@@ -50,3 +50,6 @@ mobile/dist/
 Thumbs.db
 .vscode/
 .idea/
+worker/node_modules/
+worker/.wrangler/
+worker/.dev.vars

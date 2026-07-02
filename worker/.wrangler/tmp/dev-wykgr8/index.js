@@ -2116,12 +2116,227 @@ var Hono2 = class extends Hono {
   }
 };
 
+// src/lib/crypto.ts
+var PBKDF2_ITERATIONS = 31e4;
+var enc = new TextEncoder();
+function toHex(buf) {
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(toHex, "toHex");
+function fromHex(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+__name(fromHex, "fromHex");
+function b64url(data) {
+  const bytes = typeof data === "string" ? enc.encode(data) : new Uint8Array(data);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+__name(b64url, "b64url");
+function b64urlDecode(s) {
+  const pad = "=".repeat((4 - s.length % 4) % 4);
+  const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/") + pad);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+__name(b64urlDecode, "b64urlDecode");
+async function hashPassword(password, saltHex) {
+  const salt = saltHex ? fromHex(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITERATIONS },
+    key,
+    256
+  );
+  return { hash: toHex(bits), salt: toHex(salt.buffer) };
+}
+__name(hashPassword, "hashPassword");
+async function verifyPassword(password, saltHex, expectedHex) {
+  const { hash } = await hashPassword(password, saltHex);
+  if (hash.length !== expectedHex.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hash.length; i++) diff |= hash.charCodeAt(i) ^ expectedHex.charCodeAt(i);
+  return diff === 0;
+}
+__name(verifyPassword, "verifyPassword");
+async function hmacKey(secret) {
+  return crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+}
+__name(hmacKey, "hmacKey");
+async function signJwt(payload, secret, ttlSeconds = 7 * 24 * 3600) {
+  const now = Math.floor(Date.now() / 1e3);
+  const body = { iat: now, exp: now + ttlSeconds, ...payload };
+  const head = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const claims = b64url(JSON.stringify(body));
+  const sig = await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(`${head}.${claims}`));
+  return `${head}.${claims}.${b64url(sig)}`;
+}
+__name(signJwt, "signJwt");
+async function verifyJwt(token, secret) {
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [head, claims, sig] = parts;
+  const ok = await crypto.subtle.verify(
+    "HMAC",
+    await hmacKey(secret),
+    b64urlDecode(sig),
+    enc.encode(`${head}.${claims}`)
+  );
+  if (!ok) return null;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(claims)));
+    if (typeof payload.exp === "number" && payload.exp < Date.now() / 1e3) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+__name(verifyJwt, "verifyJwt");
+
 // src/auth.ts
 var authRoutes = new Hono2();
-authRoutes.all("*", (c) => c.json({ error: "auth not ready yet" }, 501));
+var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+async function issue(c, userId) {
+  const token = await signJwt({ sub: userId }, c.env.JWT_SECRET);
+  return { token, user_id: userId };
+}
+__name(issue, "issue");
+async function logAuth(env, userId, kind, detail = "") {
+  try {
+    await env.DB.prepare("INSERT INTO auth_events (user_id, kind, detail) VALUES (?, ?, ?)").bind(userId, kind, detail.slice(0, 200)).run();
+  } catch {
+  }
+}
+__name(logAuth, "logAuth");
+authRoutes.post("/signup", async (c) => {
+  const { email = "", password = "" } = await c.req.json().catch(() => ({}));
+  const em = String(email).trim().toLowerCase();
+  if (!EMAIL_RE.test(em)) return c.json({ error: "Enter a valid email address." }, 400);
+  if (String(password).length < 8) return c.json({ error: "Password must be at least 8 characters." }, 400);
+  const existing = await c.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(em).first();
+  if (existing) return c.json({ error: "That email already has an account \u2014 log in instead." }, 409);
+  const id = crypto.randomUUID();
+  const { hash, salt } = await hashPassword(String(password));
+  await c.env.DB.prepare(
+    "INSERT INTO users (id, email, pw_hash, pw_salt, verified) VALUES (?, ?, ?, ?, 0)"
+  ).bind(id, em, hash, salt).run();
+  await c.env.DB.prepare("INSERT INTO profiles (user_id) VALUES (?)").bind(id).run();
+  await logAuth(c.env, id, "signup");
+  return c.json(await issue(c, id));
+});
+authRoutes.post("/login", async (c) => {
+  const { email = "", password = "" } = await c.req.json().catch(() => ({}));
+  const em = String(email).trim().toLowerCase();
+  const user = await c.env.DB.prepare(
+    "SELECT id, pw_hash, pw_salt FROM users WHERE email = ?"
+  ).bind(em).first();
+  if (!user?.pw_hash || !user.pw_salt) {
+    await logAuth(c.env, null, "fail", `login:${em}`);
+    return c.json({ error: "Email or password is incorrect." }, 401);
+  }
+  const ok = await verifyPassword(String(password), user.pw_salt, user.pw_hash);
+  if (!ok) {
+    await logAuth(c.env, user.id, "fail", "bad password");
+    return c.json({ error: "Email or password is incorrect." }, 401);
+  }
+  await logAuth(c.env, user.id, "login");
+  return c.json(await issue(c, user.id));
+});
+function redirectUri(c) {
+  const origin = c.env.APP_ORIGIN || new URL(c.req.url).origin;
+  return `${origin}/auth/google/callback`;
+}
+__name(redirectUri, "redirectUri");
+authRoutes.get("/google", (c) => {
+  if (!c.env.GOOGLE_CLIENT_ID) return c.json({ error: "Google sign-in isn't set up yet." }, 501);
+  const u = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  u.searchParams.set("client_id", c.env.GOOGLE_CLIENT_ID);
+  u.searchParams.set("redirect_uri", redirectUri(c));
+  u.searchParams.set("response_type", "code");
+  u.searchParams.set("scope", "openid email profile");
+  u.searchParams.set("prompt", "select_account");
+  return c.redirect(u.toString(), 302);
+});
+authRoutes.get("/google/callback", async (c) => {
+  const code = c.req.query("code");
+  if (!code || !c.env.GOOGLE_CLIENT_ID || !c.env.GOOGLE_CLIENT_SECRET) {
+    return c.redirect("/#auth_error=google", 302);
+  }
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: c.env.GOOGLE_CLIENT_ID,
+      client_secret: c.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: redirectUri(c),
+      grant_type: "authorization_code"
+    })
+  });
+  const tok = await tokenRes.json().catch(() => ({}));
+  if (!tok.id_token) return c.redirect("/#auth_error=google", 302);
+  const info = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(tok.id_token)}`
+  );
+  const claims = await info.json().catch(() => ({}));
+  if (!info.ok || claims.aud !== c.env.GOOGLE_CLIENT_ID || !claims.sub || !claims.email) {
+    return c.redirect("/#auth_error=google", 302);
+  }
+  const em = claims.email.toLowerCase();
+  let user = await c.env.DB.prepare(
+    "SELECT id FROM users WHERE google_sub = ? OR email = ?"
+  ).bind(claims.sub, em).first();
+  if (!user) {
+    const id = crypto.randomUUID();
+    await c.env.DB.prepare(
+      "INSERT INTO users (id, email, google_sub, verified) VALUES (?, ?, ?, 1)"
+    ).bind(id, em, claims.sub).run();
+    await c.env.DB.prepare("INSERT INTO profiles (user_id) VALUES (?)").bind(id).run();
+    user = { id };
+  } else {
+    await c.env.DB.prepare("UPDATE users SET google_sub = ?, verified = 1 WHERE id = ?").bind(claims.sub, user.id).run();
+  }
+  await logAuth(c.env, user.id, "google");
+  const { token } = await issue(c, user.id);
+  return c.redirect(`/#emblem_token=${encodeURIComponent(token)}`, 302);
+});
+async function requireUser(c, next) {
+  const header = c.req.header("authorization") || "";
+  const token = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
+  const payload = token ? await verifyJwt(token, c.env.JWT_SECRET) : null;
+  const sub = payload && typeof payload.sub === "string" ? payload.sub : "";
+  if (!sub) return c.json({ error: "unauthorized" }, 401);
+  c.set("userId", sub);
+  c.set("isOwner", Boolean(c.env.EMBLEM_OWNER_USER_ID && sub === c.env.EMBLEM_OWNER_USER_ID));
+  await next();
+}
+__name(requireUser, "requireUser");
 
 // src/api.ts
 var apiRoutes = new Hono2();
+apiRoutes.use("*", requireUser);
+apiRoutes.get("/me", async (c) => {
+  const uid = c.get("userId");
+  const p = await c.env.DB.prepare(
+    "SELECT display_name, onboarded FROM profiles WHERE user_id = ?"
+  ).bind(uid).first();
+  return c.json({
+    user_id: uid,
+    is_admin: c.get("isOwner"),
+    display_name: p?.display_name || "",
+    onboarded: Boolean(p?.onboarded)
+  });
+});
 apiRoutes.all("*", (c) => c.json({ error: "not found" }, 404));
 
 // src/voice.ts
