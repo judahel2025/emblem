@@ -72,16 +72,21 @@ export class VoiceRelay {
 
     if (!userId || !this.env.GEMINI_KEY) return denyReturn("unavailable");
 
+    // Standard client constructor — the supported way to hold a long-lived
+    // OUTBOUND socket from the Workers runtime (fetch-Upgrade sockets get torn
+    // down with the request context; these don't).
     let upstream: WebSocket | null = null;
     try {
-      const res = await fetch(
-        `https://${HOST}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${this.env.GEMINI_KEY}`,
-        { headers: { Upgrade: "websocket" } });
-      upstream = res.webSocket;
+      upstream = new WebSocket(
+        `wss://${HOST}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${this.env.GEMINI_KEY}`);
+      await new Promise<void>((resolve, reject) => {
+        const to = setTimeout(() => reject(new Error("upstream open timeout")), 12000);
+        upstream!.addEventListener("open", () => { clearTimeout(to); resolve(); });
+        upstream!.addEventListener("error", () => { clearTimeout(to); reject(new Error("upstream error")); });
+      });
     } catch { upstream = null; }
     if (!upstream) return denyReturn("unavailable");
     const up = upstream;
-    up.accept();
 
     const setup: Record<string, unknown> = {
       model: MODEL,
