@@ -8,6 +8,7 @@ import { authRoutes } from "./auth";
 import { apiRoutes } from "./api";
 import { voiceRelay } from "./voice";
 import { heartbeat } from "./cron";
+import "./tools";  // registers native tools with the kernel
 
 const app = new Hono<{ Bindings: Env }>();
 

@@ -4,6 +4,8 @@
 
 import { Hono } from "hono";
 import { requireUser, type AppContext } from "./auth";
+import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
+         ApprovalRequired, ApprovalRejected } from "./kernel";
 
 export const apiRoutes = new Hono<AppContext>();
 
@@ -270,14 +272,79 @@ apiRoutes.post("/alerts/:id/seen", async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- operator surfaces (owner only; invisible to everyone else) ---------------
-// Filled in properly in C4 (kernel) — the 404 gate is the contract that matters.
+// ---- kernel: approvals (per-user), audit/config/tools (owner) -----------------
 
-for (const path of ["/audit", "/config", "/secrets", "/tools", "/brain"]) {
-  apiRoutes.get(path, (c) => {
-    if (!c.get("isOwner")) return notFound(c);
-    return c.json({ items: [], note: "kernel lands in C4" });
+apiRoutes.get("/approvals", async (c) => {
+  const uid = c.get("userId");
+  const pending = await c.env.DB.prepare(
+    "SELECT id, tool, summary, risk, created_at FROM kernel_approvals " +
+    "WHERE user_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 20").bind(uid).all();
+  const recent = await c.env.DB.prepare(
+    "SELECT id, tool, summary, status, decided_at FROM kernel_approvals " +
+    "WHERE user_id = ? AND status != 'pending' ORDER BY id DESC LIMIT 20").bind(uid).all();
+  return c.json({ pending: pending.results || [], recent: recent.results || [] });
+});
+
+apiRoutes.post("/approvals/:id/decide", async (c) => {
+  const { approved = false } = await c.req.json().catch(() => ({}));
+  const res = await resolveApproval(c.env, c.get("userId"),
+    parseInt(c.req.param("id")), Boolean(approved));
+  return c.json({ ok: res.ok, approval_id: parseInt(c.req.param("id")),
+    status: approved ? "approved" : "rejected", result: res.result ?? null,
+    error: res.error });
+});
+
+apiRoutes.post("/tools/execute", async (c) => {
+  const { name = "", args = {}, approval_id = null } = await c.req.json().catch(() => ({}));
+  try {
+    const result = await executeTool(c.env, c.get("userId"), String(name),
+      args, "user", approval_id || undefined);
+    return c.json({ ok: true, result });
+  } catch (e) {
+    if (e instanceof ApprovalRequired) {
+      return c.json({ ok: false, approval_required: true, approval_id: e.approvalId, summary: e.summary });
+    }
+    if (e instanceof ApprovalRejected) {
+      return c.json({ ok: false, rejected: true, approval_id: e.approvalId });
+    }
+    return c.json({ ok: false, error: e instanceof Error ? e.message : String(e) });
+  }
+});
+
+apiRoutes.get("/audit", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const limit = Math.min(parseInt(c.req.query("limit") || "100") || 100, 500);
+  const rows = await c.env.DB.prepare(
+    "SELECT id, actor, tool, tier, args_json, status, result, user_id, created_at " +
+    "FROM kernel_audit ORDER BY id DESC LIMIT ?").bind(limit).all();
+  return c.json({ items: rows.results || [] });
+});
+
+apiRoutes.get("/config", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  return c.json({
+    kill_switch: (await getConfig(c.env, "kill_switch", "0")) === "1",
+    approval_mode: await getConfig(c.env, "approval_mode", "ask"),
   });
-}
+});
+
+apiRoutes.post("/config/kill-switch", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const { on = false } = await c.req.json().catch(() => ({}));
+  await setConfig(c.env, "kill_switch", on ? "1" : "0");
+  return c.json({ ok: true, kill_switch: Boolean(on) });
+});
+
+apiRoutes.post("/config/approval-mode", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const { mode = "ask" } = await c.req.json().catch(() => ({}));
+  await setConfig(c.env, "approval_mode", mode === "auto" ? "auto" : "ask");
+  return c.json({ ok: true, approval_mode: mode === "auto" ? "auto" : "ask" });
+});
+
+apiRoutes.get("/tools", (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  return c.json({ tools: toolManifest() });
+});
 
 apiRoutes.all("*", (c) => notFound(c));
