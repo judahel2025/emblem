@@ -94,6 +94,10 @@ const NATIVE_TOOLS: OpenAITool[] = [
       "you never need to ask for permission in chat first.",
     parameters: { type: "object", properties: { to: { type: "string" }, subject: { type: "string" },
       body: { type: "string" } }, required: ["to", "subject", "body"] } } },
+  { type: "function", function: { name: "generate_document",
+    description: "Write a document (report, letter, notes) and save it to the user's Files.",
+    parameters: { type: "object", properties: { title: { type: "string" }, content: { type: "string", description: "full document in markdown" },
+      format: { type: "string", enum: ["md", "txt", "html"] } }, required: ["title", "content"] } } },
   { type: "function", function: { name: "connect_app",
     description: "Give the user a link to connect an app (gmail, github, googlecalendar, notion, …).",
     parameters: { type: "object", properties: { toolkit: { type: "string" } }, required: ["toolkit"] } } },
@@ -191,6 +195,13 @@ async function execNative(env: Env, userId: string, name: string,
         { to: a.to, subject: a.subject, body: a.body });
       const res = r as { ok?: boolean; error?: string };
       return [res.ok ? `Sent to ${a.to}.` : `Couldn't send: ${res.error}`, { type: "refresh" }];
+    }
+    case "generate_document": {
+      const r = await executeTool(env, userId, "generate_document",
+        { title: a.title, content: a.content, format: a.format });
+      const res = r as { ok?: boolean; name?: string };
+      return [res.ok ? `Saved "${res.name}" to your Files.` : "Couldn't save the document.",
+              { type: "file.created", path: (r as { path?: string }).path }];
     }
     case "connect_app": {
       const url = await initiateConnection(env, String(a.toolkit || ""), userId);

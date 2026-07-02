@@ -9,6 +9,7 @@ import { apiRoutes } from "./api";
 import { voiceRelay } from "./voice";
 import { heartbeat } from "./cron";
 import "./tools";  // registers native tools with the kernel
+import { fileRoutes } from "./r2";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -20,6 +21,7 @@ app.get("/api/voice/live", (c) => voiceRelay(c.req.raw, c.env, c.executionCtx));
 
 
 app.route("/auth", authRoutes);
+app.route("/api", fileRoutes);
 app.route("/api", apiRoutes);
 
 // Everything else → static assets (the Svelte app; SPA fallback via wrangler config).
