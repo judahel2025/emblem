@@ -1,25 +1,18 @@
-// Thin client for the kernel-backed API (proxied to FastAPI :8788 in dev).
+// Thin client for the Emblem Worker API. The Worker serves this app same-origin,
+// so in the browser the API base is simply "" — the one exception is the Tauri
+// desktop shell, which loads from a local file and must be pointed at the Worker.
 import { speechify } from "./speech.js";
 
-const RENDER_URL = "https://emblem-k6mg.onrender.com";
+const CLOUD_URL = "https://emblem.thequaniac.com";
 
-function isMobileDevice() {
-  return typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
-}
-
-// Where's the engine? Stored override > Tauri local > dev proxy (localhost) >
-// same-origin when served BY the backend > cloud URL for any other host (Pages, custom domains).
 function resolveBase() {
   if (typeof window === "undefined") return "";
   const stored = localStorage.getItem("emblem_url");
   if (stored) return stored.replace(/\/$/, "");
   const isTauri = window.__TAURI__ || window.__TAURI_INTERNALS__ ||
     (location.protocol || "").startsWith("tauri") || location.hostname === "tauri.localhost";
-  if (isTauri) return "http://127.0.0.1:8788";
-  const h = location.hostname || "";
-  if (h === "localhost" || h === "127.0.0.1") return "";   // vite dev proxy
-  if (h.endsWith(".onrender.com")) return "";              // served same-origin by the backend
-  return RENDER_URL;                                       // Pages / any separate frontend origin
+  if (isTauri) return CLOUD_URL;   // desktop shell → hosted Worker
+  return "";                       // browser → same origin (Worker serves the app)
 }
 export let API_BASE = resolveBase();
 export function setApiBase(url) {

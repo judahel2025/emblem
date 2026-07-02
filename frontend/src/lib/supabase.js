@@ -1,30 +1,27 @@
-// Supabase Auth via the GoTrue REST API — no SDK dependency, keeps the bundle lean.
-// On success we store the access_token as `emblem_token`, which the existing API client
-// already sends as `Authorization: Bearer` — so the FastAPI JWT middleware verifies it
-// and scopes every request to this user. The anon key is publishable by design.
+// Auth client — talks to the Emblem Worker's own /auth/* endpoints (Cloudflare-native,
+// no Supabase). On success we store the Worker-signed JWT as `emblem_token`, which the
+// API client sends as `Authorization: Bearer` and the Worker verifies on every request.
+// (File name kept as supabase.js so imports don't churn; the `auth` interface is identical.)
 
-const SUPABASE_URL = "https://dzmabwgkrcxuutjlgfuh.supabase.co";
-const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bWFid2drcmN4dXV0amxnZnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTEyMTIsImV4cCI6MjA5ODU2NzIxMn0.pBX1_B0Lx4zXtIGl2NbuEGHgKi2444nVUkl2hx34epg";
+import { API_BASE } from "./api.js";
 
-const AUTH = `${SUPABASE_URL}/auth/v1`;
+const base = () => API_BASE || "";
 
-function store(session) {
-  if (session?.access_token) {
-    localStorage.setItem("emblem_token", session.access_token);
-    if (session.refresh_token) localStorage.setItem("emblem_refresh", session.refresh_token);
-    if (session.user?.email) localStorage.setItem("emblem_email", session.user.email);
+function store(data) {
+  if (data?.token) {
+    localStorage.setItem("emblem_token", data.token);
+    if (data.email) localStorage.setItem("emblem_email", data.email);
   }
 }
 
 async function call(path, body) {
-  const res = await fetch(`${AUTH}${path}`, {
+  const res = await fetch(`${base()}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", apikey: ANON_KEY },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || data.msg || data.error || "Auth failed");
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Auth failed");
   return data;
 }
 
@@ -33,39 +30,35 @@ export const auth = {
   email: () => localStorage.getItem("emblem_email") || "",
 
   async signUp(email, password) {
-    const data = await call("/signup", { email, password });
-    store(data); // if email-confirm is off, session is returned immediately
+    const data = await call("/auth/signup", { email, password });
+    store({ ...data, email });
     return data;
   },
 
   async signIn(email, password) {
-    const data = await call("/token?grant_type=password", { email, password });
-    store(data);
+    const data = await call("/auth/login", { email, password });
+    store({ ...data, email });
     return data;
   },
 
-  // Redirect to Google via Supabase. Comes back to our origin with tokens in the URL hash.
+  // Full-page redirect to the Worker, which bounces to Google and back with the JWT in the hash.
   signInWithGoogle() {
-    const redirect = encodeURIComponent(window.location.origin + window.location.pathname);
-    window.location.href =
-      `${AUTH}/authorize?provider=google&redirect_to=${redirect}`;
+    window.location.href = `${base()}/auth/google`;
   },
 
-  // Call once on app load: if we just came back from an OAuth redirect, capture the session.
+  // On load: capture a token handed back in the URL hash after Google sign-in.
   handleRedirect() {
     if (typeof window === "undefined" || !window.location.hash) return false;
     const p = new URLSearchParams(window.location.hash.slice(1));
-    const access_token = p.get("access_token");
-    if (!access_token) return false;
-    store({ access_token, refresh_token: p.get("refresh_token") });
-    // Clean the tokens out of the URL bar.
+    const token = p.get("emblem_token");
+    if (!token) return false;
+    localStorage.setItem("emblem_token", token);
     history.replaceState(null, "", window.location.pathname + window.location.search);
     return true;
   },
 
   signOut() {
     localStorage.removeItem("emblem_token");
-    localStorage.removeItem("emblem_refresh");
     localStorage.removeItem("emblem_email");
   },
 };
