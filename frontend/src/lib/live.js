@@ -2,6 +2,7 @@
 // Handles mic capture (PCM 16k), streamed playback (PCM 24k), captions, and barge-in.
 // Used by both the conversational onboarding and the everyday voice mode.
 
+import { API_BASE } from "./api.js";
 const CAP_RATE = 16000;
 const PLAY_RATE = 24000;
 
@@ -25,12 +26,11 @@ export class LiveClient {
   }
 
   _url() {
-    const base = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_url")) || "";
     const token = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_token")) || "";
     const qs = `?mode=${this.mode}${token ? `&token=${encodeURIComponent(token)}` : ""}`;
-    if (base) return base.replace(/^http/, "ws") + "/api/voice/live" + qs;
-    const proto = location.protocol === "https:" ? "wss" : "ws";
-    return `${proto}://${location.host}/api/voice/live` + qs;
+    // Single source of truth: wherever the REST API lives, the voice socket lives too.
+    const base = API_BASE || `${location.protocol}//${location.host}`;
+    return base.replace(/^http/, "ws") + "/api/voice/live" + qs;
   }
 
   async start({ mic = true } = {}) {

@@ -27,7 +27,7 @@ app = FastAPI(title="Emblem Core", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"(http://(127\.0\.0\.1|localhost)(:\d+)?)|(https?://tauri\.localhost)|(tauri://localhost)|(https://[a-z0-9\-]+\.emblem-app\.pages\.dev)|(https://emblem-app\.pages\.dev)",
+    allow_origin_regex=r"(http://(127\.0\.0\.1|localhost)(:\d+)?)|(https?://tauri\.localhost)|(tauri://localhost)|(https://([a-z0-9\-]+\.)?emblem(-[a-z0-9\-]+)?\.pages\.dev)",
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -7,16 +7,19 @@ function isMobileDevice() {
   return typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 
-// Desktop (Tauri): local engine. Mobile (any WebView or browser): Render cloud backend.
+// Where's the engine? Stored override > Tauri local > dev proxy (localhost) >
+// same-origin when served BY the backend > cloud URL for any other host (Pages, custom domains).
 function resolveBase() {
   if (typeof window === "undefined") return "";
   const stored = localStorage.getItem("emblem_url");
   if (stored) return stored.replace(/\/$/, "");
-  if (isMobileDevice()) return RENDER_URL;
   const isTauri = window.__TAURI__ || window.__TAURI_INTERNALS__ ||
     (location.protocol || "").startsWith("tauri") || location.hostname === "tauri.localhost";
-  if (!isTauri) return "";
-  return "http://127.0.0.1:8788";
+  if (isTauri) return "http://127.0.0.1:8788";
+  const h = location.hostname || "";
+  if (h === "localhost" || h === "127.0.0.1") return "";   // vite dev proxy
+  if (h.endsWith(".onrender.com")) return "";              // served same-origin by the backend
+  return RENDER_URL;                                       // Pages / any separate frontend origin
 }
 export let API_BASE = resolveBase();
 export function setApiBase(url) {
