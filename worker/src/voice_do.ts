@@ -79,6 +79,10 @@ export class VoiceRelay {
     try {
       upstream = new WebSocket(
         `wss://${HOST}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${this.env.GEMINI_KEY}`);
+      // Gemini Live sends BINARY frames. The constructor socket defaults to
+      // binaryType "blob", which TextDecoder can't read — every frame (incl.
+      // setupComplete) then throws and gets dropped, so "ready" never fires.
+      try { (upstream as any).binaryType = "arraybuffer"; } catch { /* older runtime */ }
       await new Promise<void>((resolve, reject) => {
         const to = setTimeout(() => reject(new Error("upstream open timeout")), 12000);
         upstream!.addEventListener("open", () => { clearTimeout(to); resolve(); });
@@ -137,7 +141,7 @@ export class VoiceRelay {
               }
             }
           }
-        } catch { /* skip malformed frame */ }
+        } catch (e) { console.error("voice: upstream frame error", e); }
       })();
     });
 
