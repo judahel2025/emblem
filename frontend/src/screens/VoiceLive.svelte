@@ -1,5 +1,5 @@
 <script>
-  // Kora's voice mode — full-screen conversation with the breathing mark.
+  // Emblem's voice mode — full-screen conversation with the breathing mark.
   import { createEventDispatcher, onDestroy } from "svelte";
   import { LiveClient } from "../lib/live.js";
   import Orb from "../components/Orb.svelte";

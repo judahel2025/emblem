@@ -1,6 +1,6 @@
 <script>
-  // Meeting Kora — a real conversation, not a form.
-  // Kora speaks first (Gemini Live under the hood, never named), listens, follows up,
+  // Meeting Emblem — a real conversation, not a form.
+  // Emblem speaks first (Gemini Live under the hood, never named), listens, follows up,
   // and remembers. Type-instead is always available; if live voice can't start we fall
   // back to a quiet three-question exchange that still feels conversational.
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
@@ -19,7 +19,7 @@
 
   // ── typed fallback (quiet conversation, no Live) ────────────────
   const QUESTIONS = [
-    { q: "Hey, I'm Kora. I'll be working alongside you — what should I call you?", key: "name" },
+    { q: "Hey, I'm Emblem. I'll be working alongside you — what should I call you?", key: "name" },
     { q: "Good to meet you. What do you do?", key: "role" },
     { q: "And what's the first thing you'd love a hand with?", key: "task" },
   ];
@@ -124,7 +124,7 @@
 
   <div class="convo" bind:this={linesEl}>
     {#if !lines.length}
-      <p class="pre">A moment — Kora's coming to meet you.</p>
+      <p class="pre">A moment — Emblem's coming to meet you.</p>
     {/if}
     {#each lines as l}
       <p class="line {l.who}">{l.text}</p>

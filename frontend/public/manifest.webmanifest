@@ -1,7 +1,7 @@
 {
-  "name": "Kora",
-  "short_name": "Kora",
-  "description": "Kora is the workspace you talk to — it connects to your tools, remembers what matters, and quietly gets things done.",
+  "name": "Emblem",
+  "short_name": "Emblem",
+  "description": "Emblem is the workspace you talk to — it connects to your tools, remembers what matters, and quietly gets things done.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,5 +1,5 @@
 <script>
-  // Kora's mark: a single breathing point of light on black.
+  // Emblem's mark: a single breathing point of light on black.
   // One component powers the onboarding scene, voice mode, the FAB, and thinking dots.
   //
   // Props:

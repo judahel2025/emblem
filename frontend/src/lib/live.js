@@ -1,4 +1,4 @@
-// Kora live-voice client — one WebSocket session to /api/voice/live.
+// Emblem live-voice client — one WebSocket session to /api/voice/live.
 // Handles mic capture (PCM 16k), streamed playback (PCM 24k), captions, and barge-in.
 // Used by both the conversational onboarding and the everyday voice mode.
 
