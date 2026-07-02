@@ -1,0 +1,35 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "emblem"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The Svelte app is served by this same Worker — one origin, no CORS.
+[assets]
+directory = "../frontend/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/auth/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "emblem-db"
+database_id = "placeholder-set-on-create"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "emblem-files"
+
+[triggers]
+crons = ["* * * * *"]
+
+[observability]
+enabled = true
+
+# Secrets (set via `wrangler secret put`):
+#   JWT_SECRET            — session signing
+#   CEREBRAS_KEY, GROQ_KEY, GEMINI_KEY — model providers
+#   COMPOSIO_KEY          — connections
+#   RESEND_KEY            — email (C10)
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET — OAuth (C2)
+#   EMBLEM_OWNER_USER_ID  — the admin (set after first signup)
