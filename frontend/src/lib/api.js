@@ -1,7 +1,7 @@
 // Thin client for the kernel-backed API (proxied to FastAPI :8788 in dev).
 import { speechify } from "./speech.js";
 
-const RENDER_URL = "https://emblem.thequaniac.com";
+const RENDER_URL = "https://emblem-k6mg.onrender.com";
 
 function isMobileDevice() {
   return typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);

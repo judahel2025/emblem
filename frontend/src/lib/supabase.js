@@ -3,9 +3,9 @@
 // already sends as `Authorization: Bearer` — so the FastAPI JWT middleware verifies it
 // and scopes every request to this user. The anon key is publishable by design.
 
-const SUPABASE_URL = "https://sdkukczeysnyxzsahskz.supabase.co";
+const SUPABASE_URL = "https://dzmabwgkrcxuutjlgfuh.supabase.co";
 const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka3VrY3pleXNueXh6c2Foc2t6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTYyNDAsImV4cCI6MjA5NzIzMjI0MH0.OcTrIoN2zpWGIjexFF6v7CBtEqFnxDkfbm7WUtnvnKo";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bWFid2drcmN4dXV0amxnZnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTEyMTIsImV4cCI6MjA5ODU2NzIxMn0.pBX1_B0Lx4zXtIGl2NbuEGHgKi2444nVUkl2hx34epg";
 
 const AUTH = `${SUPABASE_URL}/auth/v1`;
 
