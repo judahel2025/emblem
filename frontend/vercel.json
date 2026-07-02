@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://emblem.theemblemai.workers.dev/api/:path*" },
+    { "source": "/auth/:path*", "destination": "https://emblem.theemblemai.workers.dev/auth/:path*" }
+  ]
+}
