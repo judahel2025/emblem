@@ -16,7 +16,8 @@ const app = new Hono<{ Bindings: Env }>();
 app.get("/api/health", (c) => c.json({ name: "Emblem", status: "online", ready: true }));
 
 // Voice WebSocket must be handled before generic routing (needs raw upgrade).
-app.get("/api/voice/live", (c) => voiceRelay(c.req.raw, c.env));
+app.get("/api/voice/live", (c) => voiceRelay(c.req.raw, c.env, c.executionCtx));
+
 
 app.route("/auth", authRoutes);
 app.route("/api", apiRoutes);
