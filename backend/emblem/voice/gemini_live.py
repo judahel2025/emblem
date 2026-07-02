@@ -1,4 +1,4 @@
-"""Kora's realtime voice bridge (official google-genai SDK).
+"""Emblem's realtime voice bridge (official google-genai SDK).
 
 The browser opens a WebSocket to /api/voice/live and streams mic audio (16-bit PCM,
 16 kHz). We relay it into a Gemini Live session, stream the model's audio (24 kHz PCM)
@@ -6,7 +6,7 @@ back, and surface both sides' words as caption frames.
 
 Two modes (?mode=):
   * chat        — the everyday voice conversation (default).
-  * onboarding  — Kora MEETS a new user: she speaks first, interviews them naturally
+  * onboarding  — Emblem MEETS a new user: she speaks first, interviews them naturally
                   (name → what they do → what to help with → tone), then calls the
                   save_profile function; we write their profile + memory rows and tell
                   the client it's done.
@@ -35,14 +35,14 @@ _MODEL = os.environ.get("GEMINI_LIVE_MODEL", "models/gemini-2.0-flash-live-001")
 _VOICE = os.environ.get("GEMINI_LIVE_VOICE", "Zephyr")
 
 _PERSONA_CHAT = (
-    "You are Kora — the user's warm, concise, decisive voice assistant. Keep replies "
+    "You are Emblem — the user's warm, concise, decisive voice assistant. Keep replies "
     "short and spoken-natural. Never reveal which AI, model, or provider powers you."
 )
 
 _PERSONA_ONBOARDING = (
-    "You are Kora, and you are meeting a brand-new member for the very first time. "
+    "You are Emblem, and you are meeting a brand-new member for the very first time. "
     "You speak FIRST: greet them briefly and warmly, introduce yourself in one sentence "
-    "('I'm Kora — I'll be working alongside you'), and begin. Have a natural, human "
+    "('I'm Emblem — I'll be working alongside you'), and begin. Have a natural, human "
     "conversation — ONE question at a time, brief and warm, reacting to what they say. "
     "You need to learn, in this order: (1) their name, (2) what they do, (3) the first "
     "thing they'd love help with, (4) how they like to be spoken to — casual or formal, "
@@ -169,7 +169,7 @@ async def bridge(client_ws):
             await client_ws.send_json({"type": "status", "state": "ready"})
 
             if mode == "onboarding":
-                # Kora speaks first — nudge the model to open the conversation.
+                # Emblem speaks first — nudge the model to open the conversation.
                 await session.send_client_content(
                     turns={"role": "user", "parts": [{"text":
                         "(The new member just arrived. Greet them and begin.)"}]},
@@ -206,7 +206,7 @@ async def bridge(client_ws):
                 while True:
                     turn = session.receive()
                     async for response in turn:
-                        # tool call: Kora finished the interview → save + finish
+                        # tool call: Emblem finished the interview → save + finish
                         tc = getattr(response, "tool_call", None)
                         if tc and getattr(tc, "function_calls", None):
                             for fc in tc.function_calls:
