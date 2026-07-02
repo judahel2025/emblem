@@ -6,6 +6,9 @@ import { Hono } from "hono";
 import { requireUser, type AppContext } from "./auth";
 import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
          ApprovalRequired, ApprovalRejected } from "./kernel";
+import { runAgent } from "./agent";
+import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
+         listConnections, initiateConnection } from "./composio";
 
 export const apiRoutes = new Hono<AppContext>();
 
@@ -345,6 +348,32 @@ apiRoutes.post("/config/approval-mode", async (c) => {
 apiRoutes.get("/tools", (c) => {
   if (!c.get("isOwner")) return notFound(c);
   return c.json({ tools: toolManifest() });
+});
+
+
+// ---- the agent + connections ---------------------------------------------------
+
+apiRoutes.post("/agent", async (c) => {
+  const { command = "", context = {} } = await c.req.json().catch(() => ({}));
+  if (!String(command).trim()) return c.json({ intent: "agent", reply: "", actions: [] });
+  const result = await runAgent(c.env, c.get("userId"), c.get("isOwner"),
+    String(command), (context as { history?: [] }).history || []);
+  return c.json(result);
+});
+
+apiRoutes.get("/connections", async (c) => {
+  const uid = c.get("userId");
+  const [connected, all] = await Promise.all([
+    listConnections(c.env, uid), allToolkits(c.env)]);
+  return c.json({ configured: composioConfigured(c.env),
+    featured: FEATURED_TOOLKITS, connected, all });
+});
+
+apiRoutes.get("/connections/link", async (c) => {
+  const toolkit = c.req.query("toolkit") || "";
+  if (!toolkit) return c.json({ ok: false, error: "toolkit required" });
+  const url = await initiateConnection(c.env, toolkit, c.get("userId"));
+  return c.json(url ? { ok: true, url } : { ok: false, error: "Couldn't start the connection." });
 });
 
 apiRoutes.all("*", (c) => notFound(c));
