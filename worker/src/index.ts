@@ -3,6 +3,7 @@
 // the /auth endpoints, the /api/voice/live WebSocket relay, and the cron heartbeat.
 
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { Env } from "./env";
 import { authRoutes } from "./auth";
 import { apiRoutes } from "./api";
@@ -12,6 +13,22 @@ import "./tools";  // registers native tools with the kernel
 import { fileRoutes } from "./r2";
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Allow the frontend origin — Vercel-hosted app (emblem.thequaniac.com + preview
+// deploys) and localhost dev. Tokens ride in the Authorization header, not cookies,
+// so no credentials mode is needed. Same-origin (Vercel-proxied) requests skip this.
+app.use("/api/*", cors({
+  origin: (o) => (/^https:\/\/(emblem\.thequaniac\.com|[a-z0-9-]+\.vercel\.app)$/.test(o) ||
+                  /^http:\/\/localhost(:\d+)?$/.test(o)) ? o : "",
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowHeaders: ["Content-Type", "Authorization"],
+}));
+app.use("/auth/*", cors({
+  origin: (o) => (/^https:\/\/(emblem\.thequaniac\.com|[a-z0-9-]+\.vercel\.app)$/.test(o) ||
+                  /^http:\/\/localhost(:\d+)?$/.test(o)) ? o : "",
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  allowHeaders: ["Content-Type", "Authorization"],
+}));
 
 // Never reveal what powers Emblem — health is name + readiness only.
 app.get("/api/health", (c) => c.json({ name: "Emblem", status: "online", ready: true }));

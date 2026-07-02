@@ -28,8 +28,11 @@ export class LiveClient {
   _url() {
     const token = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_token")) || "";
     const qs = `?mode=${this.mode}${token ? `&token=${encodeURIComponent(token)}` : ""}`;
-    // Single source of truth: wherever the REST API lives, the voice socket lives too.
-    const base = API_BASE || `${location.protocol}//${location.host}`;
+    // The voice socket must reach the Worker DIRECTLY — Vercel doesn't proxy WebSockets.
+    // VITE_WORKER_URL is set at build time when the frontend is hosted apart from the
+    // backend (Vercel); otherwise the API and socket share an origin.
+    const worker = (typeof import.meta !== "undefined" && import.meta.env?.VITE_WORKER_URL) || "";
+    const base = worker || API_BASE || `${location.protocol}//${location.host}`;
     return base.replace(/^http/, "ws") + "/api/voice/live" + qs;
   }
 
