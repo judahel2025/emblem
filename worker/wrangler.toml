@@ -20,6 +20,16 @@ database_id = "5af279a8-9504-43f3-ab20-16a3eba597ae"
 binding = "FILES"
 bucket_name = "emblem-files"
 
+# VoiceRelay Durable Object — one per live voice session (holds the browser + Gemini
+# sockets alive). SQLite-backed class so it runs on the Workers free plan.
+[[durable_objects.bindings]]
+name = "VOICE"
+class_name = "VoiceRelay"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["VoiceRelay"]
+
 [triggers]
 crons = ["* * * * *"]
 

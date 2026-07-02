@@ -7,10 +7,10 @@ import { cors } from "hono/cors";
 import type { Env } from "./env";
 import { authRoutes } from "./auth";
 import { apiRoutes } from "./api";
-import { voiceRelay } from "./voice";
 import { heartbeat } from "./cron";
 import "./tools";  // registers native tools with the kernel
 import { fileRoutes } from "./r2";
+export { VoiceRelay } from "./voice_do";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -33,8 +33,14 @@ app.use("/auth/*", cors({
 // Never reveal what powers Emblem — health is name + readiness only.
 app.get("/api/health", (c) => c.json({ name: "Emblem", status: "online", ready: true }));
 
-// Voice WebSocket must be handled before generic routing (needs raw upgrade).
-app.get("/api/voice/live", (c) => voiceRelay(c.req.raw, c.env, c.executionCtx));
+// Voice WebSocket → a fresh Durable Object per session (holds both sockets alive).
+app.get("/api/voice/live", (c) => {
+  if (c.req.header("Upgrade")?.toLowerCase() !== "websocket") {
+    return c.text("expected websocket", 426);
+  }
+  const id = c.env.VOICE.newUniqueId();
+  return c.env.VOICE.get(id).fetch(c.req.raw);
+});
 
 
 app.route("/auth", authRoutes);

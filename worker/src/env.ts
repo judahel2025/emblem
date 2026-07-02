@@ -5,6 +5,7 @@ export interface Env {
   DB: D1Database;
   FILES: R2Bucket;
   ASSETS: Fetcher;
+  VOICE: DurableObjectNamespace;
 
   // secrets (wrangler secret put …)
   JWT_SECRET: string;
