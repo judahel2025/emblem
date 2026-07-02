@@ -122,7 +122,7 @@ begin
     execute format('drop policy if exists owner_all on %I', t);
     -- profiles keys on user_id (= auth.uid()); everything else too
     execute format(
-      'create policy owner_all on %I for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid())',
+      'create policy owner_all on %I for all to authenticated using (user_id::text = auth.uid()::text) with check (user_id::text = auth.uid()::text)',
       t
     );
   end loop;
