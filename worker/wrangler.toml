@@ -14,7 +14,7 @@ run_worker_first = ["/api/*", "/auth/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "emblem-db"
-database_id = "placeholder-set-on-create"
+database_id = "5af279a8-9504-43f3-ab20-16a3eba597ae"
 
 [[r2_buckets]]
 binding = "FILES"

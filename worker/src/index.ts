@@ -41,6 +41,12 @@ app.route("/auth", authRoutes);
 app.route("/api", fileRoutes);
 app.route("/api", apiRoutes);
 
+// Log real errors to `wrangler tail`; return a generic message to the client.
+app.onError((err, c) => {
+  console.log("ERROR", c.req.method, c.req.path, "-", err instanceof Error ? err.message : String(err));
+  return c.json({ error: "Something went wrong. Please try again." }, 500);
+});
+
 // Everything else → static assets (the Svelte app; SPA fallback via wrangler config).
 app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 
