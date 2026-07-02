@@ -59,7 +59,7 @@ export function notify(message, kind = "info") {
   toastTimer = setTimeout(() => toast.set(null), 3200);
 }
 
-// --- speech control: Veyra can always be cut off mid-sentence --------------------
+// --- speech control: Emblem can always be cut off mid-sentence --------------------
 let _speaking = null;   // the Audio element currently playing a reply/briefing
 export function stopSpeaking() {
   if (_speaking) { try { _speaking.pause(); _speaking.currentTime = 0; } catch {} _speaking = null; }
@@ -108,7 +108,7 @@ export async function refresh() {
   checkAlerts();
 }
 
-// Veyra comes alive: when an alert arrives (new support mail, signup, product change), she
+// Emblem comes alive: when an alert arrives (new support mail, signup, product change), she
 // speaks up unprompted in the conversation and offers to act — then marks the alert seen.
 let _alertBusy = false;
 async function checkAlerts() {
@@ -140,7 +140,7 @@ function _alertLine(al) {
   return `${al.title}. ${al.body}`;
 }
 
-// Bring back the recent conversation so Veyra (and Judah) pick up where they left off.
+// Bring back the recent conversation so the workspace picks up where it left off.
 let _convoLoaded = false;
 export async function loadConversation() {
   if (_convoLoaded) return;
@@ -152,64 +152,14 @@ export async function loadConversation() {
   } catch {}
 }
 
-// Inbox poller — fires desktop notification + speech when new email arrives.
-let _lastUnreadCount = -1;
-let _knownIds = new Set();
-
-async function _pollInbox() {
-  try {
-    const r = await api.mailMessages("unread", 20);
-    const count = r.unread || 0;
-    const items = r.items || [];
-    if (_lastUnreadCount >= 0 && count > _lastUnreadCount) {
-      const fresh = items.filter((m) => !_knownIds.has(m.id));
-      for (const m of fresh) {
-        const senderName = (m.from_addr || "someone").split("@")[0].replace(/[._+]/g, " ");
-        const subject = m.subject || "(no subject)";
-        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-          new Notification(`New email from ${senderName}`, { body: subject });
-        }
-        notify(`New email from ${senderName}: ${subject}`, "accent");
-        if (!get(thinking)) {
-          speakText(`New email from ${senderName}. Subject: ${subject}.`, get(voiceCfg));
-        }
-      }
-    }
-    _lastUnreadCount = count;
-    _knownIds = new Set(items.map((m) => m.id));
-  } catch {}
-}
-
-export function startInboxPoller() {
-  // The mailroom (Resend inbox) is the operator's — no poller for regular users.
-  if (!get(me).is_admin) return 0;
-  if (typeof Notification !== "undefined" && Notification.permission === "default") {
-    Notification.requestPermission();
-  }
-  _pollInbox();
-  return setInterval(_pollInbox, 30_000);
-}
-
-// When Veyra comes on: greet, brief, and (best-effort) speak it. Runs once.
+// When Emblem comes on: a simple personal greeting. Runs once.
 let _briefed = false;
-export async function loadBriefing(speak = true) {
+export async function loadBriefing() {
   if (_briefed) return;
   _briefed = true;
   const my = get(me);
-  if (!my.is_admin) {
-    // Users get a simple personal greeting — the operator briefing is the admin's.
-    const name = my.display_name ? `, ${my.display_name}` : "";
-    briefing.set({ greeting: `Welcome back${name}.`, summary: "" });
-    return;
-  }
-  const r = await api.briefing().catch(() => null);
-  const b = r && (r.result || r);
-  if (!b || b.ok === false) return;
-  briefing.set(b);
-  if (speak && (b.greeting || b.summary)) {
-    const text = [b.greeting, b.summary].filter(Boolean).join(" ");
-    await speakText(text);          // interruptible; may be blocked until first gesture
-  }
+  const name = my.display_name ? `, ${my.display_name}` : "";
+  briefing.set({ greeting: `Welcome back${name}.`, summary: "" });
 }
 
 // Execute the UI actions the agent returns (open editor + write, run terminal, etc.).
@@ -290,7 +240,7 @@ export async function sendCommand(text) {
 
 // File/image attachment flow:
 //  1. User bubble shows filename + optional image thumbnail (stays in Converse, no redirect)
-//  2. Veyra acknowledges immediately ("Got it, reading…")
+//  2. Emblem acknowledges immediately ("Got it, reading…")
 //  3. Agent receives the extracted content and replies with a short summary + intention question
 export async function sendAttachment(fileName, fileType, extractedContent, imagePreview = null) {
   if (get(thinking)) return;
@@ -309,7 +259,7 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   }]);
   api.conversationAdd("user", userLabel).catch(() => {});
 
-  // 2. Immediate Veyra acknowledgement — spoken + shown
+  // 2. Immediate Emblem acknowledgement — spoken + shown
   const ack = isImage
     ? `I've received the image ${fileName} — analysing it now.`
     : `I've received ${fileName} — reading through it now.`;
@@ -323,7 +273,7 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   const lastReply = [...prior].filter((m) => m.role === "assistant" && !m.isAck).slice(-1)[0]?.text || "";
   const history = prior.filter((m) => !m.isAck).slice(-12).map((m) => ({ role: m.role, content: m.text }));
 
-  // 3. Build agent prompt with extracted content — Veyra does the analysis
+  // 3. Build agent prompt with extracted content — Emblem does the analysis
   const agentPrompt = isImage
     ? `The user uploaded an image called "${fileName}". Vision analysis result:\n\n${extractedContent}\n\nBriefly summarise what you see in 2–3 sentences, then ask what they'd like to do with it.`
     : `The user uploaded a document called "${fileName}". Full extracted content:\n\n---\n${extractedContent}\n---\n\nBriefly summarise the key points in 2–4 sentences, then ask what they'd like to do with it.`;
@@ -351,7 +301,7 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   // Speak the summary response
   speakText(replyText, get(voiceCfg));
 
-  // Persist document to memory so Veyra can refer back to it across sessions
+  // Persist document to memory so Emblem can refer back to it across sessions
   const memSummary = `Document "${fileName}" read on ${new Date().toLocaleDateString()}. Summary: ${replyText}`;
   api.memoryAdd(memSummary, "document").catch(() => {});
   // Store full content under a longer-form fact so the agent can retrieve it

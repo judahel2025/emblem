@@ -10,16 +10,16 @@ from pathlib import Path
 BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 
-from veyra.kernel import paths  # noqa: E402
+from emblem.kernel import paths  # noqa: E402
 
-_tmp = Path(tempfile.mkdtemp(prefix="veyra_tools_"))
-paths.VEYRA_HOME = _tmp / ".veyra"
-paths.KERNEL_DB = paths.VEYRA_HOME / "kernel.db"
-paths.TRASH_DIR = paths.VEYRA_HOME / "trash"
+_tmp = Path(tempfile.mkdtemp(prefix="emblem_tools_"))
+paths.EMBLEM_HOME = _tmp / ".emblem"
+paths.KERNEL_DB = paths.EMBLEM_HOME / "kernel.db"
+paths.TRASH_DIR = paths.EMBLEM_HOME / "trash"
 
-from veyra import kernel  # noqa: E402
-from veyra.kernel import ApprovalRequired, approvals  # noqa: E402
-from veyra.tools import fsutil, load_all  # noqa: E402
+from emblem import kernel  # noqa: E402
+from emblem.kernel import ApprovalRequired, approvals  # noqa: E402
+from emblem.tools import fsutil, load_all  # noqa: E402
 
 # Redirect the workspaces root to the temp dir for the test.
 _ws = _tmp / "workspaces"
@@ -81,7 +81,7 @@ def run():
     assert out["snapshot_id"]
     ok("approved delete removes the file and records a snapshot")
 
-    from veyra.kernel import snapshots
+    from emblem.kernel import snapshots
     assert snapshots.restore(out["snapshot_id"]) is True
     assert (_ws / "notes/hello.txt").read_text(encoding="utf-8") == "hi there"
     ok("deleted file is fully recoverable from the snapshot")

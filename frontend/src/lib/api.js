@@ -1,7 +1,7 @@
 // Thin client for the kernel-backed API (proxied to FastAPI :8788 in dev).
 import { speechify } from "./speech.js";
 
-const RENDER_URL = "https://veyra.thequaniac.com";
+const RENDER_URL = "https://emblem.thequaniac.com";
 
 function isMobileDevice() {
   return typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -10,7 +10,7 @@ function isMobileDevice() {
 // Desktop (Tauri): local engine. Mobile (any WebView or browser): Render cloud backend.
 function resolveBase() {
   if (typeof window === "undefined") return "";
-  const stored = localStorage.getItem("veyra_url");
+  const stored = localStorage.getItem("emblem_url");
   if (stored) return stored.replace(/\/$/, "");
   if (isMobileDevice()) return RENDER_URL;
   const isTauri = window.__TAURI__ || window.__TAURI_INTERNALS__ ||
@@ -21,12 +21,12 @@ function resolveBase() {
 export let API_BASE = resolveBase();
 export function setApiBase(url) {
   API_BASE = (url || "").replace(/\/$/, "");
-  if (url) localStorage.setItem("veyra_url", API_BASE);
-  else localStorage.removeItem("veyra_url");
+  if (url) localStorage.setItem("emblem_url", API_BASE);
+  else localStorage.removeItem("emblem_url");
 }
 
 function authHeaders() {
-  const token = typeof localStorage !== "undefined" && localStorage.getItem("veyra_token");
+  const token = typeof localStorage !== "undefined" && localStorage.getItem("emblem_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -72,7 +72,6 @@ export const api = {
   lockVerify: (password) => post("/api/lock/verify", { password }),
   lockSet: (password, current = "") => post("/api/lock/set", { password, current }),
   lockDisable: (password) => post("/api/lock/disable", { password }),
-  briefing: () => post("/api/tools/execute", { name: "briefing.get", args: {} }),
   agent: (command, context = {}) => post("/api/agent", { command, context }),
   brain: () => get("/api/brain"),
   setBrain: (cfg) => post("/api/brain", cfg),
@@ -96,13 +95,6 @@ export const api = {
   emailArchive: (id) => post(`/api/emails/${id}/archive`, {}),
   emailRestore: (id) => post(`/api/emails/${id}/restore`, {}),
   emailDelete: (id) => del(`/api/emails/${id}`),
-
-  mailMessages: (status = "unread", limit = 50) =>
-    get(`/api/mail/messages?status=${status}&limit=${limit}`),
-  mailGet: (id) => get(`/api/mail/messages/${id}`),
-  mailMarkRead: (id) => post(`/api/mail/messages/${id}/read`, {}),
-  mailArchive: (id) => post(`/api/mail/messages/${id}/archive`, {}),
-  mailSuggestReply: (id) => post(`/api/mail/messages/${id}/suggest-reply`, {}),
 
   async analyzeUpload(file, token) {
     const fd = new FormData();

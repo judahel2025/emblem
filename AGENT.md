@@ -1,9 +1,9 @@
-# Veyra — Agent Spec
+# Emblem — Agent Spec
 
-> Single source of truth for what Veyra is and how it's built. Read this first.
+> Single source of truth for what Emblem is and how it's built. Read this first.
 
 ## What it is
-Veyra is a **voice-first, multi-user AI workspace**. Anyone signs up, connects the tools
+Emblem is a **voice-first, multi-user AI workspace**. Anyone signs up, connects the tools
 they already use, and talks or types to get real work done. It chats like ChatGPT, holds
 pages and a calendar like Notion, listens and speaks like a real assistant, remembers you
 between sessions, and reaches out proactively when something's worth your attention.
@@ -42,7 +42,7 @@ turns alike. External content (email, web, connected-app data) is treated as unt
 as instructions.
 
 ## Secrecy
-The client never learns which AI/model/provider/connector powers Veyra. Provider identity, model
+The client never learns which AI/model/provider/connector powers Emblem. Provider identity, model
 names, and secret names are stripped from every client-facing endpoint and error message, and gated
 to the owner (`is_owner()`).
 

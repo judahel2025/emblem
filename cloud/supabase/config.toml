@@ -1,4 +1,4 @@
-project_id = "veyra"
+project_id = "emblem"
 
 [functions.watcher]
 verify_jwt = false

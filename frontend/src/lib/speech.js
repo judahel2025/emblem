@@ -1,6 +1,6 @@
 // Turn Markdown into clean spoken text so TTS reads it naturally.
 //
-// Veyra does NOT read everything word-for-word. Code, tables, and long lists are shown on
+// Emblem does NOT read everything word-for-word. Code, tables, and long lists are shown on
 // screen, so speech collapses them to a short cue ("Here's the code", "Here's the list on
 // your screen") instead of reading them out. Regular prose and explanations are spoken in
 // full — so "list and explain" reads the explanation and shows the list.

@@ -1,6 +1,6 @@
 """API smoke test via Starlette TestClient (no live port needed).
 
-Run:  C:\\VEYRA\\.venv\\Scripts\\python.exe backend\\tests\\test_api.py
+Run:  C:\\EMBLEM\\.venv\\Scripts\\python.exe backend\\tests\\test_api.py
 """
 
 import sys
@@ -10,20 +10,20 @@ from pathlib import Path
 BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 
-from veyra.kernel import paths  # noqa: E402
+from emblem.kernel import paths  # noqa: E402
 
-_tmp = Path(tempfile.mkdtemp(prefix="veyra_api_"))
-paths.VEYRA_HOME = _tmp / ".veyra"
-paths.KERNEL_DB = paths.VEYRA_HOME / "kernel.db"
-paths.TRASH_DIR = paths.VEYRA_HOME / "trash"
+_tmp = Path(tempfile.mkdtemp(prefix="emblem_api_"))
+paths.EMBLEM_HOME = _tmp / ".emblem"
+paths.KERNEL_DB = paths.EMBLEM_HOME / "kernel.db"
+paths.TRASH_DIR = paths.EMBLEM_HOME / "trash"
 _ws = _tmp / "workspaces"
 _ws.mkdir(parents=True)
 paths.WORKSPACES_DIR = _ws
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from veyra.api.app import app  # noqa: E402
-from veyra.tools import fsutil  # noqa: E402
+from emblem.api.app import app  # noqa: E402
+from emblem.tools import fsutil  # noqa: E402
 
 fsutil.ROOTS["workspaces"] = _ws
 
@@ -94,7 +94,7 @@ def run():
         ok("code auto-save persists and is retrievable")
 
         # --- email archive / delete --------------------------------------------
-        from veyra.tools import emails as _em
+        from emblem.tools import emails as _em
         eid = _em.add_draft("x@y.com", "Hi", "Body")["id"]
         client.post(f"/api/emails/{eid}/archive")
         assert any(d["id"] == eid for d in client.get("/api/emails?status=archived").json()["items"])
@@ -109,8 +109,8 @@ def run():
         ok("approval mode toggles ask <-> auto")
 
         # --- scheduler: create a due task and tick it --------------------------
-        from veyra.tools import schedule as _sch
-        from veyra import scheduler as _scheduler
+        from emblem.tools import schedule as _sch
+        from emblem import scheduler as _scheduler
         tid = _sch.create(title="t", tool="files.write",
                           args={"path": "sched.txt", "content": "fired"}, every="day", count=1)["id"]
         _scheduler._tick_local()
@@ -119,8 +119,8 @@ def run():
         assert done["runs_done"] == 1 and done["status"] == "done"
         ok("scheduler fires a due task and marks it done")
 
-        # --- alerts feed (Veyra comes alive) -----------------------------------
-        from veyra import alerts as _al
+        # --- alerts feed (Emblem comes alive) -----------------------------------
+        from emblem import alerts as _al
         aid = _al.raise_alert(kind="support", title="New support message", body="Hi there")
         un = client.get("/api/alerts").json()["items"]
         assert any(x["id"] == aid for x in un)

@@ -94,13 +94,13 @@
   }
 
   function finish(fromLive) {
-    localStorage.setItem("veyra_onboarded", "1");
+    localStorage.setItem("emblem_onboarded", "1");
     setTimeout(() => { try { client?.stop(); } catch {}; dispatch("done"); }, fromLive ? 2600 : 900);
   }
 
   function skip() {
     try { client?.stop(); } catch {}
-    localStorage.setItem("veyra_onboarded", "1");
+    localStorage.setItem("emblem_onboarded", "1");
     dispatch("done");
   }
 

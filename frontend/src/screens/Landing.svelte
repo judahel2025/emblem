@@ -31,7 +31,7 @@
 <div class="lp">
   <!-- Nav -->
   <header class="nav">
-    <div class="brand"><span class="mark">V</span> Veyra</div>
+    <div class="brand"><span class="mark">V</span> Emblem</div>
     <nav class="links">
       <a href="#features">Product</a>
       <a href="#connect">Connections</a>
@@ -49,7 +49,7 @@
     <div class="orb"><i class="ti ti-sparkles"></i></div>
     <div class="eyebrow"><i class="ti ti-microphone"></i> Voice-first · does the work for you</div>
     <h1>Your whole workday.<br/>One voice.</h1>
-    <p class="sub">Veyra is the AI workspace you talk to. It connects to the tools you already use,
+    <p class="sub">Emblem is the AI workspace you talk to. It connects to the tools you already use,
       remembers what matters, and quietly gets things done — so you don't have to.</p>
     <div class="hero-cta">
       <button class="lemon big" on:click={enter}>Start free <i class="ti ti-arrow-right"></i></button>
@@ -102,9 +102,9 @@
   </section>
 
   <footer class="foot">
-    <div class="brand"><span class="mark">V</span> Veyra</div>
+    <div class="brand"><span class="mark">V</span> Emblem</div>
     <span class="dim">Your voice-first AI workspace.</span>
-    <span class="dim">© 2026 Veyra</span>
+    <span class="dim">© 2026 Emblem</span>
   </footer>
 </div>
 

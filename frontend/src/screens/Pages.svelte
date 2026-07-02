@@ -27,7 +27,7 @@
     <div class="editor">
       <button class="back" on:click={() => { open = null; }}><i class="ti ti-arrow-left"></i> All pages</button>
       <input class="ttl" bind:value={title} on:blur={save} placeholder="Untitled" />
-      <textarea class="bdy" bind:value={body} on:blur={save} placeholder="Start writing, or ask Veyra to draft this page for you…"></textarea>
+      <textarea class="bdy" bind:value={body} on:blur={save} placeholder="Start writing, or ask Emblem to draft this page for you…"></textarea>
     </div>
   {:else if items.length === 0}
     <div class="empty">No pages yet. Create one, or say "make a page about…" in chat.</div>

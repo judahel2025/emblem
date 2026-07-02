@@ -1,7 +1,7 @@
-# Veyra — Desktop packaging (Tauri) — Phase F
+# Emblem — Desktop packaging (Tauri) — Phase F
 
 This is the FINAL step: wrap the finished app as a native Windows desktop app (Mica window,
-system tray, autostart, always-on "Hey Veyra"). Do this once features are stable, so you
+system tray, autostart, always-on "Hey Emblem"). Do this once features are stable, so you
 don't repackage after every change.
 
 ## Prerequisites (one-time)
@@ -17,26 +17,26 @@ winget install Microsoft.VisualStudio.2022.BuildTools   # MSVC build tools (C++)
 ## Add Tauri to the frontend
 
 ```powershell
-cd C:\VEYRA\frontend
+cd C:\EMBLEM AI\frontend
 npm install -D @tauri-apps/cli
 npx tauri init `
-  --app-name Veyra `
-  --window-title "Veyra" `
+  --app-name Emblem `
+  --window-title "Emblem" `
   --frontend-dist ../frontend/dist `
   --dev-url http://127.0.0.1:8788
 ```
 
 ## Make the Python backend a sidecar
-Veyra's brain is the FastAPI server. Bundle it so the desktop app starts it automatically:
+Emblem's brain is the FastAPI server. Bundle it so the desktop app starts it automatically:
 
 1. Build a single-file backend exe (one-time, in the venv):
    ```powershell
-   C:\VEYRA\.venv\Scripts\python.exe -m pip install pyinstaller
-   C:\VEYRA\.venv\Scripts\pyinstaller --onefile --name veyra-core backend\server.py
+   C:\EMBLEM AI\.venv\Scripts\python.exe -m pip install pyinstaller
+   C:\EMBLEM AI\.venv\Scripts\pyinstaller --onefile --name emblem-core backend\server.py
    ```
-2. Copy `dist\veyra-core.exe` into `frontend\src-tauri\binaries\veyra-core-x86_64-pc-windows-msvc.exe`.
+2. Copy `dist\emblem-core.exe` into `frontend\src-tauri\binaries\emblem-core-x86_64-pc-windows-msvc.exe`.
 3. In `src-tauri/tauri.conf.json` add it under `bundle.externalBin`, and spawn it on startup
-   from `src-tauri/src/main.rs` (Command::new_sidecar("veyra-core").spawn()).
+   from `src-tauri/src/main.rs` (Command::new_sidecar("emblem-core").spawn()).
 
 ## Window styling (Mica / native feel)
 In `tauri.conf.json` → `app.windows[0]`: set `"decorations": true`, `"transparent": false`,
@@ -45,7 +45,7 @@ and enable Mica via the `window-vibrancy` crate in `main.rs` (`apply_mica(&windo
 ## Build the installer
 
 ```powershell
-cd C:\VEYRA\frontend
+cd C:\EMBLEM AI\frontend
 npm run build          # build the UI
 npx tauri build        # produces an .msi / .exe installer in src-tauri/target/release/bundle
 ```

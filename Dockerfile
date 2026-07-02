@@ -13,8 +13,8 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONPATH=/app/backend \
-    VEYRA_CLOUD=1 \
-    VEYRA_BASE=/data \
+    EMBLEM_CLOUD=1 \
+    EMBLEM_BASE=/data \
     MPLBACKEND=Agg
 
 COPY backend/requirements-cloud.txt ./requirements-cloud.txt
@@ -26,4 +26,4 @@ COPY --from=frontend-build /frontend/dist /app/frontend/dist
 RUN mkdir -p /data
 
 EXPOSE 8788
-CMD ["sh", "-c", "python -m uvicorn veyra.api.app:app --host 0.0.0.0 --port ${PORT:-8788}"]
+CMD ["sh", "-c", "python -m uvicorn emblem.api.app:app --host 0.0.0.0 --port ${PORT:-8788}"]

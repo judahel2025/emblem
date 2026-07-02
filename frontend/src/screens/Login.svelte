@@ -21,7 +21,7 @@
 
 <div class="wrap">
   <div class="card">
-    <div class="brand"><span class="mark">V</span> Veyra</div>
+    <div class="brand"><span class="mark">V</span> Emblem</div>
     <h1>{mode === "signup" ? "Create your workspace" : "Welcome back"}</h1>
     <p class="sub">{mode === "signup" ? "Your voice-first AI workspace, in one minute." : "Sign in to your workspace."}</p>
 

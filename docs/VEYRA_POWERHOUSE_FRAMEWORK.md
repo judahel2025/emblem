@@ -1,7 +1,7 @@
-# Veyra Powerhouse — Master Framework (Canonical)
+# Emblem Powerhouse — Master Framework (Canonical)
 
-This is the single source of truth for Veyra's architecture and build. It supersedes
-the ordering in `VEYRA_MASTER_PLAN.md` and `VEYRA_EXECUTION_BREAKDOWN.md` (those remain
+This is the single source of truth for Emblem's architecture and build. It supersedes
+the ordering in `EMBLEM_MASTER_PLAN.md` and `EMBLEM_EXECUTION_BREAKDOWN.md` (those remain
 valid as vision/feature references). Where they conflict, this document wins.
 
 Status legend: [ ] todo · [~] in progress · [x] done
@@ -10,7 +10,7 @@ Status legend: [ ] todo · [~] in progress · [x] done
 
 ## 1. Philosophy
 
-Veyra is a **local-first agentic operator** — not a chat box. The model chooses and
+Emblem is a **local-first agentic operator** — not a chat box. The model chooses and
 chains **tools** that act on the real world (files, shell, email, money, web, system),
 and a **Security Kernel** gates every dangerous action (approve / deny / log / undo).
 
@@ -25,7 +25,7 @@ You (voice/text)
      -> Tools act on the real world
         -> Security Kernel gates every dangerous tool (approve/deny/log/undo)
            -> Brain sees results, continues or reports
-              -> Veyra speaks/writes the outcome
+              -> Emblem speaks/writes the outcome
 ```
 
 ---
@@ -47,9 +47,9 @@ PERSISTENCE      SQLite + local vector store (RAG/memory)
 ### Directory layout (target)
 
 ```
-C:\VEYRA
+C:\EMBLEM AI
   backend\
-    veyra\
+    emblem\
       kernel\        # security kernel (pure stdlib) -- built first
       tools\         # capability tools, one module per domain
       agent\         # agent loop, model router, planner
@@ -60,7 +60,7 @@ C:\VEYRA
     main.py          # legacy stdlib server (kept running until API migration)
   frontend\          # Vite + Svelte + Monaco (M3); current src/ until then
   data\  documents\  workspaces\  exports\  logs\
-  .veyra\            # kernel runtime: trash/snapshots, vault, audit db
+  .emblem\            # kernel runtime: trash/snapshots, vault, audit db
   docs\
 ```
 
@@ -80,7 +80,7 @@ Every other layer plugs into this. Non-negotiable pieces:
    approve / reject / approve-and-remember. Agent cannot proceed without resolution.
 3. **Audit log** — append-only record of every tool call: actor, action, args (secrets
    redacted), result, tier, approval id, timestamp.
-4. **Reversibility** — snapshot before any overwrite/delete to `.veyra\trash`; restore on
+4. **Reversibility** — snapshot before any overwrite/delete to `.emblem\trash`; restore on
    demand. Undo window for sends/publishes where the connector allows.
 5. **Secrets vault** — keys encrypted at rest via Windows DPAPI (ctypes, no deps). Never
    rendered in UI, never logged, never sent to the model.
@@ -122,7 +122,7 @@ Invoicing: generate[safe] send[danger] track[safe] remind[danger]
 
 ## 4b. Experience structure (the redesign — approved)
 
-Veyra is NOT an app with pages. It is one adaptive surface:
+Emblem is NOT an app with pages. It is one adaptive surface:
 
 - **Voice bar (omnipresent)** at the base — speak or type from any mode; shows state
   (listening / thinking / speaking / acting). The spine of the whole app.
@@ -149,14 +149,14 @@ later.
 
 ## 5. Roadmap (sequenced: kernel + agent BEFORE dangerous connectors)
 
-- [x] **M0 Foundations** — package skeleton (`backend/veyra/`); CORS locked to localhost
+- [x] **M0 Foundations** — package skeleton (`backend/emblem/`); CORS locked to localhost
        in the new API; `.venv` on Python 3.14 (FastAPI verified working on 3.14 — no 3.12
        needed). Legacy stdlib server kept runnable during migration.
 - [x] **M1 Security Kernel** — DONE + verified (13/13 checks, `backend/tests/test_kernel.py`).
        Tiers, approval gate (real approve/reject, single-use, arg-bound), audit log,
        snapshot/undo, secrets vault (DPAPI active), kill switch, local-only, config
-       toggles. Lives in `backend/veyra/kernel/`.
-- [~] **M2 Agent Core** — [x] FastAPI backend (`backend/veyra/api/app.py`, port 8788)
+       toggles. Lives in `backend/emblem/kernel/`.
+- [~] **M2 Agent Core** — [x] FastAPI backend (`backend/emblem/api/app.py`, port 8788)
        kernel-backed: tools, approvals, audit, snapshots, secrets, config; serves frontend
        same-origin. [x] First tools (`files.*`, 6) registered + tested through the kernel.
        [x] Ollama client bridge. [ ] tool-calling agent loop + streaming (needs installed
@@ -193,13 +193,13 @@ later.
 | Agent     | none                | Ollama tool-calling loop       | the core leap |
 | Memory    | sqlite only         | sqlite + sqlite-vec            | RAG recall |
 | Desktop   | browser             | Tauri                          | light desktop shell |
-| Voice     | browser STT/TTS     | faster-whisper + Piper + oWW   | offline "Hey Veyra" |
+| Voice     | browser STT/TTS     | faster-whisper + Piper + oWW   | offline "Hey Emblem" |
 
 Migration is staged: existing working pieces are wrapped, not discarded.
 
 ---
 
-## 7. Definition of done (Veyra v1 powerhouse)
+## 7. Definition of done (Emblem v1 powerhouse)
 
 Opens as a desktop app; wake-word voice in/out; offline via Ollama; agentic tool-calling;
 VS Code-grade IDE; document/academic studios with exports; deep web research; multi-

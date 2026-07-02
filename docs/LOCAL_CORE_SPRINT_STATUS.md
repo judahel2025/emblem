@@ -2,7 +2,7 @@
 
 ## Completed
 
-- Rebuilt Veyra into a multi-section command center.
+- Rebuilt Emblem into a multi-section command center.
 - Added navigation for:
   - Home
   - Voice
@@ -20,16 +20,16 @@
 - Preserved typed chat and voice command flow.
 - Added local workspace file APIs.
 - Added local document APIs.
-- Added SQLite storage at `C:\VEYRA\data\veyra.db`.
+- Added SQLite storage at `C:\EMBLEM AI\data\emblem.db`.
 - Added command history table.
 - Added approval queue table.
 - Added logs table.
 - Added local folders:
-  - `C:\VEYRA\workspaces`
-  - `C:\VEYRA\documents`
-  - `C:\VEYRA\data`
-  - `C:\VEYRA\logs`
-  - `C:\VEYRA\exports`
+  - `C:\EMBLEM AI\workspaces`
+  - `C:\EMBLEM AI\documents`
+  - `C:\EMBLEM AI\data`
+  - `C:\EMBLEM AI\logs`
+  - `C:\EMBLEM AI\exports`
 - Added Custom IDE v1:
   - file list
   - file path field
@@ -72,7 +72,7 @@ ollama pull qwen2.5:7b
 ## Start Command
 
 ```powershell
-cd C:\VEYRA
+cd C:\EMBLEM AI
 npm run dev
 ```
 

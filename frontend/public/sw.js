@@ -1,6 +1,6 @@
 // Minimal service worker — enables install + an offline shell fallback.
 // API calls always hit the network (we want live data); only the app shell is cached.
-const CACHE = "veyra-shell-v1";
+const CACHE = "emblem-shell-v1";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));

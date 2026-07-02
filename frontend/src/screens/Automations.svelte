@@ -17,7 +17,7 @@
 
 <div class="page">
   <h1>Automations</h1>
-  <p class="sub">Set something once and Veyra runs it on its own — quietly, on schedule.</p>
+  <p class="sub">Set something once and Emblem runs it on its own — quietly, on schedule.</p>
 
   <div class="composer">
     <input class="instr" bind:value={instruction} placeholder="e.g. Every morning, summarize my unread email and message me the highlights" />

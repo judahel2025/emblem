@@ -1,6 +1,6 @@
-# Veyra
+# Emblem
 
-Veyra is a local-first AI command center for Master Judah — voice control, coding, documents,
+Emblem is a local-first AI command center for Master Judah — voice control, coding, documents,
 research, business data, email, scheduling, payments, and social content, all behind a security
 kernel (approvals, audit, kill switch, encrypted vault).
 
@@ -13,7 +13,7 @@ Ollama is no longer used.
 2. Start the engine + UI:
 
 ```powershell
-cd C:\VEYRA
+cd C:\EMBLEM AI
 npm run start        # builds the Svelte UI, then serves the API + UI
 ```
 
@@ -31,7 +31,7 @@ npm run ui:dev       # Vite dev server for the frontend
 A native Windows app (Tauri) wraps the UI and launches the engine automatically — see
 [desktop/README.md](desktop/README.md). Build the installer from `frontend/` with `npm run tauri build`.
 
-## What Veyra can do
+## What Emblem can do
 
 - Voice in/out (with wake word, barge-in, and "stop" to interrupt)
 - Full IDE — writes code that auto-saves and is retrievable later

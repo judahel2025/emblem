@@ -1,12 +1,12 @@
-# Veyra 8-Hour Build Plan
+# Emblem 8-Hour Build Plan
 
 ## Goal
 
-Build Veyra into a working local-first AI command center that already feels usable by the end of the first focused build window.
+Build Emblem into a working local-first AI command center that already feels usable by the end of the first focused build window.
 
 ## Hour 1: Foundation
 
-- Create the Veyra project folder.
+- Create the Emblem project folder.
 - Start a local dashboard.
 - Start a local backend.
 - Add Ollama health and model detection.
@@ -36,7 +36,7 @@ Status: first version done.
 - Later upgrade:
   - offline Whisper transcription
   - offline Piper/Kokoro voice
-  - wake phrase: "Hey Veyra"
+  - wake phrase: "Hey Emblem"
 
 Status: first version done.
 

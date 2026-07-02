@@ -25,8 +25,8 @@ export class LiveClient {
   }
 
   _url() {
-    const base = (typeof localStorage !== "undefined" && localStorage.getItem("veyra_url")) || "";
-    const token = (typeof localStorage !== "undefined" && localStorage.getItem("veyra_token")) || "";
+    const base = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_url")) || "";
+    const token = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_token")) || "";
     const qs = `?mode=${this.mode}${token ? `&token=${encodeURIComponent(token)}` : ""}`;
     if (base) return base.replace(/^http/, "ws") + "/api/voice/live" + qs;
     const proto = location.protocol === "https:" ? "wss" : "ws";

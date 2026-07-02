@@ -13,7 +13,7 @@
   <!-- Logo -->
   <div class="logo">
     <div class="logo-mark">V</div>
-    <span class="logo-name">Veyra</span>
+    <span class="logo-name">Emblem</span>
   </div>
 
   <!-- New chat -->

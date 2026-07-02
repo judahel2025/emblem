@@ -1,12 +1,12 @@
 [package]
-name = "veyra"
+name = "emblem"
 version = "0.1.0"
-description = "Veyra — Master Judah's AI operator"
+description = "Emblem — Master Judah's AI operator"
 edition = "2021"
 
 # lib target required for Tauri Android (loaded as a JNI shared library)
 [lib]
-name = "veyra_lib"
+name = "emblem_lib"
 crate-type = ["staticlib", "cdylib"]
 
 [build-dependencies]

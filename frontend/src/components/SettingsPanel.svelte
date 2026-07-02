@@ -138,7 +138,7 @@
         <h3>Your profile</h3>
         <div class="field">
           <span>Display name</span>
-          <input bind:value={profile.display_name} placeholder="How should Veyra address you?" />
+          <input bind:value={profile.display_name} placeholder="How should Emblem address you?" />
         </div>
         <div class="field">
           <span>Quiet hours start</span>
@@ -209,7 +209,7 @@
         <button class="btn primary" on:click={saveComposioKey}>Save Key</button>
 
         <h3 style="margin-top:24px">Connect Apps</h3>
-        <p class="hint">Click an app to connect via OAuth. Once connected, Veyra can use it automatically.</p>
+        <p class="hint">Click an app to connect via OAuth. Once connected, Emblem can use it automatically.</p>
 
         <div class="app-grid">
           {#each FEATURED_APPS as app}

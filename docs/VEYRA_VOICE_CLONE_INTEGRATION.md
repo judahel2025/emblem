@@ -1,20 +1,20 @@
-# Veyra Voice Clone + Agentic Brain Integration
+# Emblem Voice Clone + Agentic Brain Integration
 
 ## Voice Clone (XTTS-v2)
 
 ### Files
 | File | Change |
 |---|---|
-| `backend/veyra/voice/clone_engine.py` | **New.** XTTS-v2: available(), voices(), synth(text), pre_warm() |
-| `backend/veyra/voice/service.py` | clone branch in tts(), list_voices(), engines() |
-| `backend/veyra/api/app.py` | _startup() calls pre_warm() on daemon thread |
+| `backend/emblem/voice/clone_engine.py` | **New.** XTTS-v2: available(), voices(), synth(text), pre_warm() |
+| `backend/emblem/voice/service.py` | clone branch in tts(), list_voices(), engines() |
+| `backend/emblem/api/app.py` | _startup() calls pre_warm() on daemon thread |
 | `frontend/src/screens/Settings.svelte` | "Master Judah (cloned)" option + CPU info row |
 
 ### Model paths
 ```
-C:\VEYRA\models\xtts_v2\                                   ← 1.8 GB model
-C:\VEYRA\backend\veyra\voice\samples\master_judah.wav      ← reference clip
-C:\VEYRA\backend\veyra\voice\cache\                        ← auto-created cache
+C:\EMBLEM AI\models\xtts_v2\                                   ← 1.8 GB model
+C:\EMBLEM AI\backend\emblem\voice\samples\master_judah.wav      ← reference clip
+C:\EMBLEM AI\backend\emblem\voice\cache\                        ← auto-created cache
 ```
 
 ### CPU timing (measured)
@@ -29,8 +29,8 @@ torchcodec needs FFmpeg DLLs on Windows — patched to soundfile inside _ensure_
 ```
 voice_engine         = "clone"
 voice_clone_model    (default: ROOT/models/xtts_v2)
-voice_clone_sample   (default: ROOT/backend/veyra/voice/samples/master_judah.wav)
-voice_clone_cache    (default: .veyra/voice_cache)
+voice_clone_sample   (default: ROOT/backend/emblem/voice/samples/master_judah.wav)
+voice_clone_cache    (default: .emblem/voice_cache)
 ```
 
 Fallback: if clone unavailable → Edge Neural automatically.
@@ -41,7 +41,7 @@ Fallback: if clone unavailable → Edge Neural automatically.
 
 ### Secrets stored (DPAPI-encrypted in kernel.db)
 cerebras_key_2, groq_key, gemini_key, resend_key, render_key,
-veyra_pg, veyra_pg_pooler, supabase_url, supabase_anon_key,
+emblem_pg, emblem_pg_pooler, supabase_url, supabase_anon_key,
 supabase_service_key, supabase_access_token
 
 ### Brain dispatch chain (agent/brain.py)
@@ -62,4 +62,4 @@ docs.read now handles png/jpg/gif/webp/bmp/tiff → routes to brain.chat_vision(
 ---
 
 ## Next: P0 Security
-veyra_pg is still the admin DSN — replace with scoped roles (see VEYRA_UPGRADE_BRIEF.md §4).
+emblem_pg is still the admin DSN — replace with scoped roles (see EMBLEM_UPGRADE_BRIEF.md §4).

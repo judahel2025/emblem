@@ -27,7 +27,7 @@
     notify("Voice updated", "safe");
   }
   async function testVoice() {
-    try { new Audio(await api.ttsUrl("Hi, I'm Veyra. This is how I'll sound to you.", vcfg.voice, rateStr(), vcfg.engine)).play(); }
+    try { new Audio(await api.ttsUrl("Hi, I'm Emblem. This is how I'll sound to you.", vcfg.voice, rateStr(), vcfg.engine)).play(); }
     catch { notify("Couldn't play the test", "danger"); }
   }
 
@@ -104,7 +104,7 @@
 
   async function setApprovalMode(mode) {
     await api.approvalMode(mode);
-    notify(mode === "auto" ? "Full-auto on — Veyra acts without asking (except deletes)" : "Confirm mode — Veyra asks before sensitive actions", mode === "auto" ? "caution" : "safe");
+    notify(mode === "auto" ? "Full-auto on — Emblem acts without asking (except deletes)" : "Confirm mode — Emblem asks before sensitive actions", mode === "auto" ? "caution" : "safe");
     refresh();
   }
   async function clearTrust(tool) {
@@ -117,7 +117,7 @@
   let mobileToken = "";
   function saveMobileConn() {
     if (mobileToken.trim()) {
-      localStorage.setItem("veyra_token", mobileToken.trim());
+      localStorage.setItem("emblem_token", mobileToken.trim());
       notify("Token updated — restart the app to reconnect", "safe");
     }
   }
@@ -130,7 +130,7 @@
 <div class="card flags">
   <div class="frow">
     <i class="ti ti-cloud" style="color:var(--accent-2)"></i>
-    <div class="ft"><b>Backend</b><span class="muted">https://veyraai-og7e.onrender.com (always on)</span></div>
+    <div class="ft"><b>Backend</b><span class="muted">https://emblemai-og7e.onrender.com (always on)</span></div>
   </div>
   <div class="frow">
     <i class="ti ti-key" style="color:var(--accent-2)"></i>
@@ -216,7 +216,7 @@
   </div>
   <div class="frow">
     <i class="ti ti-bolt" style="color:var(--accent-2)"></i>
-    <div class="ft"><b>Approval mode</b><span class="muted">{$config.approval_mode === "auto" ? "Full-auto — Veyra sends/acts immediately (deletes still confirm)" : "Confirm — Veyra asks “send it, or you do it?” before sensitive actions"}</span></div>
+    <div class="ft"><b>Approval mode</b><span class="muted">{$config.approval_mode === "auto" ? "Full-auto — Emblem sends/acts immediately (deletes still confirm)" : "Confirm — Emblem asks “send it, or you do it?” before sensitive actions"}</span></div>
     <div class="seg">
       <button class:on={($config.approval_mode || "ask") === "ask"} on:click={() => setApprovalMode("ask")}>Confirm</button>
       <button class:on={$config.approval_mode === "auto"} on:click={() => setApprovalMode("auto")}>Full-auto</button>
@@ -236,7 +236,7 @@
   {/if}
   <div class="frow">
     <i class="ti ti-lock" style="color:var(--accent-2)"></i>
-    <div class="ft"><b>Master password</b><span class="muted">{lockEnabled ? "On — Veyra asks for it when she comes on" : "Off — anyone on this PC can open Veyra"}</span></div>
+    <div class="ft"><b>Master password</b><span class="muted">{lockEnabled ? "On — Emblem asks for it when she comes on" : "Off — anyone on this PC can open Emblem"}</span></div>
     <span class="badge {lockEnabled ? 'safe' : 'caution'}">{lockEnabled ? "on" : "off"}</span>
   </div>
   <div class="addrow" style="display:flex;gap:8px;margin-top:6px">

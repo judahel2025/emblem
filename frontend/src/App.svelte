@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { refresh, loadBriefing, loadConversation, startInboxPoller, loadMe, me, voiceState, brainReady } from "./lib/store.js";
+  import { refresh, loadBriefing, loadConversation, loadMe, me, voiceState, brainReady } from "./lib/store.js";
   import { api } from "./lib/api.js";
   import ChatView from "./components/ChatView.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
@@ -21,17 +21,17 @@
   let engineUp = false;
   let engineFailed = false;
   let showSettings = false;
-  let timer, inboxTimer;
+  let timer;
 
   // If we just returned from Google OAuth, capture the session before first render logic.
   if (typeof window !== "undefined" && auth.handleRedirect()) {
-    try { localStorage.setItem("veyra_entered", "1"); } catch {}
+    try { localStorage.setItem("emblem_entered", "1"); } catch {}
   }
 
   const ls = (k) => typeof localStorage !== "undefined" && localStorage.getItem(k) === "1";
-  let entered = ls("veyra_entered");
+  let entered = ls("emblem_entered");
   let loggedIn = auth.isLoggedIn();
-  let onboarded = ls("veyra_onboarded");
+  let onboarded = ls("emblem_onboarded");
   let view = "chat";
 
   const NAV = [
@@ -42,8 +42,8 @@
     { id: "automations", label: "Automations", icon: "ti-bolt" },
   ];
 
-  function enterApp() { entered = true; try { localStorage.setItem("veyra_entered", "1"); } catch {} }
-  function onLogin() { loggedIn = true; onboarded = ls("veyra_onboarded"); }
+  function enterApp() { entered = true; try { localStorage.setItem("emblem_entered", "1"); } catch {} }
+  function onLogin() { loggedIn = true; onboarded = ls("emblem_onboarded"); }
   function onOnboarded() { onboarded = true; view = "connect"; }
   function signOut() { auth.signOut(); loggedIn = false; view = "chat"; }
 
@@ -71,11 +71,10 @@
     loadConversation();
     loadBriefing();
     timer = setInterval(refresh, 6000);
-    inboxTimer = startInboxPoller();   // no-op for non-admin users
   }
 
   onMount(() => boot());
-  onDestroy(() => { clearInterval(timer); clearInterval(inboxTimer); });
+  onDestroy(() => { clearInterval(timer); });
 </script>
 
 {#if !entered}
@@ -88,7 +87,7 @@
   <div class="app">
     <!-- Left rail -->
     <aside class="rail">
-      <div class="rail-brand"><span class="mark">V</span> Veyra</div>
+      <div class="rail-brand"><span class="mark">V</span> Emblem</div>
       <nav class="rail-nav">
         {#each NAV as n}
           <button class="rail-item" class:active={view === n.id} on:click={() => view = n.id}>
@@ -117,7 +116,7 @@
       </main>
     </div>
 
-    <button class="voice-fab" on:click={() => showVoice = true} title="Talk to Veyra">
+    <button class="voice-fab" on:click={() => showVoice = true} title="Talk to Emblem">
       <i class="ti ti-microphone"></i>
     </button>
 

@@ -1,5 +1,5 @@
 // Supabase Auth via the GoTrue REST API — no SDK dependency, keeps the bundle lean.
-// On success we store the access_token as `veyra_token`, which the existing API client
+// On success we store the access_token as `emblem_token`, which the existing API client
 // already sends as `Authorization: Bearer` — so the FastAPI JWT middleware verifies it
 // and scopes every request to this user. The anon key is publishable by design.
 
@@ -11,9 +11,9 @@ const AUTH = `${SUPABASE_URL}/auth/v1`;
 
 function store(session) {
   if (session?.access_token) {
-    localStorage.setItem("veyra_token", session.access_token);
-    if (session.refresh_token) localStorage.setItem("veyra_refresh", session.refresh_token);
-    if (session.user?.email) localStorage.setItem("veyra_email", session.user.email);
+    localStorage.setItem("emblem_token", session.access_token);
+    if (session.refresh_token) localStorage.setItem("emblem_refresh", session.refresh_token);
+    if (session.user?.email) localStorage.setItem("emblem_email", session.user.email);
   }
 }
 
@@ -29,8 +29,8 @@ async function call(path, body) {
 }
 
 export const auth = {
-  isLoggedIn: () => !!localStorage.getItem("veyra_token"),
-  email: () => localStorage.getItem("veyra_email") || "",
+  isLoggedIn: () => !!localStorage.getItem("emblem_token"),
+  email: () => localStorage.getItem("emblem_email") || "",
 
   async signUp(email, password) {
     const data = await call("/signup", { email, password });
@@ -64,8 +64,8 @@ export const auth = {
   },
 
   signOut() {
-    localStorage.removeItem("veyra_token");
-    localStorage.removeItem("veyra_refresh");
-    localStorage.removeItem("veyra_email");
+    localStorage.removeItem("emblem_token");
+    localStorage.removeItem("emblem_refresh");
+    localStorage.removeItem("emblem_email");
   },
 };

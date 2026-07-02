@@ -13,15 +13,15 @@ BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 
 # Point the kernel at a temporary db BEFORE importing anything that opens it.
-from veyra.kernel import paths  # noqa: E402
+from emblem.kernel import paths  # noqa: E402
 
-_tmp = Path(tempfile.mkdtemp(prefix="veyra_test_"))
-paths.VEYRA_HOME = _tmp
+_tmp = Path(tempfile.mkdtemp(prefix="emblem_test_"))
+paths.EMBLEM_HOME = _tmp
 paths.KERNEL_DB = _tmp / "kernel.db"
 paths.TRASH_DIR = _tmp / "trash"
 
-from veyra import kernel  # noqa: E402
-from veyra.kernel import (ApprovalRequired, Forbidden, KillSwitchActive, Tier,  # noqa: E402
+from emblem import kernel  # noqa: E402
+from emblem.kernel import (ApprovalRequired, Forbidden, KillSwitchActive, Tier,  # noqa: E402
                           approvals, audit, config, snapshots, tool, vault)
 
 PASS = 0
@@ -69,7 +69,7 @@ def run():
     ok("safe tool runs without approval")
 
     # 2. CAUTION runs but is audited as a notify
-    assert kernel.execute_tool("test.search", {"q": "veyra"}) == "results for veyra"
+    assert kernel.execute_tool("test.search", {"q": "emblem"}) == "results for emblem"
     assert audit.tail(1)[0]["status"] == "notify"
     ok("caution tool runs and is flagged for notification")
 
