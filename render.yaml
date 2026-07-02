@@ -1,0 +1,61 @@
+# Render Blueprint — Veyra cloud (backend + frontend, single service).
+# In Render: New → Blueprint → pick this repo.
+# Paste secret values (marked sync:false) in the Render dashboard → Environment.
+
+services:
+  - type: web
+    name: veyra-brain
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: sh -c "python -m uvicorn veyra.api.app:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: VEYRA_CLOUD
+        value: "1"
+      - key: PYTHONPATH
+        value: /app/backend
+      - key: VEYRA_BASE
+        value: /data
+      - key: VEYRA_API_TOKEN
+        generateValue: true
+      - key: CEREBRAS_KEY
+        sync: false
+      - key: GROQ_KEY
+        sync: false
+      - key: VEYRA_PG
+        sync: false
+      - key: COMPOSIO_KEY
+        sync: false
+      - key: GEMINI_KEY
+        sync: false
+      - key: ESTOPPEL_PG
+        sync: false
+      - key: ESTOPPEL_RESEND_KEY
+        sync: false
+      - key: RESEND_KEY
+        sync: false
+      - key: ALERT_TO
+        sync: false
+      - key: RESEND_DOMAIN
+        sync: false
+      - key: QUANIAC_URL
+        sync: false
+      - key: QUANIAC_SERVICE_KEY
+        sync: false
+      - key: VEYRA_SUPABASE_URL
+        sync: false
+      - key: VEYRA_SUPABASE_ANON
+        sync: false
+      - key: VEYRA_SUPABASE_SERVICE
+        sync: false
+      # Multi-user auth + provider secrecy
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: VEYRA_OWNER_USER_ID
+        sync: false

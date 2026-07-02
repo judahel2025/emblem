@@ -1,0 +1,4 @@
+project_id = "veyra"
+
+[functions.watcher]
+verify_jwt = false

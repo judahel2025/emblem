@@ -1,0 +1,52 @@
+# ───────────────────────────────────────────────────────────
+# SECRETS / VAULT — never commit. The kernel DB holds the vault.
+# ───────────────────────────────────────────────────────────
+.veyra/
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+**/.env
+**/.env.*
+**/.secrets.env
+secrets.json
+
+# Generated content & data
+/data/
+/logs/
+/documents/
+/workspaces/
+/exports/
+/models/
+backend/veyra/voice/samples/*.wav
+
+# Python
+.venv/
+venv/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Node / build
+node_modules/
+**/node_modules/
+frontend/dist/
+dist/
+*.log
+
+# Tauri / Rust build artifacts
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+frontend/src-tauri/icons/
+**/target/
+
+# Expo / React Native
+mobile/.expo/
+mobile/dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

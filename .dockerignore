@@ -1,0 +1,20 @@
+.git
+.venv
+**/__pycache__
+**/*.pyc
+node_modules
+**/node_modules
+# Allow frontend source but exclude heavy build artifacts
+frontend/src-tauri/target
+frontend/.svelte-kit
+mobile
+models
+.veyra
+data
+logs
+documents
+workspaces
+exports
+cloud/supabase
+*.md
+desktop
