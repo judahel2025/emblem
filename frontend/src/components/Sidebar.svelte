@@ -18,6 +18,7 @@
     { id: "pages",       label: "Pages",       icon: "ti-file-text" },
     { id: "calendar",    label: "Calendar",    icon: "ti-calendar" },
     { id: "automations", label: "Automations", icon: "ti-bolt" },
+    { id: "help",        label: "Help",        icon: "ti-help-circle" },
   ];
 
   let renamingId = null;

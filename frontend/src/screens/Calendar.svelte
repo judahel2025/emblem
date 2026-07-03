@@ -23,6 +23,13 @@
   function nextMonth() { if (viewMonth === 11) { viewMonth = 0; viewYear++; } else viewMonth++; }
   function goToday() { const d = new Date(); viewYear = d.getFullYear(); viewMonth = d.getMonth(); }
 
+  function openEvent(e) {
+    selected = selected?.id === e.id ? null : e;
+    if (selected) {
+      try { const d = new Date(e.starts_at); viewYear = d.getFullYear(); viewMonth = d.getMonth(); } catch { /* keep view */ }
+    }
+  }
+
   const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
   // Cells: leading blanks + days of month + trailing blanks to complete the last week.
@@ -49,6 +56,11 @@
     return map;
   })();
 
+  $: upcoming = items
+    .filter((e) => { try { return new Date(e.starts_at) >= new Date(new Date().setHours(0, 0, 0, 0)); } catch { return false; } })
+    .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))
+    .slice(0, 5);
+
   $: monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString([], { month: "long", year: "numeric" });
   $: todayKey = dayKey(new Date());
 
@@ -60,152 +72,235 @@
     try { return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
     catch { return ""; }
   };
+  const fmtShort = (iso) => {
+    try { return new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
+    catch { return ""; }
+  };
 
   onMount(load);
 </script>
 
 <div class="page" data-tour="calendar-root">
+  <!-- Header: month as the display title, segmented pill nav on the right -->
   <header class="head">
     <div>
-      <h1>Calendar</h1>
+      <h1>{monthLabel}</h1>
       <p class="sub">Your schedule, at a glance. Emblem can add events for you from chat.</p>
     </div>
-    <div class="nav">
-      <button class="btn ghost navbtn" on:click={prevMonth} aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
-      <button class="btn" on:click={goToday}>Today</button>
-      <button class="btn ghost navbtn" on:click={nextMonth} aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
+    <div class="pillgroup" role="group" aria-label="Calendar navigation">
+      <button class="pillbtn" on:click={prevMonth} aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
+      <button class="pillbtn today" on:click={goToday}>Today</button>
+      <button class="pillbtn" on:click={nextMonth} aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
     </div>
   </header>
 
-  <div class="cal card-surface">
-    <div class="month">{monthLabel}</div>
-    <div class="grid wk" aria-hidden="true">
-      {#each WEEKDAYS as w}<div class="wkday">{w}</div>{/each}
+  <div class="layout">
+    <!-- Main calendar: glass sheet, bordered day cells, left-accent event chips -->
+    <div class="cal glass">
+      <div class="wk" aria-hidden="true">
+        {#each WEEKDAYS as w}<div class="wkday">{w}</div>{/each}
+      </div>
+      <div class="days">
+        {#each cells as d}
+          {#if d}
+            {@const k = dayKey(d)}
+            <div class="day" class:today={k === todayKey}>
+              <span class="num">{d.getDate()}</span>
+              {#if k === todayKey}<span class="dot" aria-hidden="true"></span>{/if}
+              {#each (eventsByDay[k] || []).slice(0, 3) as e (e.id)}
+                <button class="chip" class:active={selected?.id === e.id}
+                  on:click={() => selected = selected?.id === e.id ? null : e}
+                  aria-label={`Event: ${e.title} at ${fmtTime(e.starts_at)}`}
+                  in:fade={{ duration: 150 }}>
+                  {e.title}
+                </button>
+              {/each}
+              {#if (eventsByDay[k] || []).length > 3}
+                <span class="more">+{eventsByDay[k].length - 3} more</span>
+              {/if}
+            </div>
+          {:else}
+            <div class="day blank"></div>
+          {/if}
+        {/each}
+      </div>
     </div>
-    <div class="grid days">
-      {#each cells as d}
-        {#if d}
-          {@const k = dayKey(d)}
-          <div class="day" class:today={k === todayKey}>
-            <span class="num">{d.getDate()}</span>
-            {#each (eventsByDay[k] || []).slice(0, 3) as e (e.id)}
-              <button class="chip" class:active={selected?.id === e.id}
-                on:click={() => selected = selected?.id === e.id ? null : e}
-                aria-label={`Event: ${e.title} at ${fmtTime(e.starts_at)}`}
-                in:fade={{ duration: 150 }}>
-                {e.title}
+
+    <!-- Side panels (mockup's right rail): detail, composer, upcoming -->
+    <aside class="side">
+      {#if selected}
+        <div class="panel glass" transition:fly={{ y: 8, duration: 180 }}>
+          <span class="accentbar" aria-hidden="true"></span>
+          <div class="ptitle"><i class="ti ti-calendar-event"></i><h3>Event</h3></div>
+          <div class="dtitle">{selected.title}</div>
+          <div class="dwhen">{fmtFull(selected.starts_at)}</div>
+          <div class="dactions">
+            <button class="btn ghost" on:click={() => selected = null}>Close</button>
+            <button class="btn danger" on:click={() => remove(selected.id)}><i class="ti ti-trash"></i> Delete</button>
+          </div>
+        </div>
+      {/if}
+
+      <div class="panel glass">
+        <div class="ptitle"><i class="ti ti-plus"></i><h3>New event</h3></div>
+        <label class="field">
+          <span>Event title</span>
+          <input bind:value={title} placeholder="e.g. Coffee with Sam" />
+        </label>
+        <label class="field">
+          <span>When</span>
+          <input type="datetime-local" bind:value={when} />
+        </label>
+        <button class="btn primary addbtn" on:click={add} disabled={!title.trim() || !when}>
+          <i class="ti ti-plus"></i> Add event
+        </button>
+      </div>
+
+      <div class="panel glass">
+        <span class="accentbar" aria-hidden="true"></span>
+        <div class="ptitle"><i class="ti ti-bolt"></i><h3>Coming up</h3></div>
+        {#if loading}
+          <div class="pnote">Loading…</div>
+        {:else if upcoming.length === 0}
+          <div class="pnote">No events yet. Add one here, or say "put a meeting on Friday at 2pm" in chat.</div>
+        {:else}
+          <div class="uplist">
+            {#each upcoming as e (e.id)}
+              <button class="uprow" class:active={selected?.id === e.id} on:click={() => openEvent(e)}
+                aria-label={`Show event: ${e.title}`}>
+                <span class="uptitle">{e.title}</span>
+                <span class="upwhen">{fmtShort(e.starts_at)}</span>
               </button>
             {/each}
-            {#if (eventsByDay[k] || []).length > 3}
-              <span class="more">+{eventsByDay[k].length - 3} more</span>
-            {/if}
           </div>
-        {:else}
-          <div class="day blank"></div>
         {/if}
-      {/each}
-    </div>
-  </div>
-
-  {#if selected}
-    <div class="detail" transition:fly={{ y: 8, duration: 180 }}>
-      <div class="dinfo">
-        <div class="dtitle">{selected.title}</div>
-        <div class="dwhen">{fmtFull(selected.starts_at)}</div>
       </div>
-      <button class="btn ghost" on:click={() => selected = null}>Close</button>
-      <button class="btn danger" on:click={() => remove(selected.id)}><i class="ti ti-trash"></i> Delete</button>
-    </div>
-  {/if}
-
-  <div class="composer">
-    <label class="field grow">
-      <span>Event title</span>
-      <input bind:value={title} placeholder="e.g. Coffee with Sam" />
-    </label>
-    <label class="field">
-      <span>When</span>
-      <input type="datetime-local" bind:value={when} />
-    </label>
-    <button class="btn primary addbtn" on:click={add} disabled={!title.trim() || !when}>
-      <i class="ti ti-plus"></i> Add event
-    </button>
+    </aside>
   </div>
-
-  {#if loading}
-    <div class="empty">Loading…</div>
-  {:else if items.length === 0}
-    <div class="empty">No events yet. Add one above, or say "put a meeting on Friday at 2pm" in chat.</div>
-  {/if}
 </div>
 
 <style>
-  .page { max-width: 960px; margin: 0 auto; padding: 28px 24px 60px; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px 60px; }
 
-  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: var(--text); }
+  /* ── Header ── */
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 13px; margin: 0; }
-  .nav { display: flex; gap: 8px; align-items: center; }
-  .navbtn { padding: 9px 12px; cursor: pointer; }
 
-  /* ── Month card ── */
-  .card-surface {
-    background: var(--bg);
-    border: 1px solid var(--border);
+  .pillgroup {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--s1); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px;
+  }
+  .pillbtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; color: var(--text-2);
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast);
+  }
+  .pillbtn:hover { background: var(--s3); color: var(--text); }
+  .pillbtn.today { background: var(--bg-2); color: var(--accent-ink); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .pillbtn i { font-size: 16px; }
+
+  /* ── Layout: calendar sheet + side rail ── */
+  .layout { display: flex; gap: 24px; align-items: flex-start; }
+  .cal { flex: 1; min-width: 0; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+  .side { flex: 0 0 300px; width: 300px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Weekday header row ── */
+  .wk {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+    background: var(--s1);
+  }
+  .wkday {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-3); text-align: center; padding: 12px 0;
+  }
+
+  /* ── Month grid: bordered cells, no gaps ── */
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .day {
+    position: relative;
+    min-height: 108px; padding: 8px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px;
+    overflow: hidden;
+    transition: background var(--t-fast);
+  }
+  .day:nth-child(7n) { border-right: none; }
+  .days .day:nth-last-child(-n+7) { border-bottom: none; }
+  .day:not(.blank):not(.today):hover { background: var(--s1); }
+  .day.blank { background: var(--s1); opacity: 0.5; }
+  .day.today { background: var(--accent-bg); }
+  .day.today .num { color: var(--accent-ink); font-weight: 700; }
+  .dot { position: absolute; top: 10px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .num { font-size: 12px; font-weight: 500; color: var(--text-2); line-height: 1; padding: 2px 0; }
+
+  /* Event chips: left accent bar (mockup anatomy) */
+  .chip {
+    display: block; width: 100%;
+    font-size: 11px; font-weight: 600; text-align: left;
+    padding: 4px 7px;
+    border-radius: var(--r-sm);
+    background: var(--accent-bg); color: var(--accent-ink);
+    border: none; border-left: 2px solid var(--accent);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    cursor: pointer;
+    transition: box-shadow var(--t-fast), filter var(--t-fast);
+  }
+  .chip:hover { filter: brightness(0.96); }
+  .chip.active { box-shadow: 0 0 0 1px var(--accent); }
+  .more { font-size: 10px; color: var(--text-3); padding: 0 2px; }
+
+  /* ── Side panels ── */
+  .panel {
+    position: relative; overflow: hidden;
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-sm);
     padding: 18px;
+    display: flex; flex-direction: column; gap: 12px;
   }
-  .month { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 12px; letter-spacing: -0.01em; }
+  .accentbar { position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--accent); opacity: 0.5; }
+  .ptitle { display: flex; align-items: center; gap: 8px; }
+  .ptitle i { font-size: 17px; color: var(--accent-ink); }
+  .ptitle h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; color: var(--text); }
+  .pnote { font-size: 13px; color: var(--text-2); line-height: 1.55; }
 
-  .grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-  .wk { margin-bottom: 6px; }
-  .wkday {
-    font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--text-3); text-align: center; padding: 4px 0;
-  }
-  .days { gap: 4px; }
-  .day {
-    min-height: 84px; padding: 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    background: var(--bg);
-    display: flex; flex-direction: column; gap: 3px;
-    overflow: hidden;
-  }
-  .day.blank { border-color: transparent; background: transparent; }
-  .day.today { box-shadow: 0 0 0 2px var(--accent); border-color: transparent; }
-  .day.today .num { color: var(--accent-ink); font-weight: 600; }
-  .num { font-size: 12px; color: var(--text-2); line-height: 1; padding: 2px; }
+  /* Event detail */
+  .dtitle { font-size: 15px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+  .dwhen { font-size: 13px; color: var(--text-2); margin-top: -6px; }
+  .dactions { display: flex; gap: 8px; }
+  .dactions .btn { flex: 1; font-size: 13px; padding: 8px 12px; cursor: pointer; }
 
-  .chip {
-    display: block; width: 100%;
-    font-size: 11px; font-weight: 500; text-align: left;
-    padding: 3px 7px; border-radius: 6px;
-    background: var(--accent-bg); color: var(--accent-ink);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    cursor: pointer; border: 1px solid transparent;
-    transition: border-color var(--t-fast), filter var(--t-fast);
-  }
-  .chip:hover { border-color: var(--accent); }
-  .chip.active { border-color: var(--accent); }
-  .more { font-size: 10px; color: var(--text-3); padding: 0 2px; }
+  /* Composer */
+  .addbtn { width: 100%; cursor: pointer; }
 
-  /* ── Event detail ── */
-  .detail {
-    display: flex; align-items: center; gap: 10px;
-    margin-top: 14px; padding: 14px 18px;
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-md);
+  /* Upcoming list rows */
+  .uplist { display: flex; flex-direction: column; gap: 8px; }
+  .uprow {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+    width: 100%; text-align: left;
+    padding: 10px 12px;
+    background: var(--s1); border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: border-color var(--t-fast), background var(--t-fast);
   }
-  .dinfo { flex: 1; min-width: 0; }
-  .dtitle { font-size: 15px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dwhen { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+  .uprow:hover { border-color: var(--accent-glow); }
+  .uprow.active { border-color: var(--accent); background: var(--accent-bg); }
+  .uptitle {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .upwhen { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-3); }
 
-  /* ── Add event row ── */
-  .composer { display: flex; gap: 12px; align-items: flex-end; margin-top: 18px; flex-wrap: wrap; }
-  .grow { flex: 1; min-width: 200px; }
-  .addbtn { flex: 0 0 auto; }
+  @media (max-width: 920px) {
+    .layout { flex-direction: column; }
+    .side { width: 100%; flex: 1 1 auto; }
+    .day { min-height: 84px; }
+    h1 { font-size: 26px; }
+  }
 </style>

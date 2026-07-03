@@ -42,71 +42,124 @@
     } catch { error = "Couldn't start the connection."; }
   }
 
-  $: shown = (query
+  // Active section always shows every live link; the available grid shows the rest.
+  $: available = (query
     ? all.filter((k) => k.includes(query.toLowerCase()))
     : featured
-  );
+  ).filter((k) => !isOn(k));
 
   onMount(load);
 </script>
 
 <div class="page">
+  <!-- Page header: title + subtitle left, live stats right (mockup "Ecosystem" header) -->
   <header class="head">
     <div>
       <h1>Connections</h1>
       <p class="sub">Connect your apps — Emblem acts in YOUR accounts, with your approval, always. Sign-in happens securely and can be revoked anytime.</p>
     </div>
-    <button class="btn ghost refresh" on:click={load} aria-label="Refresh connections"><i class="ti ti-refresh"></i></button>
+    <div class="headside">
+      {#if !loading}
+        <div class="stat">
+          <span class="statlabel">Active links</span>
+          <span class="statnum on">{connected.length}</span>
+        </div>
+        <div class="stat">
+          <span class="statlabel">Available</span>
+          <span class="statnum">20k+</span>
+        </div>
+      {/if}
+      <button class="btn ghost refresh" on:click={load} aria-label="Refresh connections"><i class="ti ti-refresh"></i></button>
+    </div>
   </header>
 
   {#if error}<div class="banner" in:fade={{ duration: 150 }}>{error}</div>{/if}
 
-  <div class="search">
-    <i class="ti ti-search"></i>
-    <input placeholder="Search 20,000+ tools — Gmail, GitHub, Stripe, Linear…" bind:value={query}
-      aria-label="Search tools to connect" />
-  </div>
-
   {#if loading}
     <div class="empty">Loading connections…</div>
   {:else}
-    <div class="grid" data-tour="connect-grid">
-      {#each shown as k, i (k)}
-        {@const m = meta(k)}
-        {@const on = isOn(k)}
-        <div class="tile gloss" class:on use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
-          <div class="top">
-            <span class="appicon"><i class="ti {m.icon}"></i></span>
-            {#if on}<span class="badge safe">Connected</span>{/if}
-          </div>
-          <div class="name">{m.label}</div>
-          <div class="desc">{m.desc}</div>
-          {#if on}
-            {#if hasWorkspace(k)}
-              <button class="btn primary cbtn" on:click={() => appView.set(`workspace:${k}`)}
-                      aria-label={`Open ${m.label} workspace`}>
-                Open <i class="ti ti-arrow-right"></i>
-              </button>
-            {/if}
-            <button class="btn ghost cbtn" on:click={() => connect(k)} aria-label={`Reconnect ${m.label}`}>Reconnect</button>
-          {:else}
-            <button class="btn primary cbtn" on:click={() => connect(k)} aria-label={`Connect ${m.label}`}>
-              Connect <i class="ti ti-arrow-right"></i>
-            </button>
-          {/if}
+    {#if connected.length}
+      <!-- Active connectors: pulsing-dot section header + glass status cards -->
+      <section class="section">
+        <div class="secthead">
+          <span class="pulse" aria-hidden="true"></span>
+          <h2>Active connectors</h2>
         </div>
-      {/each}
-    </div>
-    {#if !query}<div class="hint">Showing featured apps. Search above to reach all 20,000+ tools.</div>{/if}
+        <div class="agrid">
+          {#each connected as k, i (k)}
+            {@const m = meta(k)}
+            <div class="acard glass gloss" use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
+              <div class="atop">
+                <span class="appicon"><i class="ti {m.icon}"></i></span>
+                <span class="badge safe">Connected</span>
+              </div>
+              <div class="name">{m.label}</div>
+              <div class="desc">{m.desc}</div>
+              <div class="afoot">
+                {#if hasWorkspace(k)}
+                  <button class="link" on:click={() => appView.set(`workspace:${k}`)}
+                    aria-label={`Open ${m.label} workspace`}>
+                    Open workspace <i class="ti ti-arrow-right"></i>
+                  </button>
+                {:else}
+                  <span class="footnote">Ready in chat</span>
+                {/if}
+                <button class="iconbtn" on:click={() => connect(k)} aria-label={`Reconnect ${m.label}`}>
+                  <i class="ti ti-refresh"></i>
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </section>
+    {/if}
+
+    <!-- Available connectors: section header with inline search + bento grid -->
+    <section class="section">
+      <div class="secthead row">
+        <h2>Available connectors</h2>
+        <div class="search">
+          <i class="ti ti-search"></i>
+          <input placeholder="Search 20,000+ tools — Gmail, GitHub, Stripe, Linear…" bind:value={query}
+            aria-label="Search tools to connect" />
+        </div>
+      </div>
+      <div class="grid" data-tour="connect-grid">
+        {#each available as k, i (k)}
+          {@const m = meta(k)}
+          <div class="tile glass gloss" use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
+            <span class="bigicon"><i class="ti {m.icon}"></i></span>
+            <div class="name center">{m.label}</div>
+            <div class="desc center">{m.desc}</div>
+            <button class="btn primary cbtn" on:click={() => connect(k)} aria-label={`Connect ${m.label}`}>
+              Connect
+            </button>
+          </div>
+        {/each}
+      </div>
+      {#if available.length === 0}
+        <div class="empty">
+          {query ? "No matches — try another name." : "All featured apps are connected. Search to reach 20,000+ more."}
+        </div>
+      {:else if !query}
+        <div class="hint">Showing featured apps. Search above to reach all 20,000+ tools.</div>
+      {/if}
+    </section>
   {/if}
 </div>
 
 <style>
-  .page { max-width: 960px; margin: 0 auto; padding: 28px 24px 60px; }
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; }
 
-  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
-  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: var(--text); }
+  /* ── Page header ── */
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+  h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 13px; max-width: 560px; margin: 0; line-height: 1.55; }
+  .headside { display: flex; align-items: flex-end; gap: 24px; }
+  .stat { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .statlabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+  .statnum { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); line-height: 1.1; }
+  .statnum.on { color: var(--accent-ink); }
   .refresh { padding: 9px 12px; cursor: pointer; }
 
   .banner {
@@ -115,47 +168,101 @@
     padding: 10px 14px; border-radius: var(--r-md); font-size: 13px; margin-bottom: 16px;
   }
 
+  /* ── Section headers ── */
+  .section { margin-bottom: 40px; }
+  .section:last-child { margin-bottom: 0; }
+  .secthead { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .secthead.row { justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .secthead h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0; color: var(--text); }
+  .pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); flex: 0 0 auto;
+    animation: pulsedot 2s ease-in-out infinite;
+  }
+  @keyframes pulsedot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ── Search (inline in section header) ── */
   .search {
     display: flex; align-items: center; gap: 10px;
     background: var(--s1); border: 1px solid var(--border);
-    border-radius: var(--r-md); padding: 11px 16px; margin-bottom: 22px;
+    border-radius: var(--r-md); padding: 9px 14px;
+    width: min(420px, 100%);
     transition: border-color var(--t-fast), box-shadow var(--t-fast);
   }
   .search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
-  .search i { color: var(--text-3); font-size: 18px; }
-  .search input { flex: 1; border: none; background: none; outline: none; font-size: 15px; color: var(--text); }
+  .search i { color: var(--text-3); font-size: 17px; }
+  .search input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-size: 14px; color: var(--text); }
 
-  /* ── Tile grid ── */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .tile {
-    display: flex; flex-direction: column; align-items: flex-start;
-    background: var(--bg);
-    border: 1px solid var(--border);
+  /* ── Active connector cards ── */
+  .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .acard {
+    display: flex; flex-direction: column; align-items: stretch;
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-sm);
-    padding: 18px;
-    transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+    padding: 20px;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
   }
-  .tile:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-  }
-  .tile.on { border-color: var(--accent); background: var(--accent-bg); }
-
-  .top { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; }
+  .acard:hover { border-color: var(--accent-glow); box-shadow: var(--shadow-md); }
+  .atop { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
   .appicon {
-    width: 42px; height: 42px; border-radius: var(--r-md);
+    width: 48px; height: 48px; border-radius: var(--r-md);
     display: grid; place-items: center;
-    background: var(--s2); border: 1px solid var(--border);
+    background: var(--bg-2); border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
   }
-  .appicon i { font-size: 24px; color: var(--accent-ink); }
+  .appicon i { font-size: 26px; color: var(--accent-ink); }
+  .afoot {
+    margin-top: auto; padding-top: 12px; border-top: 1px solid var(--divider);
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .link {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 600; color: var(--accent-ink);
+    padding: 2px 0; cursor: pointer;
+    transition: opacity var(--t-fast);
+  }
+  .link:hover { opacity: 0.8; }
+  .footnote { font-size: 12px; color: var(--text-3); }
+  .iconbtn {
+    width: 30px; height: 30px; border-radius: var(--r-sm);
+    display: grid; place-items: center;
+    color: var(--text-3); cursor: pointer;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .iconbtn:hover { color: var(--accent-ink); background: var(--accent-bg); }
+  .iconbtn i { font-size: 17px; }
+
+  /* ── Available bento grid ── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+  .tile {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 20px 16px 16px;
+    cursor: pointer;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .tile:hover { border-color: var(--accent-glow); box-shadow: var(--shadow-md); }
+  .bigicon {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--bg-2); border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 12px;
+  }
+  .bigicon i { font-size: 28px; color: var(--text-2); }
+  .tile:hover .bigicon i { color: var(--accent-ink); }
 
   .name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
-  .desc { font-size: 13px; color: var(--text-2); margin-top: 2px; margin-bottom: 14px; }
+  .desc { font-size: 13px; color: var(--text-2); margin-top: 2px; margin-bottom: 12px; }
+  .center { text-align: center; }
 
-  .cbtn { width: 100%; font-size: 13px; padding: 8px 14px; cursor: pointer; }
-  .btn.ghost.cbtn { border: 1px solid var(--border-strong); }
+  .cbtn { width: 100%; font-size: 13px; padding: 8px 14px; cursor: pointer; margin-top: auto; }
 
   .hint { text-align: center; color: var(--text-3); font-size: 13px; margin-top: 24px; }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 26px; }
+    .headside { width: 100%; justify-content: flex-start; }
+  }
 </style>
