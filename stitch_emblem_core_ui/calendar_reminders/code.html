@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EMBLEM | Calendar &amp; Events</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: #f9f9f9;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .glass-card-hover:hover {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(40px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(120px, auto);
+        }
+
+        .duration-smooth {
+            transition-duration: 300ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .easing-standard {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e2e2;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#5e5e5e",
+                      "secondary-fixed-dim": "#c6c6c6",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed": "#1b1b1b",
+                      "on-tertiary-container": "#ffddd5",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed-variant": "#0038b6",
+                      "tertiary-container": "#bf3003",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#001452",
+                      "background": "#f9f9f9",
+                      "outline-variant": "#c3c5d9",
+                      "surface-container-high": "#e8e8e8",
+                      "on-secondary-container": "#646464",
+                      "tertiary": "#952200",
+                      "on-surface": "#1a1c1c",
+                      "surface-dim": "#dadada",
+                      "surface-tint": "#004ced",
+                      "on-secondary": "#ffffff",
+                      "primary-container": "#0052ff",
+                      "secondary-fixed": "#e2e2e2",
+                      "primary-fixed": "#dde1ff",
+                      "on-secondary-fixed-variant": "#474747",
+                      "surface-container-low": "#f3f3f4",
+                      "on-tertiary-fixed-variant": "#891e00",
+                      "on-primary": "#ffffff",
+                      "primary-fixed-dim": "#b7c4ff",
+                      "error": "#ba1a1a",
+                      "on-background": "#1a1c1c",
+                      "surface-container": "#eeeeee",
+                      "inverse-primary": "#b7c4ff",
+                      "tertiary-fixed-dim": "#ffb4a1",
+                      "surface-variant": "#e2e2e2",
+                      "secondary-container": "#e2e2e2",
+                      "inverse-surface": "#2f3131",
+                      "primary": "#003ec7",
+                      "on-primary-container": "#dfe3ff",
+                      "inverse-on-surface": "#f0f1f1",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed": "#ffdbd2",
+                      "outline": "#737688",
+                      "on-tertiary-fixed": "#3c0800",
+                      "surface-bright": "#f9f9f9",
+                      "surface": "#f9f9f9",
+                      "on-surface-variant": "#434656",
+                      "surface-container-highest": "#e2e2e2",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-md": "24px",
+                      "stack-xs": "4px",
+                      "stack-xl": "80px",
+                      "margin-mobile": "20px",
+                      "stack-sm": "12px",
+                      "gutter": "24px",
+                      "margin-desktop": "48px",
+                      "container-max": "1280px",
+                      "unit": "8px",
+                      "stack-lg": "48px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "display": ["Geist"],
+                      "headline-md": ["Geist"],
+                      "display-mobile": ["Geist"],
+                      "body-lg": ["Geist"],
+                      "body-md": ["Geist"],
+                      "label-md": ["Geist"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                      "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "display-mobile": ["36px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/70 backdrop-blur-[20px] border-b border-black/10 shadow-sm">
+<div class="flex items-center justify-between px-margin-desktop h-16 w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-stack-md">
+<span class="font-display text-headline-md font-bold tracking-tighter text-on-surface">EMBLEM</span>
+<div class="hidden md:flex items-center gap-6 ml-stack-lg">
+<nav class="flex items-center gap-stack-md">
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all duration-300 px-3 py-1.5 rounded-lg cursor-pointer" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary px-3 py-1.5 cursor-pointer" href="#">Calendar</a>
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all duration-300 px-3 py-1.5 rounded-lg cursor-pointer" href="#">Projects</a>
+</nav>
+</div>
+</div>
+<div class="flex items-center gap-stack-sm">
+<div class="relative group">
+<span class="material-symbols-outlined p-2 text-secondary hover:bg-black/5 rounded-full cursor-pointer transition-all">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</div>
+<span class="material-symbols-outlined p-2 text-secondary hover:bg-black/5 rounded-full cursor-pointer transition-all">apps</span>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 ring-1 ring-black/10">
+<img class="w-full h-full object-cover" data-alt="Close up professional headshot of a creative tech director in a bright, high-key studio setting. The lighting is soft and flattering with subtle lens flare. The overall aesthetic is clean, minimalist, and authoritative, matching the Emblem brand identity with neutral grey and white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPubsI5wSC3Kc2Hn5j1ay9jUJgCbs8HIiG4-pXXW2hO4dmmQcPjwHcQCTDeurQ3FhXDkuV1V3PfhoA5E6SPR-406TSALqKbEBjkytHo6V-7uHtZyDpLSisy3IMTMEVw9vSvLtKI_sKznQXCwSuw_56adAE8h4H7PO6clW8sx-5u224Zgw9tMMH2xOb2IPSuO_tAv1XTn-XiIQp8BLCeHf_oV-_qc-9uWkJ6arDRFJuMtiLM1Ik0yAg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 bg-surface/70 backdrop-blur-[20px] border-r border-black/5 flex flex-col py-stack-md gap-stack-sm">
+<div class="px-6 mb-stack-sm">
+<h2 class="font-display text-headline-sm font-bold text-on-surface">EMBLEM</h2>
+<p class="font-label-sm text-label-sm text-secondary opacity-60">Enterprise OS</p>
+</div>
+<nav class="flex flex-col flex-1 px-3">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-label-md text-label-md hover:translate-x-1 hover:bg-black/5 transition-transform duration-300 group" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span>Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-label-md text-label-md hover:translate-x-1 hover:bg-black/5 transition-transform duration-300 group" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Pages</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-label-md text-label-md hover:translate-x-1 hover:bg-black/5 transition-transform duration-300 group" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span>Connectors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-l-2 border-primary bg-primary/5 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span>Calendar</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-label-md text-label-md hover:translate-x-1 hover:bg-black/5 transition-transform duration-300 group" href="#">
+<span class="material-symbols-outlined">bolt</span>
+<span>Automations</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-label-md text-label-md hover:translate-x-1 hover:bg-black/5 transition-transform duration-300 group" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>FAQ</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-label-md text-label-md hover:translate-x-1 hover:bg-black/5 transition-transform duration-300 group mt-auto mb-4" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-6 py-4">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md shadow-lg shadow-primary/20 active:scale-95 duration-300 hover:brightness-110">
+                New Action
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-margin-desktop min-h-[calc(100vh-64px)] bg-background">
+<div class="max-w-container-max mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-stack-lg gap-gutter">
+<div>
+<h1 class="font-display text-display font-semibold text-on-surface">September 2024</h1>
+<p class="font-body-lg text-body-lg text-secondary mt-2">Precision scheduling for high-velocity teams.</p>
+</div>
+<div class="flex items-center gap-stack-sm bg-surface-container-low p-1 rounded-full border border-outline-variant/30">
+<button class="px-6 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-all">Day</button>
+<button class="px-6 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-all">Week</button>
+<button class="px-6 py-2 rounded-full font-label-md text-label-md bg-white shadow-sm text-primary font-bold transition-all">Month</button>
+</div>
+</div>
+<div class="flex gap-gutter items-start">
+<!-- Main Calendar View -->
+<div class="flex-1 glass-card rounded-xl overflow-hidden">
+<!-- Day Headers -->
+<div class="grid grid-cols-7 border-b border-black/5 bg-surface-container-lowest/50">
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Sun</div>
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Mon</div>
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Tue</div>
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Wed</div>
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Thu</div>
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Fri</div>
+<div class="py-4 text-center font-label-sm text-label-sm text-secondary uppercase tracking-widest">Sat</div>
+</div>
+<!-- Calendar Grid -->
+<div class="calendar-grid bg-white/20">
+<!-- Empty cells for padding if month starts mid-week -->
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">25</div>
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">26</div>
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">27</div>
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">28</div>
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">29</div>
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">30</div>
+<div class="border-r border-b border-black/5 p-2 opacity-30 text-secondary font-label-md">31</div>
+<!-- Month days -->
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+<span class="font-label-md text-label-md text-on-surface">1</span>
+</div>
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+<span class="font-label-md text-label-md text-on-surface">2</span>
+<div class="mt-2 p-2 rounded bg-primary-container/20 border-l-2 border-primary text-[11px] font-bold text-primary truncate cursor-pointer hover:brightness-95">Q3 Roadmap Review</div>
+</div>
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+<span class="font-label-md text-label-md text-on-surface">3</span>
+</div>
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+<span class="font-label-md text-label-md text-on-surface">4</span>
+<div class="mt-2 p-2 rounded bg-tertiary-container/10 border-l-2 border-tertiary text-[11px] font-bold text-tertiary truncate cursor-pointer hover:brightness-95">Investor Pitch</div>
+</div>
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+<span class="font-label-md text-label-md text-on-surface">5</span>
+</div>
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] bg-primary/5 group hover:bg-primary/10 transition-colors relative">
+<span class="font-label-md text-label-md text-primary font-bold">6</span>
+<div class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full"></div>
+<div class="mt-2 p-2 rounded glass-card text-[11px] font-bold text-on-surface truncate shadow-sm">Product Launch Event</div>
+<div class="mt-1 p-2 rounded bg-secondary/10 border-l-2 border-secondary text-[11px] font-bold text-secondary truncate">Internal Sync</div>
+</div>
+<div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+<span class="font-label-md text-label-md text-on-surface">7</span>
+</div>
+<!-- Continue days -->
+<script>
+                            for(let i=8; i<=30; i++) {
+                                document.write(`
+                                    <div class="border-r border-b border-black/5 p-2 min-h-[140px] group hover:bg-black/[0.02] transition-colors">
+                                        <span class="font-label-md text-label-md text-on-surface">${i}</span>
+                                        ${i === 12 ? '<div class="mt-2 p-2 rounded bg-primary-container/20 border-l-2 border-primary text-[11px] font-bold text-primary truncate">Dev Sprint Start</div>' : ''}
+                                        ${i === 15 ? '<div class="mt-2 p-2 rounded bg-secondary-container/50 border-l-2 border-secondary text-[11px] font-bold text-secondary truncate">Legal Review</div>' : ''}
+                                        ${i === 22 ? '<div class="mt-2 p-2 rounded bg-tertiary-container/10 border-l-2 border-tertiary text-[11px] font-bold text-tertiary truncate">Hiring Round</div>' : ''}
+                                    </div>
+                                `);
+                            }
+                        </script>
+</div>
+</div>
+<!-- AI Sidebar -->
+<aside class="w-80 flex flex-col gap-gutter">
+<div class="glass-card rounded-xl p-stack-md flex flex-col gap-stack-sm relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary/40"></div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">AI Reminders</h3>
+</div>
+<div class="flex flex-col gap-stack-sm">
+<!-- AI Card 1 -->
+<div class="p-4 rounded-lg bg-surface-container-low border border-black/5 hover:border-primary/20 transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold uppercase tracking-tighter text-primary">High Priority</span>
+<span class="text-[10px] text-secondary">2h left</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">Prepare Executive Brief for tomorrow's 9AM Sync.</p>
+<div class="flex items-center gap-2 mt-3 opacity-60 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">auto_fix</span>
+<span class="text-[11px] font-label-sm">Auto-generating draft...</span>
+</div>
+</div>
+<!-- AI Card 2 -->
+<div class="p-4 rounded-lg bg-surface-container-low border border-black/5 hover:border-primary/20 transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold uppercase tracking-tighter text-secondary">Operational</span>
+<span class="text-[10px] text-secondary">Next Wed</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">Quarterly AWS renewal due. Budget scan recommended.</p>
+<div class="flex items-center gap-2 mt-3 opacity-60 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">payments</span>
+<span class="text-[11px] font-label-sm">Analyze spending</span>
+</div>
+</div>
+<!-- AI Card 3 -->
+<div class="p-4 rounded-lg bg-surface-container-low border border-black/5 hover:border-primary/20 transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold uppercase tracking-tighter text-tertiary">Team Health</span>
+<span class="text-[10px] text-secondary">Friday</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">Sarah's 1-year anniversary. Order department lunch?</p>
+<div class="flex items-center gap-2 mt-3 opacity-60 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">celebration</span>
+<span class="text-[11px] font-label-sm">View gift options</span>
+</div>
+</div>
+</div>
+<button class="mt-4 w-full py-2 border border-black/10 rounded-lg font-label-sm text-label-sm text-secondary hover:bg-black/5 transition-all">
+                            View All Insight
+                        </button>
+</div>
+<!-- Visual Accent Card -->
+<div class="rounded-xl overflow-hidden aspect-video relative group cursor-pointer shadow-xl shadow-black/5">
+<img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A clean, minimalist high-tech workspace during blue hour. A single high-end monitor displays an abstract data visualization in electric blue. Subtle glass textures and light refractions create a sense of deep focus and intellectual calm. The lighting is low and sophisticated, reflecting the premium quality of the Emblem brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJD6b2P_FwPld4Xn0Leyu0s7DYE-lkgHYtnNEehcuiLVZ3tMDB8lLxA6NP-d6S0gEd_rBEGv-jZzhtbESERdpQYsuMDHyUiPfxXEUllNpNpRNGDriIzK9zDUTPGFTlbrGIqLJxqazptkwo2v5q0d9E6dKoNMLUFaxUt_fghziN7dpmswom-76VYwFjqs7ZLuoCtoXKsWhjMSj9QVEvQjyd1pBc7YYOJdC6B0JAuAHM1EhGFd9lvgXc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
+<p class="text-white font-label-md text-label-md font-bold mb-1">Deep Work Mode</p>
+<p class="text-white/60 text-[11px]">4 focused sessions today</p>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="relative w-full mt-stack-xl border-t border-outline-variant bg-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-margin-desktop py-stack-lg grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="col-span-1 md:col-span-1">
+<span class="font-display text-headline-md font-black text-on-surface">EMBLEM</span>
+<p class="mt-4 font-body-md text-body-md text-secondary">The definitive operating system for high-performance enterprise teams.</p>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary mb-4">Product</h4>
+<ul class="flex flex-col gap-2 font-label-sm text-label-sm text-on-secondary-container">
+<li class="hover:text-primary cursor-pointer transition-colors">Intelligence</li>
+<li class="hover:text-primary cursor-pointer transition-colors">Automation</li>
+<li class="hover:text-primary cursor-pointer transition-colors">Pricing</li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary mb-4">Company</h4>
+<ul class="flex flex-col gap-2 font-label-sm text-label-sm text-on-secondary-container">
+<li class="hover:text-primary cursor-pointer transition-colors">About</li>
+<li class="hover:text-primary cursor-pointer transition-colors">Solutions</li>
+<li class="hover:text-primary cursor-pointer transition-colors">Careers</li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary mb-4">Support</h4>
+<ul class="flex flex-col gap-2 font-label-sm text-label-sm text-on-secondary-container">
+<li class="hover:text-primary cursor-pointer transition-colors">Privacy</li>
+<li class="hover:text-primary cursor-pointer transition-colors">Terms</li>
+<li class="hover:text-primary cursor-pointer transition-colors">Help Center</li>
+</ul>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop py-6 border-t border-black/5 flex justify-between items-center">
+<p class="font-label-sm text-label-sm text-secondary">© 2024 EMBLEM Technologies. All rights reserved.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-secondary hover:text-primary cursor-pointer">language</span>
+<span class="material-symbols-outlined text-secondary hover:text-primary cursor-pointer">share</span>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction: Mouse tracking for glass cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+                
+                // Subtle 3D tilt effect
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 50;
+                const rotateY = (centerX - x) / 50;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
+            });
+        });
+    </script>
+</body></html>

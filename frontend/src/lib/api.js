@@ -173,7 +173,7 @@ export const api = {
   models: () => get("/api/models"),
   chat: (prompt, model, mode) => post("/api/chat", { prompt, model, mode }),
 
-  // Connections (Composio, per-user)
+  // Connections (per-user)
   connections: () => get("/api/connections"),
   connectionLink: (toolkit) => get(`/api/connections/link?toolkit=${encodeURIComponent(toolkit)}`),
 

@@ -1,45 +1,46 @@
-/* Emblem — dual-theme design system.
-   Pure white canvas + near-black text (light) / pure dark canvas + white text (dark),
-   glossy glass surfaces, ONE accent: electric blue #00f0ff.
-   The accent is a FILL/GLOW color only — on white it is ~1.4:1 contrast, so
-   interactive TEXT uses --accent-ink instead. Never write body text in --accent. */
+/* Emblem — design system from stitch_emblem_core_ui (emblem_1):
+   High-End Minimalism + Glassmorphism. Pure white foundation, Geist type,
+   ONE high-energy accent (Electric Blue #0052FF) reserved for primary actions,
+   active states, and focus. Tight "engineered" radii (4/8/12), thin 1px borders,
+   depth via translucency + soft ambient shadows — never heavy stacks.
+   Dark mode is our derivation of the same system (the Stitch export is light-first). */
 
 :root, [data-theme="light"] {
   color-scheme: light;
 
-  /* ── Surfaces ───────────────────────────────────────────────── */
-  --bg:    #ffffff;
-  --bg-2:  #fafafa;
-  --s1:    #f7f7f8;   /* sidebar / panels */
-  --s2:    #f0f0f2;   /* inputs / tiles */
-  --s3:    #e8e8ea;   /* hover */
-  --s4:    #101014;   /* high-contrast fill (user pills, solid buttons) */
+  /* ── Surfaces (Stitch surface-container scale) ──────────────── */
+  --bg:    #f9f9f9;   /* surface */
+  --bg-2:  #ffffff;   /* surface-container-lowest */
+  --s1:    #f3f3f4;   /* surface-container-low — sidebar/panels */
+  --s2:    #eeeeee;   /* surface-container — inputs/tiles */
+  --s3:    #e8e8e8;   /* surface-container-high — hover */
+  --s4:    #2f3131;   /* inverse-surface — high-contrast fill */
 
-  /* glass */
-  --surface:    rgba(255, 255, 255, 0.78);
-  --glass-blur: blur(18px) saturate(1.5);
-  --gloss:      linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0) 45%);
+  /* glass — Level 1: blur 20, white 70%, hairline border */
+  --surface:    rgba(255, 255, 255, 0.7);
+  --glass-blur: blur(20px);
+  --gloss:      linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%);
 
   /* ── Borders ────────────────────────────────────────────────── */
-  --border:        rgba(13, 13, 15, 0.09);
-  --border-strong: rgba(13, 13, 15, 0.18);
-  --divider:       rgba(13, 13, 15, 0.09);
+  --border:        rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --divider:       rgba(0, 0, 0, 0.08);
 
   /* ── Text ───────────────────────────────────────────────────── */
-  --text:   #0d0d0f;
-  --text-2: #55555e;
-  --text-3: #8b8b95;
-  --text-on-accent: #001416;
+  --text:   #1a1c1c;   /* on-surface */
+  --text-2: #434656;   /* on-surface-variant */
+  --text-3: #737688;   /* outline */
+  --text-on-accent: #ffffff;
 
-  /* ── Accent — electric blue. Fills, glows, focus rings. ─────── */
-  --accent:      #00f0ff;
-  --accent-h:    #3df4ff;
-  --accent-ink:  #007a8a;                    /* interactive TEXT on light */
-  --accent-t:    #001416;                    /* text ON accent fills */
-  --accent-bg:   rgba(0, 240, 255, 0.10);
-  --accent-glow: rgba(0, 240, 255, 0.35);
-  --accent-grad: linear-gradient(135deg, #00f0ff, #00b8d4);
-  --accent-2:    #00b8d4;
+  /* ── Accent — Electric Blue. Primary actions, active, focus. ── */
+  --accent:      #0052ff;   /* primary-container — the "signal" fill */
+  --accent-h:    #2e6bff;
+  --accent-ink:  #003ec7;   /* primary — interactive TEXT on light */
+  --accent-t:    #ffffff;   /* on-primary */
+  --accent-bg:   rgba(0, 82, 255, 0.08);
+  --accent-glow: rgba(0, 82, 255, 0.25);
+  --accent-grad: linear-gradient(135deg, #0052ff, #003ec7);
+  --accent-2:    #003ec7;
 
   /* ── Legacy aliases (older components) ──────────────────────── */
   --bg-1:   var(--s1);
@@ -50,32 +51,32 @@
   /* ── Status ─────────────────────────────────────────────────── */
   --safe:       #0f8a43;
   --safe-bg:    rgba(15, 138, 67, 0.10);
-  --caution:    #b45309;
-  --caution-bg: rgba(180, 83, 9, 0.10);
-  --danger:     #d92d20;
-  --danger-bg:  rgba(217, 45, 32, 0.10);
+  --caution:    #952200;   /* Stitch tertiary — burnt signal */
+  --caution-bg: rgba(149, 34, 0, 0.08);
+  --danger:     #ba1a1a;   /* Stitch error */
+  --danger-bg:  #ffdad6;   /* Stitch error-container */
   --info:       var(--text-2);
 
   /* ── Glow (Orb, focus moments) ──────────────────────────────── */
-  --glow-core: rgba(0, 240, 255, 0.9);
-  --glow-soft: rgba(0, 240, 255, 0.30);
-  --glow-rim:  rgba(0, 184, 212, 0.35);
+  --glow-core: rgba(0, 82, 255, 0.9);
+  --glow-soft: rgba(0, 82, 255, 0.28);
+  --glow-rim:  rgba(0, 62, 199, 0.32);
 
-  /* ── Shadows (glossy depth — light mode only gets soft ones) ── */
-  --shadow-sm: 0 1px 2px rgba(13, 13, 15, 0.05);
-  --shadow-md: 0 4px 16px rgba(13, 13, 15, 0.07);
-  --shadow-lg: 0 12px 40px rgba(13, 13, 15, 0.10);
+  /* ── Shadows — soft ambient only (Stitch Level 2) ───────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.07);
 
-  /* ── Radius ─────────────────────────────────────────────────── */
-  --r-sm:   8px;
-  --r-md:   12px;
-  --r-lg:   16px;
-  --r-xl:   20px;
-  --r-pill: 999px;
-  --r-ghost: 999px;
-  --radius:    var(--r-lg);
-  --radius-sm: var(--r-md);
-  --radius-lg: var(--r-pill);
+  /* ── Radius — "engineered, not organic" ─────────────────────── */
+  --r-sm:   4px;    /* inputs, buttons, chips */
+  --r-md:   8px;    /* cards, containers */
+  --r-lg:   12px;   /* modals, large sheets */
+  --r-xl:   16px;
+  --r-pill: 999px;  /* the Orb + floating primary actions only */
+  --r-ghost: 4px;
+  --radius:    var(--r-md);
+  --radius-sm: var(--r-sm);
+  --radius-lg: var(--r-lg);
 
   /* ── Motion ─────────────────────────────────────────────────── */
   --t-fast:   0.15s;
@@ -83,56 +84,56 @@
   --t-slow:   0.4s;
   --spring:   cubic-bezier(0.34, 1.3, 0.64, 1);
 
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Geist', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --bg:    #0b0b0d;
-  --bg-2:  #101013;
-  --s1:    #131316;
-  --s2:    #1a1a1f;
-  --s3:    #232329;
-  --s4:    #f4f4f6;
+  --bg:    #101112;
+  --bg-2:  #0b0c0d;
+  --s1:    #161718;
+  --s2:    #1c1d1f;
+  --s3:    #242527;
+  --s4:    #f0f1f1;   /* inverse-on-surface as fill */
 
-  --surface:    rgba(22, 22, 26, 0.72);
-  --glass-blur: blur(18px) saturate(1.4);
-  --gloss:      linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 45%);
+  --surface:    rgba(24, 25, 27, 0.7);
+  --glass-blur: blur(20px);
+  --gloss:      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 45%);
 
-  --border:        rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --divider:       rgba(255, 255, 255, 0.09);
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --divider:       rgba(255, 255, 255, 0.08);
 
-  --text:   #f4f4f6;
-  --text-2: #a9a9b4;
-  --text-3: #6b6b76;
-  --text-on-accent: #001416;
+  --text:   #f0f1f1;   /* inverse-on-surface */
+  --text-2: #b9bccb;
+  --text-3: #82859a;
+  --text-on-accent: #ffffff;
 
-  --accent:      #00f0ff;
-  --accent-h:    #3df4ff;
-  --accent-ink:  #00e0ef;                    /* neon reads fine on dark */
-  --accent-t:    #001416;
-  --accent-bg:   rgba(0, 240, 255, 0.10);
-  --accent-glow: rgba(0, 240, 255, 0.25);
-  --accent-grad: linear-gradient(135deg, #00f0ff, #00b8d4);
-  --accent-2:    #00b8d4;
+  --accent:      #0052ff;
+  --accent-h:    #2e6bff;
+  --accent-ink:  #b7c4ff;   /* inverse-primary — readable blue on dark */
+  --accent-t:    #ffffff;
+  --accent-bg:   rgba(0, 82, 255, 0.14);
+  --accent-glow: rgba(0, 82, 255, 0.30);
+  --accent-grad: linear-gradient(135deg, #0052ff, #003ec7);
+  --accent-2:    #b7c4ff;
 
   --safe:       #34d399;
   --safe-bg:    rgba(52, 211, 153, 0.12);
-  --caution:    #fbbf24;
-  --caution-bg: rgba(251, 191, 36, 0.12);
-  --danger:     #f87171;
-  --danger-bg:  rgba(248, 113, 113, 0.12);
+  --caution:    #ffb4a1;   /* tertiary-fixed-dim */
+  --caution-bg: rgba(255, 180, 161, 0.10);
+  --danger:     #ffb4ab;
+  --danger-bg:  rgba(147, 0, 10, 0.35);
   --info:       var(--text-2);
 
-  --glow-core: rgba(0, 240, 255, 0.9);
-  --glow-soft: rgba(0, 240, 255, 0.32);
-  --glow-rim:  rgba(0, 184, 212, 0.38);
+  --glow-core: rgba(77, 127, 255, 0.9);
+  --glow-soft: rgba(0, 82, 255, 0.32);
+  --glow-rim:  rgba(183, 196, 255, 0.25);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Reset & base ─────────────────────────────────────────────── */
@@ -186,32 +187,34 @@ a { color: var(--accent-ink); }
 .badge.danger  { border-color: var(--danger);  color: var(--danger);  background: var(--danger-bg); }
 .badge.accent  { border-color: var(--accent);  color: var(--accent-ink); background: var(--accent-bg); }
 
-/* ── Buttons ──────────────────────────────────────────────────── */
+/* ── Buttons — Stitch: primary = electric blue fill, 4px radius; ghost fills
+      with 5% ink on hover. Precision over roundness. ──────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 9px 18px; border-radius: var(--r-pill);
+  padding: 9px 18px; border-radius: var(--r-sm);
   border: 1px solid var(--border-strong);
   background: transparent; color: var(--text);
   font-size: 14px; font-weight: 500;
   transition: background var(--t-fast), border-color var(--t-fast),
-              color var(--t-fast), box-shadow var(--t-fast);
+              color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
 .btn:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
 .btn:active { opacity: 0.85; }
 .btn:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
 
 .btn.primary {
-  background: var(--accent-grad);
+  background: var(--accent);
   border-color: transparent;
   color: var(--accent-t);
   font-weight: 600;
-  box-shadow: 0 2px 12px var(--accent-glow);
+  box-shadow: 0 4px 14px var(--accent-glow);
 }
-.btn.primary:hover { filter: brightness(1.06); box-shadow: 0 4px 18px var(--accent-glow); }
+.btn.primary:hover { background: var(--accent-h); box-shadow: 0 6px 18px var(--accent-glow); transform: scale(1.02); }
 .btn.approve { background: transparent; border-color: var(--safe); color: var(--safe); }
 .btn.reject  { background: transparent; border-color: var(--border); color: var(--text-3); }
-.btn.ghost   { background: transparent; border-color: transparent; color: var(--text-2); }
-.btn.ghost:hover { color: var(--text); border-color: var(--border); box-shadow: none; }
+.btn.ghost   { background: transparent; border-color: var(--border); color: var(--text-2); }
+.btn.ghost:hover { color: var(--text); background: rgba(0, 0, 0, 0.05); box-shadow: none; }
+[data-theme="dark"] .btn.ghost:hover { background: rgba(255, 255, 255, 0.06); }
 .btn.danger  { background: transparent; border-color: var(--danger); color: var(--danger); }
 
 /* ── Cards / tiles ────────────────────────────────────────────── */

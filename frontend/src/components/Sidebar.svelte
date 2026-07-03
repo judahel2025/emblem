@@ -3,8 +3,9 @@
   import { createEventDispatcher } from "svelte";
   import { slide } from "svelte/transition";
   import { threads, activeThread, appView, openThread, openLegacy, newChat,
-           renameThread, deleteThread, brainReady } from "../lib/store.js";
+           renameThread, deleteThread, brainReady, connectedApps } from "../lib/store.js";
   import { auth } from "../lib/supabase.js";
+  import { WORKSPACES } from "../lib/workspaces.js";
   import ThemeToggle from "./ThemeToggle.svelte";
 
   export let collapsed = false;
@@ -90,6 +91,14 @@
               title={n.label}>
         <i class="ti {n.icon}"></i>
         {#if !collapsed}<span>{n.label}</span>{/if}
+      </button>
+    {/each}
+    {#each $connectedApps.filter((s) => WORKSPACES[s]) as s (s)}
+      <button class="nav-item" class:active={$appView === `workspace:${s}`}
+              on:click={() => appView.set(`workspace:${s}`)}
+              title={WORKSPACES[s].label}>
+        <i class="ti {WORKSPACES[s].icon}"></i>
+        {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
       </button>
     {/each}
   </nav>

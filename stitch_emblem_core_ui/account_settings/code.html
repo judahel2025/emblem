@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .duration-smooth { transition-duration: 350ms; }
+        .easing-standard { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        
+        .glass-panel:hover {
+            backdrop-filter: blur(40px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+        }
+
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #003ec7;
+        }
+        .toggle-checkbox:checked + .toggle-label::after {
+            transform: translateX(100%);
+        }
+
+        /* Cursor tracking effect placeholder - implemented via JS */
+        .cursor-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e2e2;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#5e5e5e",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "on-tertiary-container": "#ffddd5",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#0038b6",
+                        "tertiary-container": "#bf3003",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#001452",
+                        "background": "#f9f9f9",
+                        "outline-variant": "#c3c5d9",
+                        "surface-container-high": "#e8e8e8",
+                        "on-secondary-container": "#646464",
+                        "tertiary": "#952200",
+                        "on-surface": "#1a1c1c",
+                        "surface-dim": "#dadada",
+                        "surface-tint": "#004ced",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#0052ff",
+                        "secondary-fixed": "#e2e2e2",
+                        "primary-fixed": "#dde1ff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-container-low": "#f3f3f4",
+                        "on-tertiary-fixed-variant": "#891e00",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1c",
+                        "surface-container": "#eeeeee",
+                        "inverse-primary": "#b7c4ff",
+                        "tertiary-fixed-dim": "#ffb4a1",
+                        "surface-variant": "#e2e2e2",
+                        "secondary-container": "#e2e2e2",
+                        "inverse-surface": "#2f3131",
+                        "primary": "#003ec7",
+                        "on-primary-container": "#dfe3ff",
+                        "inverse-on-surface": "#f0f1f1",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#ffdbd2",
+                        "outline": "#737688",
+                        "on-tertiary-fixed": "#3c0800",
+                        "surface-bright": "#f9f9f9",
+                        "surface": "#f9f9f9",
+                        "on-surface-variant": "#434656",
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-md": "24px",
+                        "stack-xs": "4px",
+                        "stack-xl": "80px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "12px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "container-max": "1280px",
+                        "unit": "8px",
+                        "stack-lg": "48px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "display": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "display-mobile": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                        "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "display-mobile": ["36px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden selection:bg-primary-fixed">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-surface/70 backdrop-blur-[20px] border-b border-black/10 shadow-sm">
+<div class="flex items-center justify-between px-margin-desktop h-16 w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-display text-headline-md font-bold tracking-tighter text-on-surface">EMBLEM</span>
+<div class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary py-5" href="#">Settings</a>
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all duration-300 py-5 px-2" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all duration-300 py-5 px-2" href="#">Analytics</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary transition-colors">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-tertiary rounded-full"></span>
+</div>
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary transition-colors">apps</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer active:scale-95 duration-smooth">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a technology executive in their 30s with a neutral, confident expression. The lighting is crisp and modern with high-key whites and subtle blue undertones. The background is a soft, out-of-focus minimalist office setting that aligns with a premium, corporate enterprise OS aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvcTy0lIu4lbd2ndPaSRJlg2Fif79hyvaWZL9nN7U3z3BqfJpWpJnmSmn31_fW6LaFrzCL5ca7wfkSK0HPYl--iPxrkayJOrwxVuWSAiH6e2DCZtXo7jBK4y18SAZVsdT9k2UIeTc5jNJNL3_yII_aUkgdNm4VRRLoHA0kRwirgkPpmOPAttzc3WfCpFdk2ywA6FjqI1ono1R_FoAmsuXVOXNtydBrIjrubY1VvCKGuRKOxgcm0IOv"/>
+</div>
+</div>
+</div>
+</nav>
+<div class="flex pt-16 min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 bg-surface/70 backdrop-blur-[20px] border-r border-black/5 shadow-md flex flex-col py-stack-md gap-stack-sm">
+<div class="px-6 mb-stack-md">
+<h2 class="font-display text-headline-sm font-bold text-on-surface">EMBLEM</h2>
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mt-1">Enterprise OS</p>
+</div>
+<div class="flex flex-col">
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-smooth font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">chat</span> Chat
+                </a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-smooth font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">description</span> Pages
+                </a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-smooth font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">hub</span> Connectors
+                </a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-smooth font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">calendar_today</span> Calendar
+                </a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-smooth font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">bolt</span> Automations
+                </a>
+<a class="flex items-center gap-3 px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-smooth font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">help</span> FAQ
+                </a>
+<a class="flex items-center gap-3 px-6 py-3 text-primary font-bold border-l-2 border-primary bg-primary/5 transition-all duration-300 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span> Settings
+                </a>
+</div>
+<div class="mt-auto px-6">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-lg font-label-md text-label-md shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-smooth flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span> New Action
+                </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 w-full max-w-container-max mx-auto px-margin-desktop py-stack-lg">
+<header class="mb-stack-lg animate-reveal">
+<h1 class="font-display text-display text-on-surface mb-stack-xs">Settings</h1>
+<p class="text-secondary font-body-lg">Manage your account preferences and system configurations.</p>
+</header>
+<!-- Horizontal Sub-Tabs -->
+<div class="flex gap-8 border-b border-outline-variant mb-stack-md">
+<button class="pb-4 text-primary font-bold border-b-2 border-primary font-label-md text-label-md transition-all">Profile</button>
+<button class="pb-4 text-secondary hover:text-on-surface font-label-md text-label-md transition-all">Security</button>
+<button class="pb-4 text-secondary hover:text-on-surface font-label-md text-label-md transition-all">Billing</button>
+<button class="pb-4 text-secondary hover:text-on-surface font-label-md text-label-md transition-all">Preferences</button>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Bento Grid Section: Left Column -->
+<div class="col-span-12 lg:col-span-8 space-y-gutter">
+<!-- Profile Card -->
+<div class="glass-panel rounded-xl p-stack-md cursor-card animate-reveal" style="animation-delay: 0.1s;">
+<h3 class="font-headline-md text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">person</span> Personal Information
+                        </h3>
+<div class="space-y-6">
+<div class="flex items-center gap-6 pb-6 border-b border-outline-variant/30">
+<div class="relative group cursor-pointer">
+<div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary/20">
+<img class="w-full h-full object-cover" data-alt="A macro studio photograph of a highly detailed, minimalist profile avatar placeholder. The image features soft, volumetric lighting on a sleek, matte white surface, creating an elegant and professional aesthetic consistent with high-end enterprise software interfaces. The palette is dominated by pure whites and subtle cool greys." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-zT0LBYwjc8DEaRn4jWiaZhCGEyayz9wUAN0_NjPZpePjCdFvVsydclLKemnclh4jCi9BSQacWkpkkt-rrEH-1yihcvSD4IZ1zYmqrvblLXGCZeIPM6vKjJ5YWYdSaW7A55F_w0ibOda0wlxvf4yfj3zvAq5iGVKlOiPQxO_kGtOvf96I0A6mxTkSy2o9UlzYMTa7s2pTpN2iTgD2H_Jv31GBVa0aL3lyh67hSvGiDYGRb6jM_Pcq"/>
+</div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full transition-opacity">
+<span class="material-symbols-outlined text-white">photo_camera</span>
+</div>
+</div>
+<div>
+<h4 class="font-label-md text-on-surface">Alex Thompson</h4>
+<p class="text-secondary text-label-sm">Senior Product Architect</p>
+<button class="mt-2 text-primary font-label-sm hover:underline">Change Avatar</button>
+</div>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-sm text-secondary uppercase">Full Name</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-colors py-2 font-body-md" type="text" value="Alex Thompson"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-sm text-secondary uppercase">Email Address</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-colors py-2 font-body-md" type="email" value="alex@emblem.tech"/>
+</div>
+<div class="space-y-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-secondary uppercase">Bio</label>
+<textarea class="w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-colors py-2 font-body-md min-h-[80px]" placeholder="Write a short professional bio..."></textarea>
+</div>
+</form>
+</div>
+</div>
+<!-- Appearance/Preferences -->
+<div class="glass-panel rounded-xl p-stack-md cursor-card animate-reveal" style="animation-delay: 0.2s;">
+<h3 class="font-headline-md text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">palette</span> Interface
+                        </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-outline-variant/20">
+<div>
+<p class="font-label-md text-on-surface">Theme Mode</p>
+<p class="text-secondary text-label-sm">Current: Light Mode</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full border border-outline-variant">
+<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">light_mode</span>
+<span class="text-label-sm font-bold">LIGHT</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-outline-variant/20">
+<div>
+<p class="font-label-md text-on-surface">Compact View</p>
+<p class="text-secondary text-label-sm">Increase information density</p>
+</div>
+<div class="relative inline-block w-10 h-5 align-middle select-none">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-2 border-outline-variant appearance-none cursor-pointer transition-transform duration-300 ease-in-out -left-1 -top-0.5 checked:border-primary" id="toggle-compact" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-surface-container-highest cursor-pointer transition-colors duration-300" for="toggle-compact"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Section: Right Column (Sidebar Settings) -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Notifications Status -->
+<div class="glass-panel rounded-xl p-stack-md animate-reveal" style="animation-delay: 0.3s;">
+<h3 class="font-label-md text-secondary uppercase mb-4 tracking-widest">Active Alerts</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">mail</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Email Digest</p>
+<p class="text-secondary text-label-sm">Weekly activity reports are active.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded bg-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary">warning</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Security Key</p>
+<p class="text-secondary text-label-sm">MFA not yet configured for this account.</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-3 bg-secondary-container text-on-surface font-label-md rounded hover:bg-outline-variant transition-colors">Review All Alerts</button>
+</div>
+<!-- Data & Storage Card -->
+<div class="glass-panel rounded-xl p-stack-md animate-reveal overflow-hidden relative" style="animation-delay: 0.4s;">
+<div class="absolute -right-4 -bottom-4 opacity-5">
+<span class="material-symbols-outlined text-[120px]">database</span>
+</div>
+<h3 class="font-label-md text-secondary uppercase mb-4 tracking-widest">Cloud Storage</h3>
+<div class="space-y-2">
+<div class="flex justify-between font-label-md">
+<span>82.4 GB used</span>
+<span class="text-secondary">of 100 GB</span>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 82.4%"></div>
+</div>
+</div>
+<p class="text-secondary text-label-sm mt-4 italic">Usage is optimized across all 14 connected instances.</p>
+</div>
+</div>
+</div>
+<!-- Footer Section -->
+<footer class="relative w-full mt-stack-xl border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-desktop py-stack-lg grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="col-span-1 md:col-span-1">
+<span class="font-display text-headline-md font-black text-on-surface">EMBLEM</span>
+<p class="text-secondary font-label-sm mt-4">© 2024 EMBLEM Technologies.<br/>All rights reserved.</p>
+</div>
+<div class="flex flex-col gap-3">
+<p class="font-label-md font-bold mb-2">Product</p>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Intelligence</a>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Solutions</a>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Automations</a>
+</div>
+<div class="flex flex-col gap-3">
+<p class="font-label-md font-bold mb-2">Legal</p>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Terms</a>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Security</a>
+</div>
+<div class="flex flex-col gap-3">
+<p class="font-label-md font-bold mb-2">Support</p>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Help Center</a>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">API Docs</a>
+<a class="font-label-sm text-on-secondary-container hover:text-primary transition-colors" href="#">Community</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        // Cursor tracking 3D tilt effect for cards
+        const cards = document.querySelectorAll('.cursor-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 25;
+                const rotateY = (centerX - x) / 25;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
+                card.style.transition = 'none';
+                
+                // Light refraction effect
+                card.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.7) 100%)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.style.background = 'rgba(255, 255, 255, 0.7)';
+            });
+        });
+
+        // Simple reveal animation observer
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-reveal').forEach(el => {
+            el.classList.add('opacity-0', 'translate-y-4', 'transition-all', 'duration-700', 'ease-out');
+            observer.observe(el);
+        });
+    </script>
+</body></html>

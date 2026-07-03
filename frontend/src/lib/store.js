@@ -18,6 +18,15 @@ export const filesTab = writable("files");      // files | notes | memory | skil
 export const appView = writable("chat");
 export const showVoiceOverlay = writable(false);   // full-screen live voice (VoiceLive)
 
+// The user's connected apps (toolkit slugs) — drives sidebar workspaces + tiles.
+export const connectedApps = writable([]);
+export async function loadConnections() {
+  try {
+    const r = await api.connections();
+    connectedApps.set(r.connected || []);
+  } catch (e) { console.error("loadConnections failed:", e); }
+}
+
 // --- threads (ChatGPT-style conversation list) -----------------------------------
 export const threads = writable({ items: [], legacy_count: 0 });
 export const activeThread = writable(null);   // null = fresh chat (thread made on first message)

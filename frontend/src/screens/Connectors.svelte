@@ -2,6 +2,9 @@
   import { onMount } from "svelte";
   import { fly, fade } from "svelte/transition";
   import { api } from "../lib/api.js";
+  import { appView, loadConnections } from "../lib/store.js";
+  import { hasWorkspace } from "../lib/workspaces.js";
+  import { tilt } from "../lib/tilt.js";
 
   let loading = true, configured = false, connected = [], featured = [], all = [], query = "", error = "";
 
@@ -25,6 +28,7 @@
     try {
       const d = await api.connections();
       configured = d.configured; connected = d.connected || []; featured = d.featured || []; all = d.all || [];
+      loadConnections();   // keep the sidebar's workspace list in sync
       if (d.error) error = "Connections service is warming up.";
     } catch { error = "Couldn't load connections."; }
     loading = false;
@@ -70,7 +74,7 @@
       {#each shown as k, i (k)}
         {@const m = meta(k)}
         {@const on = isOn(k)}
-        <div class="tile gloss" class:on in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
+        <div class="tile gloss" class:on use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
           <div class="top">
             <span class="appicon"><i class="ti {m.icon}"></i></span>
             {#if on}<span class="badge safe">Connected</span>{/if}
@@ -78,6 +82,12 @@
           <div class="name">{m.label}</div>
           <div class="desc">{m.desc}</div>
           {#if on}
+            {#if hasWorkspace(k)}
+              <button class="btn primary cbtn" on:click={() => appView.set(`workspace:${k}`)}
+                      aria-label={`Open ${m.label} workspace`}>
+                Open <i class="ti ti-arrow-right"></i>
+              </button>
+            {/if}
             <button class="btn ghost cbtn" on:click={() => connect(k)} aria-label={`Reconnect ${m.label}`}>Reconnect</button>
           {:else}
             <button class="btn primary cbtn" on:click={() => connect(k)} aria-label={`Connect ${m.label}`}>

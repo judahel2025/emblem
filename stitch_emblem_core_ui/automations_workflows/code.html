@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Automations | EMBLEM Enterprise OS</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Geist -->
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Design System Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#5e5e5e",
+                    "secondary-fixed-dim": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed": "#1b1b1b",
+                    "on-tertiary-container": "#ffddd5",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed-variant": "#0038b6",
+                    "tertiary-container": "#bf3003",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#001452",
+                    "background": "#f9f9f9",
+                    "outline-variant": "#c3c5d9",
+                    "surface-container-high": "#e8e8e8",
+                    "on-secondary-container": "#646464",
+                    "tertiary": "#952200",
+                    "on-surface": "#1a1c1c",
+                    "surface-dim": "#dadada",
+                    "surface-tint": "#004ced",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#0052ff",
+                    "secondary-fixed": "#e2e2e2",
+                    "primary-fixed": "#dde1ff",
+                    "on-secondary-fixed-variant": "#474747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-tertiary-fixed-variant": "#891e00",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#b7c4ff",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "surface-container": "#eeeeee",
+                    "inverse-primary": "#b7c4ff",
+                    "tertiary-fixed-dim": "#ffb4a1",
+                    "surface-variant": "#e2e2e2",
+                    "secondary-container": "#e2e2e2",
+                    "inverse-surface": "#2f3131",
+                    "primary": "#003ec7",
+                    "on-primary-container": "#dfe3ff",
+                    "inverse-on-surface": "#f0f1f1",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#ffdbd2",
+                    "outline": "#737688",
+                    "on-tertiary-fixed": "#3c0800",
+                    "surface-bright": "#f9f9f9",
+                    "surface": "#f9f9f9",
+                    "on-surface-variant": "#434656",
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-md": "24px",
+                    "stack-xs": "4px",
+                    "stack-xl": "80px",
+                    "margin-mobile": "20px",
+                    "stack-sm": "12px",
+                    "gutter": "24px",
+                    "margin-desktop": "48px",
+                    "container-max": "1280px",
+                    "unit": "8px",
+                    "stack-lg": "48px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Geist"],
+                    "headline-lg": ["Geist"],
+                    "display": ["Geist"],
+                    "headline-md": ["Geist"],
+                    "display-mobile": ["Geist"],
+                    "body-lg": ["Geist"],
+                    "body-md": ["Geist"],
+                    "label-md": ["Geist"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "display-mobile": ["36px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: #f9f9f9;
+            color: #1a1c1c;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-surface {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .node-connector {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(to bottom, #003ec7, transparent);
+            left: 24px;
+            z-index: 0;
+        }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite ease-in-out;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/70 backdrop-blur-[20px] border-b border-black/10 shadow-sm">
+<div class="flex items-center justify-between px-margin-desktop h-16 w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-stack-md">
+<span class="font-display text-headline-md font-bold tracking-tighter text-on-surface">EMBLEM</span>
+<div class="hidden md:flex items-center bg-black/5 rounded-full px-4 py-1.5 gap-2 border border-black/5">
+<span class="material-symbols-outlined text-secondary scale-75">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md w-64 p-0" placeholder="Search workflows..." type="text"/>
+</div>
+</div>
+<nav class="flex items-center gap-6 h-full">
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all duration-300 px-3 py-2 rounded-lg" href="#">Intelligence</a>
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all duration-300 px-3 py-2 rounded-lg" href="#">Solutions</a>
+<div class="flex items-center gap-4 border-l border-black/10 pl-6 ml-2">
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary transition-colors">notifications</span>
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary transition-colors">apps</span>
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden border border-black/5">
+<img class="w-full h-full object-cover" data-alt="A professional portrait of a senior tech executive in a clean, high-key minimalist setting. The lighting is soft and directional, typical of a high-end studio. The executive has a neutral, focused expression, wearing professional attire. The overall aesthetic is polished, sharp, and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr1EzqtCsRJRXHcgEWi-xkQpKYhE6-PuR93xwzGqWiz-Qc0QqvEHCcdCqEsjIZKIc20K9Q8dtKiJpbCW4humpIC6yrL2Jb3QT5T5eATFi3DUu_ynj4FVdTgAzTwBMOpNkW9i4mT4u0pvVSZNdD4Fw4nhe0kMYX9FstZlMX9obPTawY7flvoJJSHJ3HbNabd_grvcw8MO17uHqT8vd0I0CDtzvn_kT8xOY82A8o80W3asBnBam4-R9F"/>
+</div>
+</div>
+</nav>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 bg-surface/70 backdrop-blur-[20px] border-r border-black/5 flex flex-col py-stack-md gap-stack-sm">
+<div class="px-6 mb-stack-md">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-lg font-label-md flex items-center justify-center gap-2 shadow-lg hover:translate-y-[-2px] transition-all active:scale-95 duration-smooth">
+<span class="material-symbols-outlined">add</span>
+                New Action
+            </button>
+</div>
+<nav class="flex flex-col gap-1 px-3">
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary hover:bg-black/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">chat</span>
+<span class="font-label-md text-label-md">Chat</span>
+</a>
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary hover:bg-black/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">description</span>
+<span class="font-label-md text-label-md">Pages</span>
+</a>
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary hover:bg-black/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">hub</span>
+<span class="font-label-md text-label-md">Connectors</span>
+</a>
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary hover:bg-black/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary font-bold border-l-2 border-primary bg-primary/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-label-md text-label-md">Automations</span>
+</a>
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary hover:bg-black/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">help</span>
+<span class="font-label-md text-label-md">FAQ</span>
+</a>
+<a class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary hover:bg-black/5 transition-all duration-smooth" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen px-margin-desktop pb-stack-xl">
+<div class="max-w-container-max mx-auto py-stack-lg">
+<!-- Page Header -->
+<div class="flex items-end justify-between mb-stack-lg">
+<div>
+<h1 class="font-display text-display text-on-surface mb-stack-xs">Automations</h1>
+<p class="text-body-md text-secondary max-w-xl">Intelligent workflow management across your entire enterprise infrastructure.</p>
+</div>
+<div class="flex gap-4">
+<div class="glass-surface px-4 py-2 rounded-lg flex items-center gap-3">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[10px] font-bold">JD</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-green-100 flex items-center justify-center text-[10px] font-bold">AS</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-orange-100 flex items-center justify-center text-[10px] font-bold">MK</div>
+</div>
+<span class="text-label-sm text-secondary">3 active contributors</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left Column: Triggered Actions (Node Style) -->
+<div class="col-span-12 lg:col-span-7 flex flex-col gap-stack-md">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface">Triggered Actions</h2>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse-soft"></span>
+<span class="text-label-sm text-secondary">14 Active Nodes</span>
+</div>
+</div>
+<!-- Automation Node List -->
+<div class="relative space-y-gutter">
+<div class="node-connector h-full opacity-20"></div>
+<!-- Card 1: Node Style -->
+<div class="glass-surface p-stack-md rounded-xl relative hover:shadow-lg transition-all duration-smooth group cursor-pointer border-l-4 border-l-primary">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-body-lg font-bold">Customer Lead Intake</h3>
+<span class="bg-primary/5 text-primary px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">Running</span>
+</div>
+<p class="text-label-md text-secondary">When new inquiry arrives via Webhook...</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-black/5 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">play_arrow</span></button>
+<button class="p-2 hover:bg-black/5 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 pt-4 border-t border-black/5">
+<div class="flex flex-col">
+<span class="text-label-sm text-secondary/60 uppercase">Last Run</span>
+<span class="text-label-md font-medium">2 mins ago</span>
+</div>
+<div class="flex flex-col">
+<span class="text-label-sm text-secondary/60 uppercase">Success Rate</span>
+<span class="text-label-md font-medium text-green-600">99.8%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-label-sm text-secondary/60 uppercase">Impact</span>
+<span class="text-label-md font-medium">420 calls/day</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Node Style (Paused) -->
+<div class="glass-surface p-stack-md rounded-xl relative hover:shadow-lg transition-all duration-smooth group cursor-pointer border-l-4 border-l-secondary-fixed">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">database</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-body-lg font-bold">Data Sync: Cloud SQL</h3>
+<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">Paused</span>
+</div>
+<p class="text-label-md text-secondary">Syncing local records to main cluster...</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-black/5 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">refresh</span></button>
+<button class="p-2 hover:bg-black/5 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</div>
+<div class="flex items-center gap-4 pt-4 border-t border-black/5">
+<span class="material-symbols-outlined text-amber-500 scale-75">warning</span>
+<span class="text-label-md text-secondary">Paused due to connection timeout at 04:00 AM</span>
+</div>
+</div>
+<!-- Card 3: Node Style -->
+<div class="glass-surface p-stack-md rounded-xl relative hover:shadow-lg transition-all duration-smooth group cursor-pointer border-l-4 border-l-primary">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">account_tree</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-body-lg font-bold">Asset Optimization</h3>
+<span class="bg-primary/5 text-primary px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">Running</span>
+</div>
+<p class="text-label-md text-secondary">Compressing incoming media files...</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-black/5 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">pause</span></button>
+<button class="p-2 hover:bg-black/5 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</div>
+<div class="pt-4 border-t border-black/5 flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">speed</span>
+<span class="text-label-sm font-medium">0.4s avg latency</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">history</span>
+<span class="text-label-sm font-medium">Last 24h: 12.4k executions</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Recurring Tasks & Insights -->
+<div class="col-span-12 lg:col-span-5 flex flex-col gap-stack-md">
+<!-- Recurring Tasks Section -->
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-md">Recurring Tasks</h2>
+<div class="glass-surface rounded-xl overflow-hidden divide-y divide-black/5">
+<div class="p-4 hover:bg-black/5 transition-colors flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">schedule</span>
+<div>
+<p class="text-label-md font-bold">Weekly Audit Report</p>
+<p class="text-label-sm text-secondary">Every Monday at 08:00 AM</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="h-1.5 w-12 bg-black/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3"></div>
+</div>
+<span class="material-symbols-outlined text-secondary scale-75 cursor-pointer">edit</span>
+</div>
+</div>
+<div class="p-4 hover:bg-black/5 transition-colors flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">cloud_upload</span>
+<div>
+<p class="text-label-md font-bold">Daily DB Backup</p>
+<p class="text-label-sm text-secondary">Every Day at 02:00 AM</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="h-1.5 w-12 bg-black/10 rounded-full overflow-hidden">
+<div class="h-full bg-green-500 w-full"></div>
+</div>
+<span class="material-symbols-outlined text-secondary scale-75 cursor-pointer">edit</span>
+</div>
+</div>
+<div class="p-4 hover:bg-black/5 transition-colors flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">cleaning_services</span>
+<div>
+<p class="text-label-md font-bold">Log Purge Utility</p>
+<p class="text-label-sm text-secondary">1st of Month at 00:00 AM</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="h-1.5 w-12 bg-black/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/4"></div>
+</div>
+<span class="material-symbols-outlined text-secondary scale-75 cursor-pointer">edit</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Performance Visualization Card -->
+<div class="glass-surface p-stack-md rounded-xl relative overflow-hidden h-64 group">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="w-full h-full bg-gradient-to-tr from-primary/50 to-transparent"></div>
+</div>
+<h3 class="text-label-sm font-bold uppercase tracking-widest text-secondary mb-4 flex items-center justify-between">
+                            System Efficiency
+                            <span class="material-symbols-outlined text-[18px]">trending_up</span>
+</h3>
+<div class="flex items-end gap-2 h-32 mb-4">
+<div class="w-full bg-primary/10 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 60%"></div>
+<div class="w-full bg-primary/20 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 80%"></div>
+<div class="w-full bg-primary/15 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 45%"></div>
+<div class="w-full bg-primary/40 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 90%"></div>
+<div class="w-full bg-primary/25 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 70%"></div>
+<div class="w-full bg-primary/10 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 55%"></div>
+<div class="w-full bg-primary/50 rounded-t-sm hover:bg-primary/30 transition-all duration-smooth" style="height: 95%"></div>
+</div>
+<p class="text-label-md text-secondary">
+<span class="text-primary font-bold">+12%</span> throughput since optimization node activated yesterday.
+                        </p>
+</div>
+<!-- Featured Integration Card -->
+<div class="bg-primary rounded-xl p-stack-md text-on-primary shadow-xl relative overflow-hidden group cursor-pointer">
+<div class="absolute right-[-20px] top-[-20px] opacity-10 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined !text-[120px]">bolt</span>
+</div>
+<h4 class="text-headline-md font-bold mb-2">Automate with AI</h4>
+<p class="text-on-primary-container text-body-md mb-6 opacity-80">Let the EMBLEM Core suggest new workflows based on your team's most repetitive manual actions.</p>
+<button class="bg-white text-primary px-6 py-2 rounded-full font-label-md font-bold hover:shadow-lg transition-shadow">
+                            Explore Suggestions
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="relative w-full mt-stack-xl border-t border-outline-variant bg-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-margin-desktop py-stack-lg grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="col-span-1 md:col-span-1">
+<span class="font-display text-headline-md font-black text-on-surface">EMBLEM</span>
+<p class="mt-4 text-secondary text-label-md">Empowering the next generation of enterprise agility through intelligent automation and unified design.</p>
+</div>
+<div class="col-span-1">
+<h5 class="font-label-sm text-label-sm uppercase text-secondary mb-4">Product</h5>
+<ul class="flex flex-col gap-2">
+<li><a class="text-on-secondary-container hover:text-primary transition-colors text-label-md" href="#">Intelligence</a></li>
+<li><a class="text-on-secondary-container hover:text-primary transition-colors text-label-md" href="#">Solutions</a></li>
+<li><a class="text-on-secondary-container hover:text-primary transition-colors text-label-md" href="#">API Reference</a></li>
+</ul>
+</div>
+<div class="col-span-1">
+<h5 class="font-label-sm text-label-sm uppercase text-secondary mb-4">Company</h5>
+<ul class="flex flex-col gap-2">
+<li><a class="text-on-secondary-container hover:text-primary transition-colors text-label-md" href="#">Privacy</a></li>
+<li><a class="text-on-secondary-container hover:text-primary transition-colors text-label-md" href="#">Terms</a></li>
+<li><a class="text-on-secondary-container hover:text-primary transition-colors text-label-md" href="#">Support</a></li>
+</ul>
+</div>
+<div class="col-span-1">
+<div class="glass-surface p-4 rounded-lg">
+<p class="text-label-sm font-bold text-on-surface mb-2">System Status</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-label-md text-secondary">All systems operational</span>
+</div>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop py-6 border-t border-black/5 flex justify-between items-center">
+<p class="text-label-sm text-secondary">© 2024 EMBLEM Technologies. All rights reserved.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-secondary scale-75 cursor-pointer">public</span>
+<span class="material-symbols-outlined text-secondary scale-75 cursor-pointer">terminal</span>
+</div>
+</div>
+</footer>
+<!-- Micro-interactions Script -->
+<script>
+        // Cursor tracking effect for cards
+        document.querySelectorAll('.glass-surface').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 25;
+                const rotateY = (centerX - x) / 25;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+            });
+        });
+
+        // Simple node status toggle simulation
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Visual feedback for interaction
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 100);
+            });
+        });
+    </script>
+</body></html>

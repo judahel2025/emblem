@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { refresh, loadBriefing, loadConversation, loadMe, appView, showVoiceOverlay } from "./lib/store.js";
+  import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay } from "./lib/store.js";
   import { api } from "./lib/api.js";
   import ChatView from "./components/ChatView.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
@@ -18,6 +18,7 @@
   import "./lib/theme.js";   // keeps data-theme live (toggle + OS changes)
   import TourOverlay from "./components/TourOverlay.svelte";
   import { startTour } from "./lib/tour.js";
+  import WorkspaceHost from "./screens/workspaces/WorkspaceHost.svelte";
 
   let engineUp = false;
   let engineFailed = false;
@@ -81,6 +82,7 @@
     refresh();
     loadConversation();
     loadBriefing();
+    loadConnections();
     timer = setInterval(refresh, 6000);
   }
 
@@ -118,7 +120,9 @@
       {:else if $appView === "connect"}<Connectors />
       {:else if $appView === "pages"}<Pages />
       {:else if $appView === "calendar"}<Calendar />
-      {:else if $appView === "automations"}<Automations />{/if}
+      {:else if $appView === "automations"}<Automations />
+      {:else if $appView.startsWith("workspace:")}
+        <WorkspaceHost slug={$appView.slice(10)} />{/if}
     </main>
 
     {#if $showVoiceOverlay}<VoiceLive on:close={() => showVoiceOverlay.set(false)} />{/if}

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EMBLEM | Connectors</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#5e5e5e",
+                    "secondary-fixed-dim": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed": "#1b1b1b",
+                    "on-tertiary-container": "#ffddd5",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed-variant": "#0038b6",
+                    "tertiary-container": "#bf3003",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#001452",
+                    "background": "#f9f9f9",
+                    "outline-variant": "#c3c5d9",
+                    "surface-container-high": "#e8e8e8",
+                    "on-secondary-container": "#646464",
+                    "tertiary": "#952200",
+                    "on-surface": "#1a1c1c",
+                    "surface-dim": "#dadada",
+                    "surface-tint": "#004ced",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#0052ff",
+                    "secondary-fixed": "#e2e2e2",
+                    "primary-fixed": "#dde1ff",
+                    "on-secondary-fixed-variant": "#474747",
+                    "surface-container-low": "#f3f3f4",
+                    "on-tertiary-fixed-variant": "#891e00",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#b7c4ff",
+                    "error": "#ba1a1a",
+                    "on-background": "#1a1c1c",
+                    "surface-container": "#eeeeee",
+                    "inverse-primary": "#b7c4ff",
+                    "tertiary-fixed-dim": "#ffb4a1",
+                    "surface-variant": "#e2e2e2",
+                    "secondary-container": "#e2e2e2",
+                    "inverse-surface": "#2f3131",
+                    "primary": "#003ec7",
+                    "on-primary-container": "#dfe3ff",
+                    "inverse-on-surface": "#f0f1f1",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#ffdbd2",
+                    "outline": "#737688",
+                    "on-tertiary-fixed": "#3c0800",
+                    "surface-bright": "#f9f9f9",
+                    "surface": "#f9f9f9",
+                    "on-surface-variant": "#434656",
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-md": "24px",
+                    "stack-xs": "4px",
+                    "stack-xl": "80px",
+                    "margin-mobile": "20px",
+                    "stack-sm": "12px",
+                    "gutter": "24px",
+                    "margin-desktop": "48px",
+                    "container-max": "1280px",
+                    "unit": "8px",
+                    "stack-lg": "48px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Geist"],
+                    "headline-lg": ["Geist"],
+                    "display": ["Geist"],
+                    "headline-md": ["Geist"],
+                    "display-mobile": ["Geist"],
+                    "body-lg": ["Geist"],
+                    "body-md": ["Geist"],
+                    "label-md": ["Geist"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "display-mobile": ["36px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f9f9f9;
+            font-family: 'Geist', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            backdrop-filter: blur(40px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+            transform: translateY(-4px);
+            border-color: rgba(0, 76, 237, 0.2);
+        }
+
+        .active-indicator {
+            position: absolute;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background-color: #003ec7;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/70 backdrop-blur-[20px] border-b border-black/10 shadow-sm">
+<div class="flex items-center justify-between px-margin-desktop h-16 w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-stack-md">
+<span class="font-display text-headline-md font-bold tracking-tighter text-on-surface">EMBLEM</span>
+<div class="hidden md:flex items-center gap-gutter ml-stack-lg">
+<nav class="flex gap-stack-md">
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all px-3 py-1 rounded-sm" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary px-3 py-1" href="#">Connectors</a>
+<a class="font-label-md text-label-md text-secondary hover:bg-black/5 transition-all px-3 py-1 rounded-sm" href="#">Intelligence</a>
+</nav>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="relative group">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 rounded-full hover:bg-black/5 transition-all">search</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 rounded-full hover:bg-black/5 transition-all" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 rounded-full hover:bg-black/5 transition-all" data-icon="apps">apps</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio headshot of a young tech executive in a minimalist white office. The lighting is soft and natural, emphasizing a high-end, clean aesthetic. The individual has a neutral but confident expression, reflecting a calm authority consistent with the professional EMBLEM OS branding." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmFTSZUjnjv6zPTNDMijNO7uah3hgwLichKrxigsJDtXdpiWYSXZUAQDmeG0Rg7dzDTC6UecAznUYclI1Bdk_P50Gw4jGNbNWMp0geAl1Xw8ZPA9JEXfxMCDrOofQk3VmoGw7LPUysucorp7Qk7MIxtVpk6Aj-aVGZKJ8IYqYOk9hCePQtO_VO_MgvPYYU2qeE8w6gID8WNYTPP9Vl4Px3DiZnWBA7SM88i-RpuOoKKVl_cPAhCGgV"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 bg-surface/70 backdrop-blur-[20px] border-r border-black/5 flex flex-col py-stack-md gap-stack-sm hidden md:flex">
+<div class="px-6 mb-stack-md">
+<h2 class="font-display text-headline-sm font-bold text-on-surface">Connectors</h2>
+<p class="font-label-sm text-label-sm text-secondary">Manage integrations</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="group flex items-center px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="chat">chat</span>
+<span class="font-label-md text-label-md">Chat</span>
+</a>
+<a class="group flex items-center px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="description">description</span>
+<span class="font-label-md text-label-md">Pages</span>
+</a>
+<a class="group flex items-center px-6 py-3 text-primary font-bold border-l-2 border-primary bg-primary/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="hub">hub</span>
+<span class="font-label-md text-label-md">Connectors</span>
+</a>
+<a class="group flex items-center px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="group flex items-center px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="bolt">bolt</span>
+<span class="font-label-md text-label-md">Automations</span>
+</a>
+<div class="mt-stack-lg border-t border-black/5 pt-stack-sm">
+<a class="group flex items-center px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="help">help</span>
+<span class="font-label-md text-label-md">FAQ</span>
+</a>
+<a class="group flex items-center px-6 py-3 text-secondary hover:translate-x-1 hover:bg-black/5 transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<div class="mt-auto px-6">
+<button class="w-full bg-primary text-on-primary py-3 rounded-sm font-label-md text-label-md hover:opacity-90 transition-opacity active:scale-95 duration-200">
+                New Action
+            </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-64 pt-16 min-h-screen">
+<div class="max-w-container-max mx-auto px-margin-desktop py-stack-lg">
+<!-- Page Header -->
+<div class="mb-stack-lg flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+<div>
+<h1 class="font-display text-display text-on-surface mb-2">Ecosystem</h1>
+<p class="font-body-lg text-body-lg text-secondary max-w-2xl">Integrate your professional toolchain into the EMBLEM core. Unified data streams for intelligent automation.</p>
+</div>
+<div class="flex gap-gutter">
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Active Links</p>
+<p class="font-display text-headline-md font-bold text-primary">14</p>
+</div>
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Available</p>
+<p class="font-display text-headline-md font-bold text-on-surface">128+</p>
+</div>
+</div>
+</div>
+<!-- Active Connectors Section -->
+<section class="mb-stack-xl">
+<div class="flex items-center gap-3 mb-stack-md">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Connectors</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Slack Card -->
+<div class="glass-card p-stack-md flex flex-col gap-stack-sm relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">forum</span>
+</div>
+<span class="px-2 py-1 bg-primary/10 text-primary font-label-sm text-label-sm rounded-sm">Syncing</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md mb-1">Slack Enterprise</h4>
+<p class="font-body-md text-body-md text-secondary">Real-time event monitoring across 42 channels.</p>
+</div>
+<div class="mt-auto pt-stack-sm border-t border-black/5 flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-secondary">Last sync: 2m ago</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+<!-- Gmail Card -->
+<div class="glass-card p-stack-md flex flex-col gap-stack-sm relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">mail</span>
+</div>
+<span class="px-2 py-1 bg-primary/10 text-primary font-label-sm text-label-sm rounded-sm">Active</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md mb-1">Google Workspace</h4>
+<p class="font-body-md text-body-md text-secondary">Calendar &amp; Mail integration for autonomous scheduling.</p>
+</div>
+<div class="mt-auto pt-stack-sm border-t border-black/5 flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-secondary">Last sync: 15m ago</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+<!-- Notion Card -->
+<div class="glass-card p-stack-md flex flex-col gap-stack-sm relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+<span class="px-2 py-1 bg-error-container text-on-error-container font-label-sm text-label-sm rounded-sm">Action Required</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md mb-1">Notion Knowledge</h4>
+<p class="font-body-md text-body-md text-secondary">Permission expired for 'Engineering' workspace.</p>
+</div>
+<div class="mt-auto pt-stack-sm border-t border-black/5 flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-error">Re-authenticate</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors" data-icon="refresh">refresh</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Available Apps Section -->
+<section>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-stack-md mb-stack-md">
+<h3 class="font-headline-md text-headline-md text-on-surface">Available Connectors</h3>
+<div class="flex items-center gap-gutter">
+<div class="relative">
+<input class="bg-surface-container-low border-none border-b-2 border-outline-variant focus:border-primary focus:ring-0 w-64 py-2 px-4 font-label-md text-label-md transition-all duration-300" placeholder="Search apps..." type="text"/>
+<span class="material-symbols-outlined absolute right-2 top-2 text-secondary" data-icon="search">search</span>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-white border border-outline-variant rounded-sm font-label-sm text-label-sm hover:bg-black/5 transition-all">Popular</button>
+<button class="px-4 py-2 bg-white border border-outline-variant rounded-sm font-label-sm text-label-sm hover:bg-black/5 transition-all">CRM</button>
+<button class="px-4 py-2 bg-white border border-outline-variant rounded-sm font-label-sm text-label-sm hover:bg-black/5 transition-all">Dev Tools</button>
+</div>
+</div>
+</div>
+<!-- Bento Grid for Available Apps -->
+<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-gutter">
+<!-- Salesforce -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="cloud">cloud</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Salesforce</p>
+<p class="font-label-sm text-label-sm text-secondary">CRM &amp; Pipeline</p>
+</div>
+<!-- GitHub -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="code">code</span>
+</div>
+<p class="font-label-md text-label-md font-bold">GitHub</p>
+<p class="font-label-sm text-label-sm text-secondary">Repositories</p>
+</div>
+<!-- Figma -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="category">category</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Figma</p>
+<p class="font-label-sm text-label-sm text-secondary">Design Assets</p>
+</div>
+<!-- Stripe -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="payments">payments</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Stripe</p>
+<p class="font-label-sm text-label-sm text-secondary">Finance</p>
+</div>
+<!-- Linear -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="task_alt">task_alt</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Linear</p>
+<p class="font-label-sm text-label-sm text-secondary">Issues</p>
+</div>
+<!-- HubSpot -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="hub">hub</span>
+</div>
+<p class="font-label-md text-label-md font-bold">HubSpot</p>
+<p class="font-label-sm text-label-sm text-secondary">Marketing</p>
+</div>
+<!-- Zoom -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="videocam">videocam</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Zoom</p>
+<p class="font-label-sm text-label-sm text-secondary">Meetings</p>
+</div>
+<!-- AWS -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="dns">dns</span>
+</div>
+<p class="font-label-md text-label-md font-bold">AWS</p>
+<p class="font-label-sm text-label-sm text-secondary">Infrastructure</p>
+</div>
+<!-- Jira -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="assignment">assignment</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Jira</p>
+<p class="font-label-sm text-label-sm text-secondary">Project Mgmt</p>
+</div>
+<!-- Zendesk -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="support_agent">support_agent</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Zendesk</p>
+<p class="font-label-sm text-label-sm text-secondary">Support</p>
+</div>
+<!-- Airtable -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="grid_view">grid_view</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Airtable</p>
+<p class="font-label-sm text-label-sm text-secondary">Database</p>
+</div>
+<!-- Discord -->
+<div class="glass-card p-stack-sm flex flex-col items-center text-center gap-3 cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="group">group</span>
+</div>
+<p class="font-label-md text-label-md font-bold">Discord</p>
+<p class="font-label-sm text-label-sm text-secondary">Community</p>
+</div>
+</div>
+</section>
+<!-- Intelligence Featurette -->
+<section class="mt-stack-xl">
+<div class="glass-card p-stack-lg rounded-xl overflow-hidden relative border-primary/20">
+<div class="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-[200px] absolute -right-20 -top-10 text-primary">auto_awesome</span>
+</div>
+<div class="relative z-10 max-w-xl">
+<h2 class="font-display text-headline-lg text-on-surface mb-stack-sm">Intelligent Cross-App Reasoning</h2>
+<p class="font-body-lg text-body-lg text-secondary mb-stack-md">EMBLEM can now reason across multiple connectors. Ask "What are the common pain points mentioned in Slack and Zendesk?" and get a synthesized report instantly.</p>
+<button class="bg-primary text-on-primary px-margin-desktop py-3 rounded-sm font-label-md text-label-md hover:scale-[1.02] transition-transform flex items-center gap-2">
+                            Explore Insights <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="md:ml-64 relative w-full mt-stack-xl border-t border-outline-variant bg-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-margin-desktop py-stack-lg grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="flex flex-col gap-stack-sm">
+<span class="font-display text-headline-md font-black text-on-surface">EMBLEM</span>
+<p class="font-body-md text-body-md text-on-secondary-container">The Enterprise Intelligence Layer. Designed for precision.</p>
+</div>
+<div class="flex flex-col gap-stack-xs">
+<p class="font-label-sm text-label-sm text-primary mb-2">Platform</p>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-colors" href="#">Product</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-colors" href="#">Solutions</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-colors" href="#">Intelligence</a>
+</div>
+<div class="flex flex-col gap-stack-xs">
+<p class="font-label-sm text-label-sm text-primary mb-2">Company</p>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-colors" href="#">Terms</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-colors" href="#">Support</a>
+</div>
+<div class="flex flex-col justify-end">
+<p class="font-label-sm text-label-sm text-secondary">© 2024 EMBLEM Technologies. All rights reserved.</p>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for cursor tracking light reflection on glass cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+                
+                // Dynamic subtle glow
+                card.style.boxShadow = `
+                    ${-rotateY * 2}px ${rotateX * 2}px 30px rgba(0, 62, 199, 0.08),
+                    0 20px 40px rgba(0, 0, 0, 0.04)
+                `;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+                card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.04)';
+            });
+        });
+
+        // Spring animation for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.95)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+    </script>
+</body></html>

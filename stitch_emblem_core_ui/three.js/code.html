@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<!-- STITCH_THREEJS_START:ANIMATION_15 class="fixed inset-0 w-full h-full bg-transparent" -->
+<div class="fixed inset-0 w-full h-full bg-transparent" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_15" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_15');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const width = container.clientWidth || window.innerWidth;
+const height = container.clientHeight || window.innerHeight;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setSize(width, height);
+container.appendChild(renderer.domElement);
+
+// Create a high-tech "Orb" for light mode
+const geometry = new THREE.SphereGeometry(1.5, 64, 64);
+const material = new THREE.MeshPhongMaterial({
+    color: 0x0052ff,
+    transparent: true,
+    opacity: 0.8,
+    shininess: 100,
+    emissive: 0x002266
+});
+const orb = new THREE.Mesh(geometry, material);
+scene.add(orb);
+
+// Wireframe shell for detail
+const wireGeo = new THREE.SphereGeometry(1.55, 32, 32);
+const wireMat = new THREE.MeshBasicMaterial({
+    color: 0x0052ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.1
+});
+const shell = new THREE.Mesh(wireGeo, wireMat);
+scene.add(shell);
+
+const light = new THREE.PointLight(0xffffff, 1, 100);
+light.position.set(5, 5, 5);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+camera.position.z = 5;
+
+let mouseX = 0, mouseY = 0;
+window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    orb.rotation.y += 0.005;
+    shell.rotation.y -= 0.003;
+    
+    // Gentle floating motion
+    orb.position.y = Math.sin(Date.now() * 0.001) * 0.1;
+    
+    // Follow mouse subtly
+    orb.position.x += (mouseX * 0.5 - orb.position.x) * 0.05;
+    orb.position.y += (mouseY * 0.5 - orb.position.y) * 0.05;
+    
+    renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+});
+
+animate();
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_15 -->
+</body>
+</html>
