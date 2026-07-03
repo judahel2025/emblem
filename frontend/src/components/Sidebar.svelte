@@ -7,6 +7,7 @@
   import { auth } from "../lib/supabase.js";
   import { WORKSPACES } from "../lib/workspaces.js";
   import ThemeToggle from "./ThemeToggle.svelte";
+  import Logo from "./Logo.svelte";
 
   export let collapsed = false;
 
@@ -35,7 +36,7 @@
 <aside class="sidebar" class:collapsed data-tour="sidebar">
   <div class="top">
     <button class="brand" on:click={() => { newChat(); }} title="Emblem">
-      <span class="mark gloss">E</span>
+      <span class="mark"><Logo size={26} /></span>
       {#if !collapsed}<span class="name">Emblem</span>{/if}
     </button>
     <button class="icon-btn" on:click={() => collapsed = !collapsed}
@@ -136,10 +137,8 @@
   .top { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; }
   .brand { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; }
   .mark {
-    width: 28px; height: 28px; border-radius: 9px;
-    background: var(--accent-grad); color: var(--accent-t);
-    display: grid; place-items: center; font-weight: 800; font-size: 15px;
-    box-shadow: 0 2px 10px var(--accent-glow);
+    display: grid; place-items: center;
+    color: var(--accent-ink);
   }
   .icon-btn {
     width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;

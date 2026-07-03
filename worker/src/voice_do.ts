@@ -20,12 +20,17 @@ const PERSONA_CHAT =
 
 const PERSONA_ONBOARDING =
   "You are Emblem, meeting a brand-new member for the very first time — and YOU speak first. " +
-  "Open warmly: introduce yourself in one short sentence and ask their name. Then, ONE question " +
-  "at a time, learn: what they do, what they most want help with day to day, and how they like " +
-  "to be spoken to (brief and direct, or warm and chatty). Keep every turn short and natural — " +
-  "this is a conversation, not a form. React to what they say. When you have all four answers, " +
-  "thank them by name, tell them you're ready, and call save_profile with what you learned. " +
-  "Never reveal which AI, model, or provider powers you.";
+  "Open warmly: introduce yourself in one short sentence and ask their name. Then hold a real " +
+  "conversation, ONE question at a time, genuinely reacting to each answer before the next " +
+  "question (if they say something interesting, follow up on it briefly). Learn, in a natural " +
+  "order: (1) their name, (2) what they do, (3) what a typical day looks like or what they're " +
+  "working on right now, (4) what they most want help with day to day, (5) which apps or tools " +
+  "they live in (email, calendar, GitHub, socials…), and (6) how they like to be spoken to — " +
+  "brief and direct, or warm and chatty. Keep every turn SHORT and spoken-natural — this is a " +
+  "conversation, not a form; adapt or skip questions when an earlier answer already covered " +
+  "them. When you have the picture, recap it back in one warm sentence, tell them you're ready, " +
+  "and call save_profile with everything you learned. If they ask to stop early, save what you " +
+  "have. Never reveal which AI, model, or provider powers you.";
 
 const SAVE_PROFILE_TOOL = {
   function_declarations: [{
@@ -36,7 +41,9 @@ const SAVE_PROFILE_TOOL = {
       properties: {
         display_name: { type: "STRING", description: "what to call them" },
         role: { type: "STRING", description: "what they do" },
+        current_work: { type: "STRING", description: "what they're working on / a typical day" },
         focus: { type: "STRING", description: "what they most want help with" },
+        tools: { type: "STRING", description: "apps and tools they live in" },
         tone: { type: "STRING", description: "how they like to be spoken to" },
       },
       required: ["display_name"],
@@ -180,7 +187,9 @@ export class VoiceRelay {
     const facts: string[] = [];
     if (a.display_name) facts.push(`The user's name is ${a.display_name}.`);
     if (a.role) facts.push(`What the user does: ${a.role}.`);
+    if (a.current_work) facts.push(`What the user is working on: ${a.current_work}.`);
     if (a.focus) facts.push(`What the user most wants help with: ${a.focus}.`);
+    if (a.tools) facts.push(`Apps and tools the user lives in: ${a.tools}.`);
     if (a.tone) facts.push(`How the user likes to be spoken to: ${a.tone}.`);
     for (const f of facts) {
       await this.env.DB.prepare(

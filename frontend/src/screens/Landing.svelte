@@ -3,6 +3,7 @@
   // ONE electric-blue accent used for fills/glows/focus only.
   // Says nothing about which AI or providers power it — that stays in the backend.
   import { createEventDispatcher } from "svelte";
+  import Logo from "../components/Logo.svelte";
   const dispatch = createEventDispatcher();
   const enter = () => dispatch("enter");
 
@@ -26,7 +27,7 @@
   }
 
   const tools = [
-    { i: "ti-brand-google-filled", n: "Gmail" },
+    { i: "ti-brand-gmail", n: "Gmail" },
     { i: "ti-calendar", n: "Calendar" },
     { i: "ti-brand-github", n: "GitHub" },
     { i: "ti-brand-notion", n: "Notion" },
@@ -49,7 +50,7 @@
 <div class="lp">
   <!-- Nav -->
   <header class="nav glass">
-    <div class="brand"><span class="mark">E</span> Emblem</div>
+    <div class="brand"><span class="mark"><Logo size={24} /></span> Emblem</div>
     <nav class="links">
       <a href="#features">Product</a>
       <a href="#connect">Connections</a>
@@ -120,7 +121,7 @@
   </section>
 
   <footer class="foot">
-    <div class="brand"><span class="mark">E</span> Emblem</div>
+    <div class="brand"><span class="mark"><Logo size={24} /></span> Emblem</div>
     <span class="dim">Your voice-first AI workspace.</span>
     <span class="dim">© 2026 Emblem</span>
   </footer>
@@ -142,8 +143,7 @@
   .nav { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
     padding: 16px 40px; border-left: none; border-right: none; border-top: none; }
   .brand { display: flex; align-items: center; gap: 9px; font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
-  .mark { width: 26px; height: 26px; border-radius: 8px; background: var(--accent-grad); color: var(--accent-t);
-    display: grid; place-items: center; font-weight: 800; font-size: 16px; box-shadow: 0 1px 6px var(--accent-glow); }
+  .mark { display: grid; place-items: center; color: var(--accent-ink); }
   .links { display: flex; gap: 30px; }
   .links a { color: var(--text-2); font-size: 14px; font-weight: 500; text-decoration: none; transition: color var(--t-fast); }
   .links a:hover { color: var(--accent-ink); }

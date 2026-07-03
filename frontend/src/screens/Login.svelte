@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import { fly } from "svelte/transition";
   import { auth } from "../lib/supabase.js";
+  import Logo from "../components/Logo.svelte";
   const dispatch = createEventDispatcher();
 
   let mode = "signin"; // "signin" | "signup"
@@ -25,7 +26,7 @@
 
 <div class="wrap">
   <div class="card glass gloss" class:shake in:fly={{ y: 14, duration: 300 }}>
-    <div class="brand"><span class="mark gloss">E</span> Emblem</div>
+    <div class="brand"><span class="mark"><Logo size={26} /></span> Emblem</div>
     <h1>{mode === "signup" ? "Create your workspace" : "Welcome back"}</h1>
     <p class="sub">{mode === "signup" ? "Your voice-first AI workspace, in one minute." : "Sign in to your workspace."}</p>
 
@@ -78,9 +79,7 @@
     75% { transform: translateX(-3px); }
   }
   .brand { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 700; margin-bottom: 22px; color: var(--text); }
-  .mark { width: 26px; height: 26px; border-radius: 8px; background: var(--accent-grad); color: var(--accent-t);
-    display: grid; place-items: center; font-weight: 800; font-size: 15px;
-    box-shadow: 0 2px 10px var(--accent-glow); }
+  .mark { display: grid; place-items: center; color: var(--accent-ink); }
   h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 14px; margin: 0 0 24px; }
   form { display: flex; flex-direction: column; gap: 14px; }
