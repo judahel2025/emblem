@@ -32,7 +32,9 @@ registerTool({
   },
 });
 
-async function sendViaResend(env: Env, to: string, subject: string, body: string) {
+// System mail (Resend) — OWNER/SYSTEM ALERTS ONLY. User email always goes through
+// the user's own connected account (Gmail via the connections layer), never this.
+export async function sendViaResend(env: Env, to: string, subject: string, body: string) {
   if (!env.RESEND_KEY || !env.RESEND_DOMAIN) {
     return { ok: false, error: "Email isn't configured yet." };
   }
@@ -52,9 +54,14 @@ async function sendViaResend(env: Env, to: string, subject: string, body: string
 }
 
 registerTool({
-  name: "email.send_to",
-  tier: "danger",
-  description: "Send an email to a specific recipient",
-  summarize: (a) => `Send email to ${a.to}: ${String(a.subject ?? "").slice(0, 50)}`,
-  handler: (a, env) => sendViaResend(env, String(a.to || ""), String(a.subject || ""), String(a.body || "")),
+  name: "system.notify_owner",
+  tier: "caution",
+  description: "Send a system notification email to the product owner (internal alerts only)",
+  summarize: (a) => `Notify owner: ${String(a.subject ?? "").slice(0, 60)}`,
+  handler: async (a, env, userId) => {
+    if (!env.EMBLEM_OWNER_USER_ID || userId !== env.EMBLEM_OWNER_USER_ID) {
+      return { ok: false, error: "Not available." };
+    }
+    return sendViaResend(env, String(a.to || ""), String(a.subject || ""), String(a.body || ""));
+  },
 });

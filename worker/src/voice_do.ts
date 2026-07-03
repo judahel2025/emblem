@@ -171,7 +171,8 @@ export class VoiceRelay {
   private async saveProfile(userId: string, a: Record<string, unknown>) {
     await this.env.DB.prepare(
       `INSERT INTO profiles (user_id, display_name, role, tone, onboarded)
-       VALUES (?1, ?2, ?3, ?4, 1)
+       VALUES (?1, COALESCE(?2, ''), COALESCE(?3, ''),
+               COALESCE(?4, 'warm, concise, decisive'), 1)
        ON CONFLICT(user_id) DO UPDATE SET
          display_name = COALESCE(?2, display_name), role = COALESCE(?3, role),
          tone = COALESCE(?4, tone), onboarded = 1`)

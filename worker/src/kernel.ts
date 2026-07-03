@@ -34,7 +34,9 @@ export function toolManifest() {
 }
 
 // Tools full-auto mode may run without a click. Allowlist — omission = ask.
-const FULL_AUTO_ALLOW = new Set(["email.send_to", "files.delete", "composio.act"]);
+// Deliberately narrow: connected-app writes (composio.act) and email always ask —
+// auto-sending mail or auto-pushing commits would contradict the approval contract.
+const FULL_AUTO_ALLOW = new Set(["files.delete"]);
 
 // Secret-looking arg values never reach the audit log.
 const SECRET_KEYS = ["password", "secret", "token", "api_key", "apikey", "key", "authorization"];

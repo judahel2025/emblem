@@ -85,6 +85,14 @@ export async function allToolkits(env: Env): Promise<string[]> {
 const MAX_PER_TOOLKIT = 15;
 const MAX_TOTAL = 60;
 
+// Slugs that MUST be in the agent's tool list whenever the toolkit is connected —
+// `important=true` sometimes omits the very actions users ask for by name.
+const PINNED_SLUGS: Record<string, string[]> = {
+  gmail: ["GMAIL_SEND_EMAIL", "GMAIL_FETCH_EMAILS", "GMAIL_REPLY_TO_THREAD"],
+  googlecalendar: ["GOOGLECALENDAR_CREATE_EVENT", "GOOGLECALENDAR_EVENTS_LIST"],
+  github: ["GITHUB_CREATE_OR_UPDATE_FILE_CONTENTS", "GITHUB_GET_A_REPOSITORY"],
+};
+
 export interface OpenAITool {
   type: "function";
   function: { name: string; description: string; parameters: Record<string, unknown> };
@@ -102,7 +110,18 @@ export async function userTools(env: Env, userId: string): Promise<OpenAITool[]>
       if (!res.items?.length) {
         res = await cf(env, `/tools?toolkit_slug=${tk}&limit=${MAX_PER_TOOLKIT}`) as typeof res;
       }
-      for (const t of res.items || []) {
+      const items = [...(res.items || [])];
+      // Merge pinned slugs the importance filter missed.
+      const have = new Set(items.map((t) => String(t.slug)));
+      const missing = (PINNED_SLUGS[tk] || []).filter((s) => !have.has(s));
+      if (missing.length) {
+        try {
+          const pinned = await cf(env, `/tools?toolkit_slug=${tk}&tool_slugs=${missing.join(",")}`) as
+            { items?: Array<Record<string, unknown>> };
+          items.unshift(...(pinned.items || []));
+        } catch { /* pinned fetch is best-effort */ }
+      }
+      for (const t of items) {
         if (out.length >= MAX_TOTAL || !t.slug || t.is_deprecated) continue;
         out.push({ type: "function", function: {
           name: String(t.slug),
@@ -130,12 +149,46 @@ const READ_HINTS = ["GET_", "_GET", "LIST", "FETCH", "SEARCH", "READ", "FIND",
 export const isReadOnly = (slug: string) =>
   READ_HINTS.some((h) => slug.toUpperCase().includes(h));
 
+// Human summaries for approval cards — the user must see WHAT happens in WHOSE
+// account, never a raw tool slug.
+const TOOLKIT_LABELS: Record<string, string> = {
+  gmail: "Gmail", googlecalendar: "Google Calendar", github: "GitHub", youtube: "YouTube",
+  instagram: "Instagram", facebook: "Facebook", linkedin: "LinkedIn", twitter: "X (Twitter)",
+  notion: "Notion", slack: "Slack",
+};
+
+export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): string {
+  const s = slug.toUpperCase();
+  const str = (k: string) => (typeof p[k] === "string" && (p[k] as string).trim()) ? String(p[k]).trim() : "";
+  switch (s) {
+    case "GMAIL_SEND_EMAIL": {
+      const to = str("recipient_email") || str("to") || "a recipient";
+      const subj = str("subject");
+      return `Send email to ${to}${subj ? ` — “${subj.slice(0, 60)}”` : ""} via your Gmail`;
+    }
+    case "GMAIL_REPLY_TO_THREAD":
+      return `Reply${str("recipient_email") ? ` to ${str("recipient_email")}` : ""} in your Gmail`;
+    case "GITHUB_CREATE_OR_UPDATE_FILE_CONTENTS": {
+      const repo = [str("owner"), str("repo")].filter(Boolean).join("/");
+      return `Commit ${str("path") || "a file"}${repo ? ` to ${repo}` : ""}${str("branch") ? ` (${str("branch")})` : ""} on your GitHub`;
+    }
+    case "GOOGLECALENDAR_CREATE_EVENT":
+      return `Add “${(str("summary") || str("title") || "an event").slice(0, 60)}” to your Google Calendar`;
+  }
+  // Generic fallback: "Create issue in your GitHub" from the slug's toolkit + verb words.
+  const toolkit = Object.keys(TOOLKIT_LABELS).find((k) => s.startsWith(k.toUpperCase() + "_"));
+  const action = (toolkit ? s.slice(toolkit.length + 1) : s)
+    .toLowerCase().replace(/_/g, " ").replace(/^an? /, "");
+  return toolkit ? `${action.charAt(0).toUpperCase()}${action.slice(1)} in your ${TOOLKIT_LABELS[toolkit]}`
+                 : `${action.charAt(0).toUpperCase()}${action.slice(1)} in a connected app`;
+}
+
 // Kernel gateway tools — every connected-app call passes the same gate as native tools.
 registerTool({
   name: "composio.read",
   tier: "safe",
   description: "Read from a connected app (Gmail, Calendar, GitHub, socials)",
-  summarize: (a) => `Read via ${a.slug}`,
+  summarize: (a) => humanizeSlug(String(a.slug), (a.params as Record<string, unknown>) || {}),
   handler: (a, env, userId) =>
     executeComposio(env, userId, String(a.slug), (a.params as Record<string, unknown>) || {}),
 });
@@ -144,7 +197,7 @@ registerTool({
   name: "composio.act",
   tier: "danger",
   description: "Take an action in a connected app (send, post, create, delete)",
-  summarize: (a) => `Act via ${a.slug}`,
+  summarize: (a) => humanizeSlug(String(a.slug), (a.params as Record<string, unknown>) || {}),
   handler: (a, env, userId) =>
     executeComposio(env, userId, String(a.slug), (a.params as Record<string, unknown>) || {}),
 });

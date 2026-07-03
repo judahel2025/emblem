@@ -10,20 +10,30 @@ export class LiveClient {
   /**
    * @param {object} opts
    *   mode        "chat" | "onboarding"
-   *   onState     (state) => {}   connecting|ready|listening|thinking|speaking|onboarded|unavailable|ended
+   *   onState     (state) => {}   connecting|ready|listening|thinking|speaking|onboarded|unavailable|error|ended
+   *                               "unavailable" = the server said no (mic denied / not configured);
+   *                               "error" = connection trouble — retryable.
    *   onCaption   ({who, text}) => {}
    *   onLevel     (0..1) => {}    live mic level (for the orb)
+   *   onError     (message) => {} human-readable connection problem
    */
   constructor(opts = {}) {
     this.mode = opts.mode || "chat";
     this.onState = opts.onState || (() => {});
     this.onCaption = opts.onCaption || (() => {});
     this.onLevel = opts.onLevel || (() => {});
+    this.onError = opts.onError || (() => {});
     this.ws = null; this.audioCtx = null; this.micStream = null;
     this.procNode = null; this.analyser = null;
     this.playHead = 0; this.sources = [];
     this.speaking = false; this.stopped = false;
+    this.everReady = false; this.reconnected = false;
   }
+
+  /** Chrome autoplay policy: an AudioContext created without a user gesture stays
+   *  suspended and everything plays SILENTLY. Callers must check this and show a
+   *  tap-to-enable affordance instead of silence. */
+  audioSuspended() { return this.audioCtx?.state === "suspended"; }
 
   _url() {
     const token = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_token")) || "";
@@ -41,17 +51,42 @@ export class LiveClient {
     try {
       this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       await this.audioCtx.resume();
-      if (mic) {
-        this.micStream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true },
-        });
-      }
-    } catch {
+    } catch (e) {
+      console.error("voice: audio context failed", e);
+      this.onError("Audio isn't available in this browser.");
       this.onState("unavailable");
       return false;
     }
+    if (mic) {
+      try {
+        this.micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
+      } catch (e) {
+        console.error("voice: mic denied", e);
+        this.onError("Microphone access was blocked.");
+        this.onState("unavailable");
+        return false;
+      }
+    }
+    return this._connect({ mic });
+  }
 
+  _connect({ mic }) {
     return new Promise((resolve) => {
+      let settled = false;
+      const settle = (ok) => { if (!settled) { settled = true; clearTimeout(connectTimer); resolve(ok); } };
+      // A relay that never answers is a connection problem, not silence.
+      const connectTimer = setTimeout(() => {
+        if (!settled) {
+          console.error("voice: connect timeout");
+          try { this.ws?.close(); } catch {}
+          this.onError("Couldn't reach the voice service.");
+          this.onState("error");
+          settle(false);
+        }
+      }, 10000);
+
       this.ws = new WebSocket(this._url());
       this.ws.binaryType = "arraybuffer";
       this.ws.onmessage = (ev) => {
@@ -59,16 +94,35 @@ export class LiveClient {
         if (m.type === "audio") this._play(m.data);
         else if (m.type === "caption") this.onCaption(m);
         else if (m.type === "status") {
-          if (m.state === "ready") { this.onState("listening"); if (mic) this._startMic(); resolve(true); }
+          if (m.state === "ready") {
+            this.everReady = true;
+            this.onState("listening"); if (mic) this._startMic(); settle(true);
+          }
           else if (m.state === "turn_complete") { this.speaking = false; this.onState("listening"); }
           else if (m.state === "interrupted") this._bargeIn();
           else if (m.state === "onboarded") this.onState("onboarded");
-          else if (m.state === "unavailable") { this.onState("unavailable"); resolve(false); }
+          else if (m.state === "unavailable") { this.onState("unavailable"); settle(false); }
           else if (m.state === "ended") { if (!this.stopped) this.onState("ended"); }
         }
       };
-      this.ws.onerror = () => { this.onState("unavailable"); resolve(false); };
-      this.ws.onclose = () => { if (!this.stopped) this.onState("ended"); };
+      this.ws.onerror = () => {
+        console.error("voice: websocket error");
+        this.onError("Voice connection failed.");
+        this.onState("error");
+        settle(false);
+      };
+      this.ws.onclose = () => {
+        if (this.stopped) return;
+        // One quiet reconnect for a mid-session drop; a second drop surfaces as ended.
+        if (this.everReady && !this.reconnected && settled) {
+          this.reconnected = true;
+          this.onState("connecting");
+          setTimeout(() => { if (!this.stopped) this._connect({ mic }); }, 800);
+          return;
+        }
+        this.onState(settled ? "ended" : "error");
+        settle(false);
+      };
     });
   }
 
@@ -78,6 +132,7 @@ export class LiveClient {
   }
 
   _startMic() {
+    if (this.procNode) return;   // already capturing (e.g. after a reconnect)
     const src = this.audioCtx.createMediaStreamSource(this.micStream);
     this.analyser = this.audioCtx.createAnalyser();
     this.analyser.fftSize = 256;

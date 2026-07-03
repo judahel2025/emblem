@@ -31,8 +31,24 @@ async function req(path, options = {}) {
     headers: { "Content-Type": "application/json", ...authHeaders() },
     ...options,
   });
-  if (!res.ok && res.status >= 500) throw new Error(`${path} -> ${res.status}`);
+  if (res.status === 401) {
+    // Session expired/invalid — let the shell sign out cleanly.
+    window.dispatchEvent(new CustomEvent("emblem:session-expired"));
+    throw new ApiError(path, 401, "signed out");
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(path, res.status, body.error || `request failed (${res.status})`);
+  }
   return res.json();
+}
+
+export class ApiError extends Error {
+  constructor(path, status, message) {
+    super(message);
+    this.path = path;
+    this.status = status;
+  }
 }
 
 const get = (p) => req(p);
@@ -172,6 +188,6 @@ export const api = {
 
   // Identity + profile
   me: () => get("/api/me"),
-  profile: () => get("/api/profile"),
-  profileSet: (patch) => post("/api/profile", patch),
+  profile: () => get("/api/me/profile"),
+  profileSet: (patch) => req("/api/me/profile", { method: "PUT", body: JSON.stringify(patch) }),
 };

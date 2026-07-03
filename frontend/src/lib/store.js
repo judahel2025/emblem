@@ -12,6 +12,11 @@ export const pulseTab = writable("money");      // money | inbox | content | res
 export const guardTab = writable("approvals");  // approvals | activity | security
 export const filesTab = writable("files");      // files | notes | memory | skills
 
+// --- app shell -------------------------------------------------------------------
+// The active workspace screen. The agent (open_screen tool) and the tour drive this
+// too, so it lives in a store rather than App.svelte local state.
+export const appView = writable("chat");
+
 // --- conversation / voice ------------------------------------------------------
 export const messages = writable([]);
 export const thinking = writable(false);
@@ -35,12 +40,14 @@ export const voiceCfg = writable({ engine: "edge", voice: "en-US-AriaNeural", ra
 // clean personal workspace with none of the operator surfaces.
 export const me = writable({ user_id: null, is_admin: false, display_name: "", onboarded: false });
 let _meLoaded = false;
-export async function loadMe() {
-  if (_meLoaded) return get(me);
+export async function loadMe(force = false) {
+  if (_meLoaded && !force) return get(me);
   try {
     const r = await api.me();
     if (r && r.user_id !== undefined) { me.set(r); _meLoaded = true; }
-  } catch {}
+  } catch (e) {
+    console.error("loadMe failed:", e);
+  }
   return get(me);
 }
 
@@ -178,7 +185,13 @@ function runActions(actions) {
     } else if (a.type === "terminal.run") {
       termInbox.set(a.command); goTo("make", "code");
     } else if (a.type === "navigate") {
-      goTo(a.mode || "converse", a.tab);
+      if (a.view) appView.set(a.view);        // app screens (chat/connect/pages/…)
+      else goTo(a.mode || "converse", a.tab); // legacy mode navigation
+    } else if (a.type === "open_url") {
+      if (a.url) window.open(a.url, "_blank", "noopener");
+    } else if (a.type === "approval.pending") {
+      notify(a.summary ? `Waiting for your approval: ${a.summary}` : "An action is waiting for your approval", "caution");
+      refresh();
     } else if (a.type === "view_file") {
       goTo("files", "files");
       fileToView.set({ root: a.root || "documents", path: a.path });

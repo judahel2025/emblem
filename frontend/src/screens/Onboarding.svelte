@@ -89,7 +89,15 @@
       if (answers.role) await api.memoryAdd(`What the user does: ${answers.role}.`, "identity");
       if (answers.task) await api.memoryAdd(`Something the user wants help with: ${answers.task}.`, "preference");
       await api.profileSet({ display_name: answers.name || "", role: answers.role || "", onboarded: true });
-    } catch {}
+    } catch (e) {
+      // The save failing means the server never marks them onboarded — tell them
+      // instead of pretending, and let them retry rather than looping forever.
+      console.error("onboarding save failed:", e);
+      pushLine("assistant", "Hmm — I couldn't save that just now. Give it another try in a moment.");
+      state = "listening";
+      qi = QUESTIONS.length - 1;
+      return;
+    }
     finish(false);
   }
 

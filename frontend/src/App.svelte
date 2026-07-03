@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { refresh, loadBriefing, loadConversation, loadMe, me, voiceState, brainReady } from "./lib/store.js";
+  import { refresh, loadBriefing, loadConversation, loadMe, me, voiceState, brainReady, appView } from "./lib/store.js";
   import { api } from "./lib/api.js";
   import ChatView from "./components/ChatView.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
@@ -31,8 +31,9 @@
   const ls = (k) => typeof localStorage !== "undefined" && localStorage.getItem(k) === "1";
   let entered = ls("emblem_entered");
   let loggedIn = auth.isLoggedIn();
+  // Optimistic hint only — the server's profiles.onboarded is the truth, reconciled in boot().
   let onboarded = ls("emblem_onboarded");
-  let view = "chat";
+  let identityReady = !loggedIn;   // logged-in users wait for /api/me before routing
 
   const NAV = [
     { id: "chat", label: "Chat", icon: "ti-message-2" },
@@ -43,9 +44,25 @@
   ];
 
   function enterApp() { entered = true; try { localStorage.setItem("emblem_entered", "1"); } catch {} }
-  function onLogin() { loggedIn = true; onboarded = ls("emblem_onboarded"); }
-  function onOnboarded() { onboarded = true; view = "connect"; }
-  function signOut() { auth.signOut(); loggedIn = false; view = "chat"; }
+  async function onLogin() {
+    loggedIn = true;
+    identityReady = false;
+    await syncIdentity();
+    boot();
+  }
+  function onOnboarded() { onboarded = true; appView.set("connect"); }
+  function signOut() { auth.signOut(); loggedIn = false; appView.set("chat"); }
+
+  // Server truth for onboarding — localStorage is just a hint that can go stale
+  // (cleared cache, new device, or a failed save in an old build).
+  async function syncIdentity() {
+    const my = await loadMe(true);
+    if (my?.user_id) {
+      onboarded = !!my.onboarded;
+      try { localStorage.setItem("emblem_onboarded", onboarded ? "1" : "0"); } catch {}
+    }
+    identityReady = true;
+  }
 
   // status label mirrors Clicky's status text
   $: statusLabel = {
@@ -64,23 +81,38 @@
   }
 
   async function boot() {
+    if (!loggedIn || timer) return;   // workspace boot only, once
     await waitForEngine();
     if (!engineUp) return;
-    await loadMe();          // identity FIRST — everything after keys off me.is_admin
     refresh();
     loadConversation();
     loadBriefing();
     timer = setInterval(refresh, 6000);
   }
 
-  onMount(() => boot());
-  onDestroy(() => { clearInterval(timer); });
+  function onSessionExpired() {
+    if (loggedIn) { signOut(); }
+  }
+
+  onMount(() => {
+    window.addEventListener("emblem:session-expired", onSessionExpired);
+    if (loggedIn) { syncIdentity().then(boot); }
+  });
+  onDestroy(() => {
+    clearInterval(timer);
+    window.removeEventListener("emblem:session-expired", onSessionExpired);
+  });
 </script>
 
 {#if !entered}
   <Landing on:enter={enterApp} />
 {:else if !loggedIn}
   <Login on:done={onLogin} />
+{:else if !identityReady}
+  <div class="splash">
+    <div class="splash-v pulse">E</div>
+    <p class="splash-sub">One moment…</p>
+  </div>
 {:else if !onboarded}
   <Onboarding on:done={onOnboarded} />
 {:else}
@@ -90,7 +122,7 @@
       <div class="rail-brand"><span class="mark">V</span> Emblem</div>
       <nav class="rail-nav">
         {#each NAV as n}
-          <button class="rail-item" class:active={view === n.id} on:click={() => view = n.id}>
+          <button class="rail-item" class:active={$appView === n.id} on:click={() => appView.set(n.id)}>
             <i class="ti {n.icon}"></i> {n.label}
           </button>
         {/each}
@@ -108,11 +140,11 @@
         <span class="status-dot" class:ready={$brainReady} class:notready={!$brainReady}></span>
       </header>
       <main class="main">
-        {#if view === "chat"}<ChatView />
-        {:else if view === "connect"}<Connectors />
-        {:else if view === "pages"}<Pages />
-        {:else if view === "calendar"}<Calendar />
-        {:else if view === "automations"}<Automations />{/if}
+        {#if $appView === "chat"}<ChatView />
+        {:else if $appView === "connect"}<Connectors />
+        {:else if $appView === "pages"}<Pages />
+        {:else if $appView === "calendar"}<Calendar />
+        {:else if $appView === "automations"}<Automations />{/if}
       </main>
     </div>
 

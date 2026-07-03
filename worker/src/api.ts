@@ -32,12 +32,26 @@ apiRoutes.get("/me", async (c) => {
   });
 });
 
+apiRoutes.get("/me/profile", async (c) => {
+  const uid = c.get("userId");
+  const p = await c.env.DB.prepare(
+    "SELECT display_name, role, tone, onboarded FROM profiles WHERE user_id = ?").bind(uid)
+    .first<{ display_name: string | null; role: string | null; tone: string | null; onboarded: number | null }>();
+  return c.json({
+    display_name: p?.display_name || "", role: p?.role || "", tone: p?.tone || "",
+    onboarded: Boolean(p?.onboarded),
+  });
+});
+
 apiRoutes.put("/me/profile", async (c) => {
   const uid = c.get("userId");
   const b = await c.req.json().catch(() => ({}));
   await c.env.DB.prepare(
+    // NOT NULL columns: the INSERT arm needs real values even when a field is
+    // omitted; the UPDATE arm keeps whatever is already there.
     `INSERT INTO profiles (user_id, display_name, role, tone, onboarded)
-     VALUES (?1, ?2, ?3, ?4, ?5)
+     VALUES (?1, COALESCE(?2, ''), COALESCE(?3, ''),
+             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?5, 0))
      ON CONFLICT(user_id) DO UPDATE SET
        display_name = COALESCE(?2, display_name),
        role = COALESCE(?3, role),
