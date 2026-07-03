@@ -39,7 +39,7 @@
       base: "vs-dark",
       inherit: true,
       rules: [],
-      colors: { "editor.background": "#0b0b0d" },
+      colors: { "editor.background": "#0a0a0a" },
     });
 
     editor = monaco.editor.create(host, {

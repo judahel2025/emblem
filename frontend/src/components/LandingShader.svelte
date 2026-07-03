@@ -5,6 +5,8 @@
   // WebGL is unavailable or reduced motion is requested.
   import { onMount, onDestroy } from "svelte";
 
+  export let alwaysDark = false;   // the landing hero is black in BOTH themes
+
   let canvas;
   let raf = 0;
   let cleanup = () => {};
@@ -14,7 +16,7 @@
     const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
     if (!gl) return;
 
-    const dark = () => document.documentElement.dataset.theme === "dark";
+    const dark = () => alwaysDark || document.documentElement.dataset.theme === "dark";
 
     function syncSize() {
       const w = canvas.clientWidth || 1280;
@@ -34,13 +36,13 @@
         vec2 uv = v_texCoord;
         vec2 mouse = u_mouse / u_resolution;
         float dist = distance(uv, mouse);
-        vec3 base1 = mix(vec3(0.98, 0.98, 1.0), vec3(0.055, 0.06, 0.07), u_dark);
-        vec3 base2 = mix(vec3(1.0, 1.0, 1.0),   vec3(0.043, 0.047, 0.055), u_dark);
-        vec3 accent = vec3(0.0, 0.32, 1.0);
+        vec3 base1 = mix(vec3(0.985, 0.985, 0.985), vec3(0.02, 0.02, 0.02), u_dark);
+        vec3 base2 = mix(vec3(1.0, 1.0, 1.0),       vec3(0.0, 0.0, 0.0),    u_dark);
+        vec3 accent = mix(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), u_dark);
         float noise = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.1;
         float influence = smoothstep(0.4, 0.0, dist + noise);
         vec3 finalColor = mix(base1, base2, uv.y);
-        finalColor = mix(finalColor, accent, influence * (0.05 + 0.03 * u_dark));
+        finalColor = mix(finalColor, accent, influence * (0.04 + 0.05 * u_dark));
         gl_FragColor = vec4(finalColor, 1.0);
       }`;
     const cs = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };

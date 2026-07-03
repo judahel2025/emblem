@@ -1,12 +1,9 @@
 <script>
-  // Meeting Emblem — a real AI conversation, not a form.
-  // The scene opens with an idle orb and two ways in:
-  //   "Meet Emblem"   → the live AI speaks + listens (mic), captions run along.
-  //   "prefer typing" → the SAME live AI, no mic — you type, Emblem answers with
-  //                     voice + captions and still learns about you adaptively.
-  // The opening tap is the user gesture that unlocks audio (browsers silence
-  // sound started without one). A static three-question script exists ONLY as
-  // the last resort when the connection itself fails.
+  // Meeting Emblem — a real AI conversation with NO dead ends.
+  // Engine chain: live realtime voice → the SAME conversation continues on the
+  // text brain (/api/onboarding/chat, three providers deep) with spoken replies
+  // via one-shot TTS. The user never sees a seam and never meets a static form.
+  // The opening tap is the user gesture that unlocks audio + mic.
   import { createEventDispatcher, onDestroy } from "svelte";
   import { fly } from "svelte/transition";
   import { api } from "../lib/api.js";
@@ -14,8 +11,9 @@
   import Orb from "../components/Orb.svelte";
   const dispatch = createEventDispatcher();
 
-  let mode = "intro";           // intro | live | scripted
-  let state = "idle";           // idle|connecting|listening|thinking|speaking|onboarded|unavailable|error|ended
+  let mode = "intro";           // intro | convo
+  let engine = "none";          // none | live | chat
+  let state = "idle";           // idle|connecting|listening|thinking|speaking|onboarded|error
   let withMic = true;
   let level = 0;
   let lines = [];               // {who: "user"|"assistant", text}
@@ -24,15 +22,8 @@
   let linesEl;
   let errorMsg = "";
   let needsAudioTap = false;
-
-  // ── last-resort scripted flow (no AI reachable) ─────────────────
-  const QUESTIONS = [
-    { q: "Hey, I'm Emblem. I'll be working alongside you — what should I call you?", key: "name" },
-    { q: "Good to meet you. What do you do?", key: "role" },
-    { q: "And what's the first thing you'd love a hand with?", key: "task" },
-  ];
-  let qi = 0;
-  const answers = {};
+  let chatBusy = false;
+  let done = false;
 
   function pushLine(who, text) {
     const last = lines[lines.length - 1];
@@ -46,48 +37,76 @@
     queueMicrotask(() => { if (linesEl) linesEl.scrollTop = linesEl.scrollHeight; });
   }
 
-  // Called from the intro taps — the gesture that makes audio audible.
+  // ── Engine 1: realtime voice ─────────────────────────────────────
   async function startLive(mic) {
     withMic = mic;
-    mode = "live";
+    mode = "convo";
+    engine = "live";
     state = "connecting";
     errorMsg = "";
     try { client?.stop(); } catch {}
     client = new LiveClient({
       mode: "onboarding",
       onState: (s) => {
+        if (engine !== "live" || done) return;
+        if (s === "onboarded") { state = s; finish(); return; }
+        // Any terminal live state mid-conversation → carry on via the chat brain.
+        if (s === "unavailable" || s === "error" || s === "ended") { fallThrough(); return; }
         state = s;
-        if (s === "onboarded") finish(true);
       },
       onCaption: ({ who, text }) => pushLine(who, text),
       onLevel: (l) => (level = l),
       onError: (m) => (errorMsg = m),
     });
-    let ok = await client.start({ mic });
-    // Mic blocked? The AI conversation still works — retry without the mic.
-    if (!ok && mic && state === "unavailable") {
-      pushLine("assistant", "(your microphone is blocked — no problem, you can type to me)");
-      ok = await startLiveNoMicRetry();
-    }
+    const ok = await client.start({ mic });
     needsAudioTap = client.audioSuspended();
-    return ok;
+    if (!ok && engine === "live" && !done) fallThrough();
   }
 
-  async function startLiveNoMicRetry() {
-    withMic = false;
-    state = "connecting";
+  // ── Engine 2: the text brain (same conversation, spoken replies) ──
+  async function fallThrough() {
     try { client?.stop(); } catch {}
-    client = new LiveClient({
-      mode: "onboarding",
-      onState: (s) => {
-        state = s;
-        if (s === "onboarded") finish(true);
-      },
-      onCaption: ({ who, text }) => pushLine(who, text),
-      onLevel: (l) => (level = l),
-      onError: (m) => (errorMsg = m),
-    });
-    return client.start({ mic: false });
+    client = null;
+    engine = "chat";
+    // If the live engine never produced a greeting, get one from the brain.
+    if (!lines.some((l) => l.who === "assistant")) await chatTurn(null);
+    else state = "listening";
+  }
+
+  async function chatTurn(userText) {
+    if (chatBusy || done) return;
+    chatBusy = true;
+    state = "thinking";
+    errorMsg = "";
+    try {
+      const history = lines.map((l) => ({ role: l.who, text: l.text }));
+      if (userText) history.push({ role: "user", text: userText });
+      const r = await api.onboardingChat(history);
+      if (!r.ok) throw new Error(r.error || "unavailable");
+      pushLine("assistant", r.reply);
+      speak(r.reply);
+      if (r.done) { state = "onboarded"; finish(); }
+      else state = "listening";
+    } catch (e) {
+      console.error("onboarding chat failed:", e);
+      errorMsg = "Couldn't reach Emblem.";
+      state = "error";
+    }
+    chatBusy = false;
+  }
+
+  // Spoken replies for the chat engine — best-effort, captions always carry it.
+  let audioEl = null;
+  async function speak(text) {
+    try {
+      const url = await api.speechUrl(text);
+      if (!url) return;
+      try { audioEl?.pause(); } catch {}
+      audioEl = new Audio(url);
+      state = "speaking";
+      audioEl.onended = () => { if (!done) state = "listening"; };
+      await audioEl.play();
+    } catch { /* audio blocked or TTS down — captions have it */ }
   }
 
   async function enableAudio() {
@@ -95,95 +114,69 @@
     needsAudioTap = client?.audioSuspended() ?? false;
   }
 
-  // Only when the AI can't be reached at all.
-  function startScripted() {
-    try { client?.stop(); } catch {}
-    client = null;
-    mode = "scripted";
-    state = "listening";
-    if (!lines.some((l) => l.who === "assistant")) pushLine("assistant", QUESTIONS[0].q);
-  }
-
   function sendDraft() {
     const t = draft.trim();
-    if (!t) return;
+    if (!t || done) return;
     draft = "";
     pushLine("user", t);
-    if (mode === "live" && client) {
-      client.sendText(t);
-      return;
-    }
-    // scripted flow
-    answers[QUESTIONS[qi].key] = t;
-    if (qi < QUESTIONS.length - 1) {
-      qi += 1;
-      setTimeout(() => pushLine("assistant", QUESTIONS[qi].q), 350);
-    } else {
-      pushLine("assistant", `Thank you${answers.name ? ", " + answers.name : ""} — I'll remember. Let's get you set up.`);
-      saveScripted();
-    }
+    if (engine === "live" && client) client.sendText(t);
+    else chatTurn(t);
   }
 
-  async function saveScripted() {
-    state = "thinking";
-    try {
-      if (answers.name) await api.memoryAdd(`The user's name is ${answers.name}.`, "identity");
-      if (answers.role) await api.memoryAdd(`What the user does: ${answers.role}.`, "identity");
-      if (answers.task) await api.memoryAdd(`Something the user wants help with: ${answers.task}.`, "preference");
-      await api.profileSet({ display_name: answers.name || "", role: answers.role || "", onboarded: true });
-    } catch (e) {
-      console.error("onboarding save failed:", e);
-      pushLine("assistant", "Hmm — I couldn't save that just now. Give it another try in a moment.");
-      state = "listening";
-      qi = QUESTIONS.length - 1;
-      return;
-    }
-    finish(false);
+  function retry() {
+    if (engine === "chat") chatTurn(null);
+    else startLive(withMic);
   }
 
-  function finish(fromLive) {
+  function finish() {
+    if (done) return;
+    done = true;
     localStorage.setItem("emblem_onboarded", "1");
-    setTimeout(() => { try { client?.stop(); } catch {}; dispatch("done"); }, fromLive ? 2600 : 900);
+    setTimeout(() => {
+      try { client?.stop(); } catch {}
+      try { audioEl?.pause(); } catch {}
+      dispatch("done");
+    }, 2400);
   }
 
   function skip() {
     try { client?.stop(); } catch {}
+    try { audioEl?.pause(); } catch {}
     localStorage.setItem("emblem_onboarded", "1");
     api.profileSet({ onboarded: true }).catch((e) => console.error("skip save failed:", e));
     dispatch("done");
   }
 
-  onDestroy(() => { try { client?.stop(); } catch {} });
+  onDestroy(() => {
+    try { client?.stop(); } catch {}
+    try { audioEl?.pause(); } catch {}
+  });
 
   $: statusLine = {
     connecting: "waking up…",
-    listening: mode === "live"
-      ? (withMic ? "listening — just talk (or type below)" : "type below — I'll answer out loud")
-      : "type your answer below",
+    listening: engine === "live" && withMic ? "listening — just talk (or type below)" : "type below — I'll answer out loud",
     thinking: "one moment…",
     speaking: "",
     onboarded: "all set.",
     error: errorMsg || "couldn't connect",
-    unavailable: errorMsg || "voice isn't available right now",
-    ended: "session ended",
   }[state] ?? "";
 </script>
 
 <div class="scene">
   <div class="orbwrap">
     <Orb size={120}
-         state={mode === "intro" ? "idle" : state === "connecting" ? "thinking" : state === "onboarded" ? "idle" : (state === "error" || state === "unavailable") ? "off" : state}
+         state={mode === "intro" ? "idle" : state === "connecting" ? "thinking" : state === "onboarded" ? "idle" : state === "error" ? "off" : state}
          {level} />
   </div>
 
   {#if mode === "intro"}
     <div class="intro" in:fly={{ y: 12, duration: 300 }}>
       <h1>Meet Emblem.</h1>
-      <p>A short hello — Emblem speaks, listens, asks about you, and remembers what matters.</p>
+      <p>A real conversation — Emblem asks about you, listens, and remembers what matters.</p>
       <button class="meet" on:click={() => startLive(true)}>
         <i class="ti ti-microphone"></i> Meet Emblem
       </button>
-      <button class="quiet" on:click={() => startLive(false)}>prefer typing? Emblem still talks</button>
+      <button class="quiet" on:click={() => { mode = "convo"; fallThrough(); }}>prefer typing? Emblem still talks</button>
     </div>
   {:else}
     <div class="convo" bind:this={linesEl}>
@@ -195,28 +188,30 @@
       {/each}
     </div>
 
-    {#if statusLine}<div class="status" class:bad={state === "error" || state === "unavailable"}>{statusLine}</div>{/if}
+    {#if statusLine}<div class="status" class:bad={state === "error"}>{statusLine}</div>{/if}
 
-    {#if needsAudioTap && state !== "error" && state !== "unavailable"}
+    {#if needsAudioTap && state !== "error"}
       <button class="meet small" on:click={enableAudio} in:fly={{ y: 6, duration: 200 }}>
         <i class="ti ti-volume"></i> Tap to hear Emblem
       </button>
     {/if}
 
-    {#if state === "error" || state === "unavailable" || state === "ended"}
+    {#if state === "error"}
       <div class="recover" in:fly={{ y: 8, duration: 200 }}>
-        <button class="meet small" on:click={() => startLive(withMic)}><i class="ti ti-refresh"></i> Try again</button>
-        <button class="quiet" on:click={startScripted}>continue with simple questions</button>
+        <button class="meet small" on:click={retry}><i class="ti ti-refresh"></i> Try again</button>
       </div>
-    {:else}
+    {:else if !done}
       <div class="composer glass">
         <input
           bind:value={draft}
           aria-label="Reply to Emblem"
-          placeholder={mode === "live" && withMic ? "…or type instead" : "Type your answer"}
+          placeholder={engine === "live" && withMic ? "…or type instead" : "Type your answer"}
+          disabled={chatBusy}
           on:keydown={(e) => e.key === "Enter" && sendDraft()}
         />
-        <button class="send" on:click={sendDraft} aria-label="Send"><i class="ti ti-arrow-up"></i></button>
+        <button class="send" on:click={sendDraft} aria-label="Send" disabled={chatBusy}>
+          <i class="ti ti-arrow-up"></i>
+        </button>
       </div>
     {/if}
   {/if}
@@ -242,12 +237,12 @@
   .meet {
     display: inline-flex; align-items: center; gap: 9px;
     padding: 14px 30px; border-radius: var(--r-pill);
-    background: var(--accent); color: var(--accent-t);
+    background: var(--accent-grad); color: var(--accent-t);
     font-size: 16px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 4px 20px var(--accent-glow);
-    transition: background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+    box-shadow: 0 0 24px var(--accent-glow);
+    transition: filter var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
   }
-  .meet:hover { background: var(--accent-h); box-shadow: 0 6px 26px var(--accent-glow); transform: scale(1.02); }
+  .meet:hover { filter: brightness(1.04); box-shadow: 0 0 32px var(--accent-glow); transform: scale(1.02); }
   .meet.small { padding: 10px 22px; font-size: 14px; }
   .quiet { color: var(--text-3); font-size: 13.5px; cursor: pointer; border-bottom: 1px solid transparent;
     transition: color var(--t-fast); }
@@ -276,10 +271,12 @@
   .composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg), var(--shadow-md); }
   .composer input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 15px; }
   .composer input::placeholder { color: var(--text-3); }
-  .send { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--accent-t);
+  .composer input:disabled { opacity: 0.6; }
+  .send { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-grad); color: var(--accent-t);
     display: grid; place-items: center; font-size: 17px; cursor: pointer;
-    box-shadow: 0 2px 8px var(--accent-glow); transition: background var(--t-fast); }
-  .send:hover { background: var(--accent-h); }
+    box-shadow: 0 0 12px var(--accent-glow); transition: filter var(--t-fast); }
+  .send:hover:not(:disabled) { filter: brightness(1.04); }
+  .send:disabled { opacity: 0.5; cursor: default; }
   .skip { margin-top: auto; color: var(--text-3); font-size: 13px; cursor: pointer; border-bottom: 1px solid transparent; }
   .skip:hover { color: var(--text-2); border-bottom-color: var(--divider); }
 </style>

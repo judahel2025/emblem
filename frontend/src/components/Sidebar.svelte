@@ -24,6 +24,17 @@
   let renamingId = null;
   let renameValue = "";
 
+  // Workspace nav items (one per connected app with a workspace).
+  $: wsItems = $connectedApps.filter((s) => WORKSPACES[s]);
+
+  // >3 workspaces collapse under a "Workspaces" toggle; state persists.
+  let wsOpen = false;
+  try { wsOpen = localStorage.getItem("emblem_ws_open") === "1"; } catch {}
+  function toggleWs() {
+    wsOpen = !wsOpen;
+    try { localStorage.setItem("emblem_ws_open", wsOpen ? "1" : "0"); } catch {}
+  }
+
   function startRename(t) {
     renamingId = t.id;
     renameValue = t.title;
@@ -95,14 +106,37 @@
         {#if !collapsed}<span>{n.label}</span>{/if}
       </button>
     {/each}
-    {#each $connectedApps.filter((s) => WORKSPACES[s]) as s (s)}
-      <button class="nav-item" class:active={$appView === `workspace:${s}`}
-              on:click={() => appView.set(`workspace:${s}`)}
-              title={WORKSPACES[s].label}>
-        <i class="ti {WORKSPACES[s].icon}"></i>
-        {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
+    {#if wsItems.length > 3}
+      <button class="nav-item ws-toggle" on:click={toggleWs}
+              aria-expanded={wsOpen} title="Workspaces">
+        <i class="ti ti-apps"></i>
+        {#if !collapsed}
+          <span>Workspaces</span>
+          <i class="ti chev {wsOpen ? 'ti-chevron-up' : 'ti-chevron-down'}"></i>
+        {/if}
       </button>
-    {/each}
+      {#if wsOpen}
+        <div class="ws-list" transition:slide={{ duration: 150 }}>
+          {#each wsItems as s (s)}
+            <button class="nav-item" class:active={$appView === `workspace:${s}`}
+                    on:click={() => appView.set(`workspace:${s}`)}
+                    title={WORKSPACES[s].label}>
+              <i class="ti {WORKSPACES[s].icon}"></i>
+              {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    {:else}
+      {#each wsItems as s (s)}
+        <button class="nav-item" class:active={$appView === `workspace:${s}`}
+                on:click={() => appView.set(`workspace:${s}`)}
+                title={WORKSPACES[s].label}>
+          <i class="ti {WORKSPACES[s].icon}"></i>
+          {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
+        </button>
+      {/each}
+    {/if}
   </nav>
 
   <div class="foot">
@@ -160,11 +194,15 @@
   .new-chat:hover { filter: brightness(1.07); box-shadow: 0 4px 16px var(--accent-glow); }
   .new-chat i { font-size: 17px; }
 
-  .threads { flex: 1; overflow-y: auto; min-height: 40px; padding: 4px 0;
+  /* Threads own the flexible space: guaranteed at least 40% of the column,
+     scrolls on their own so the nav below can never squeeze them out. */
+  .threads { flex: 1 1 auto; overflow-y: auto; min-height: 40%; padding: 4px 0;
     scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
   .section-label {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--s1);
     font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--text-3); margin: 8px 8px 4px;
+    color: var(--text-3); margin: 0 0 4px; padding: 8px 8px 4px;
   }
   .thread-row {
     display: flex; align-items: center; border-radius: 10px; position: relative;
@@ -173,8 +211,8 @@
   .thread-row:hover, .thread-row.active { background: var(--s2); }
   .thread-row.active { font-weight: 500; }
   .thread-btn {
-    flex: 1; min-width: 0; text-align: left; padding: 8px 10px;
-    font-size: 13.5px; color: var(--text-2); cursor: pointer;
+    flex: 1; min-width: 0; text-align: left; padding: 6px 10px;
+    font-size: 13.5px; line-height: 1.5; color: var(--text-2); cursor: pointer;
   }
   .thread-row.active .thread-btn { color: var(--text); }
   .t-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -196,7 +234,13 @@
     color: var(--text); outline: none;
   }
 
-  .nav { display: flex; flex-direction: column; gap: 1px; padding-top: 8px; border-top: 1px solid var(--divider); }
+  /* Nav never grows into the thread list; rows are compact. */
+  .nav { display: flex; flex-direction: column; gap: 1px; padding-top: 8px;
+    border-top: 1px solid var(--divider); flex-shrink: 0; }
+  .nav .nav-item { height: 32px; padding: 0 10px; font-size: 13px; }
+  .sidebar.collapsed .nav .nav-item { padding: 0; }
+  .ws-list { display: flex; flex-direction: column; gap: 1px; }
+  .ws-toggle .chev { margin-left: auto; font-size: 15px; color: var(--text-3); }
   .nav-item {
     display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
     padding: 9px 10px; border-radius: 10px;

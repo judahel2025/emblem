@@ -50,8 +50,8 @@
 </script>
 
 <div class="lp">
-  <!-- Nav -->
-  <header class="nav glass">
+  <!-- Nav — rides on the black hero, so it's night-scoped too -->
+  <header class="nav glass night">
     <div class="brand"><span class="mark"><Logo size={24} /></span> <span class="word">EMBLEM</span></div>
     <nav class="links">
       <a href="#features">Product</a>
@@ -64,9 +64,9 @@
     </div>
   </header>
 
-  <!-- Hero — liquid shader field + the 3D orb -->
-  <section class="hero">
-    <LandingShader />
+  <!-- Hero — liquid shader field + the 3D orb. ALWAYS black, both themes. -->
+  <section class="hero night">
+    <LandingShader alwaysDark />
     <div class="hero-inner" use:reveal>
       <LandingOrb3D />
       <div class="eyebrow"><i class="ti ti-microphone"></i> Voice-first · does the work for you</div>
@@ -161,6 +161,23 @@
 
 <style>
   .lp { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  /* The cinematic scope: hero + nav are pure black in BOTH themes.
+     Re-declaring the tokens locally keeps every child component correct. */
+  .night {
+    --bg: #000000; --bg-2: #070707; --s1: #0e0e0e; --s2: #151515; --s3: #1d1d1d;
+    --text: #ffffff; --text-2: #a3a3a3; --text-3: #6e6e6e;
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.18);
+    --divider: rgba(255,255,255,0.09);
+    --surface: rgba(14,14,14,0.72);
+    --accent: #ffffff; --accent-h: #ffffff; --accent-ink: #ffffff; --accent-t: #0a0a0a;
+    --accent-bg: rgba(255,255,255,0.08); --accent-glow: rgba(255,255,255,0.30);
+    --accent-grad: linear-gradient(180deg,#ffffff,#d4d4d4); --accent-2: #d4d4d4;
+    --glow-core: rgba(255,255,255,0.92); --glow-soft: rgba(255,255,255,0.28);
+    --glow-rim: rgba(255,255,255,0.18);
+    background: #000;
+    color: var(--text);
+  }
   .lp :global(h1), .lp :global(h2) { font-weight: 600; letter-spacing: -0.04em; color: var(--text); margin: 0; }
 
   .lp :global(.reveal) {

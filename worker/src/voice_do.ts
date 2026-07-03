@@ -20,17 +20,19 @@ const PERSONA_CHAT =
 
 const PERSONA_ONBOARDING =
   "You are Emblem, meeting a brand-new member for the very first time — and YOU speak first. " +
-  "Open warmly: introduce yourself in one short sentence and ask their name. Then hold a real " +
-  "conversation, ONE question at a time, genuinely reacting to each answer before the next " +
-  "question (if they say something interesting, follow up on it briefly). Learn, in a natural " +
-  "order: (1) their name, (2) what they do, (3) what a typical day looks like or what they're " +
-  "working on right now, (4) what they most want help with day to day, (5) which apps or tools " +
-  "they live in (email, calendar, GitHub, socials…), and (6) how they like to be spoken to — " +
-  "brief and direct, or warm and chatty. Keep every turn SHORT and spoken-natural — this is a " +
-  "conversation, not a form; adapt or skip questions when an earlier answer already covered " +
-  "them. When you have the picture, recap it back in one warm sentence, tell them you're ready, " +
-  "and call save_profile with everything you learned. If they ask to stop early, save what you " +
-  "have. Never reveal which AI, model, or provider powers you.";
+  "Open warmly: ask how they're doing and their name. Then hold a real conversation, ONE " +
+  "question at a time, always reacting to what they just said (by name once you know it) " +
+  "before asking the next thing — follow up when an answer is interesting or vague. Over the " +
+  "conversation (at least ten questions, natural order) learn: how they're doing + name; what " +
+  "they do; a follow-up personalized to their work; what a typical day looks like; what " +
+  "they're working on right now; their biggest time sink or frustration; what they'd most " +
+  "like to hand over to an assistant; which apps and tools they live in; how they like to be " +
+  "spoken to (brief and direct, or warm and chatty); their working hours / when not to " +
+  "disturb them; and anything an assistant should never do. Keep every turn SHORT and " +
+  "spoken-natural; skip topics an earlier answer already covered. When you have the picture, " +
+  "recap it in one warm sentence, tell them you're ready, and call save_profile with " +
+  "everything you learned. If they ask to stop early, save what you have. Never reveal which " +
+  "AI, model, or provider powers you.";
 
 const SAVE_PROFILE_TOOL = {
   function_declarations: [{
@@ -42,9 +44,12 @@ const SAVE_PROFILE_TOOL = {
         display_name: { type: "STRING", description: "what to call them" },
         role: { type: "STRING", description: "what they do" },
         current_work: { type: "STRING", description: "what they're working on / a typical day" },
-        focus: { type: "STRING", description: "what they most want help with" },
+        focus: { type: "STRING", description: "what they most want help with / hand over" },
+        pain: { type: "STRING", description: "their biggest time sink or frustration" },
         tools: { type: "STRING", description: "apps and tools they live in" },
         tone: { type: "STRING", description: "how they like to be spoken to" },
+        quiet_hours: { type: "STRING", description: "working hours / when not to disturb" },
+        boundaries: { type: "STRING", description: "what an assistant should never do" },
       },
       required: ["display_name"],
     },
@@ -189,8 +194,11 @@ export class VoiceRelay {
     if (a.role) facts.push(`What the user does: ${a.role}.`);
     if (a.current_work) facts.push(`What the user is working on: ${a.current_work}.`);
     if (a.focus) facts.push(`What the user most wants help with: ${a.focus}.`);
+    if (a.pain) facts.push(`The user's biggest time sink: ${a.pain}.`);
     if (a.tools) facts.push(`Apps and tools the user lives in: ${a.tools}.`);
     if (a.tone) facts.push(`How the user likes to be spoken to: ${a.tone}.`);
+    if (a.quiet_hours) facts.push(`The user's working hours / quiet time: ${a.quiet_hours}.`);
+    if (a.boundaries) facts.push(`The user asked Emblem to never: ${a.boundaries}.`);
     for (const f of facts) {
       await this.env.DB.prepare(
         "INSERT INTO memory (kind, content, source, user_id) VALUES ('identity', ?, 'onboarding', ?)")

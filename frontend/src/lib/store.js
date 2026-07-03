@@ -245,6 +245,9 @@ function runActions(actions) {
     } else if (a.type === "approval.pending") {
       notify(a.summary ? `Waiting for your approval: ${a.summary}` : "An action is waiting for your approval", "caution");
       refresh();
+    } else if (a.type === "tool_error") {
+      // A connected-app action failed — say so loudly instead of deflecting.
+      notify(a.summary || "A connected app returned an error", "danger");
     } else if (a.type === "view_file") {
       goTo("files", "files");
       fileToView.set({ root: a.root || "documents", path: a.path });
@@ -394,10 +397,71 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   return r;
 }
 
-export async function decide(id, approved) {
-  await api.decide(id, approved);
-  notify(approved ? `Approved #${id}` : `Rejected #${id}`, approved ? "safe" : "danger");
-  await refresh();
+// Approve/decline a pending action AND close the loop in the conversation:
+// api.decide runs the tool server-side (resolveApproval executes it and returns
+// its result), then an internal continuation is sent to the agent so Emblem
+// reports the outcome in-chat — no more "approved… now what?" dead ends.
+// The internal command is never shown as a user bubble and never persisted as
+// a user message; only the assistant's reply is pushed + saved.
+const _deciding = new Set();
+export async function decideAndContinue(id, approved, summary = "") {
+  if (_deciding.has(id)) return { ok: false, error: "already deciding" };
+  _deciding.add(id);
+  try {
+    summary = summary
+      || (get(approvals).pending || []).find((p) => p.id === id)?.summary
+      || "the pending action";
+
+    let r;
+    try { r = await api.decide(id, approved); }
+    catch (e) { r = { ok: false, error: e?.message || String(e) }; }
+
+    notify(approved ? `Approved #${id}` : `Declined #${id}`, approved ? "safe" : "info");
+    const tid = get(activeThread);
+
+    // Approve failed (tool threw, already decided, …) — surface it, no continuation.
+    if (approved && !r.ok) {
+      const line = `That action failed: ${r.error || "unknown error"}`;
+      messages.update((m) => [...m, { role: "assistant", text: line }]);
+      api.conversationAdd("assistant", line, tid).catch((e) => console.error("save msg:", e));
+      refresh();
+      return r;
+    }
+
+    // Internal continuation — same history shape sendCommand builds.
+    const command = approved
+      ? `[system note — not typed by the user] They approved the pending action "${summary}". Result: ${JSON.stringify(r.result ?? null).slice(0, 1500)}. Confirm the outcome to the user in one short sentence (mention any id/link), and continue the task if anything was left unfinished.`
+      : `[system note — not typed by the user] They declined the action "${summary}". Acknowledge briefly and offer an alternative if there is one.`;
+
+    const prior = get(messages);
+    const lastReply = [...prior].reverse().find((m) => m.role === "assistant")?.text || "";
+    const history = prior.slice(-12).map((m) => ({ role: m.role, content: m.text }));
+
+    thinking.set(true);
+    voiceState.set("thinking");
+    const ar = await api.agent(command, { model: get(model), lastReply, history, pending: pendingTask })
+      .catch((e) => ({ reply: String(e), actions: [] }));
+    pendingTask = ar.pending || null;
+    const replyText = ar.reply || "(no reply)";
+    messages.update((m) => [...m, { role: "assistant", text: replyText }]);
+    api.conversationAdd("assistant", replyText, tid).catch((e) => console.error("save msg:", e));
+    thinking.set(false);
+    voiceState.set("idle");
+
+    // Loop guard: if this continuation itself queued a NEW approval, runActions
+    // just notifies + refreshes so the new card renders — we never auto-decide,
+    // so there is no way to recurse. decideAndContinue only runs on user click.
+    runActions(ar.actions);
+    refresh();
+    return r;
+  } finally {
+    _deciding.delete(id);
+  }
+}
+
+// Thin alias kept for existing callers.
+export function decide(id, approved) {
+  return decideAndContinue(id, approved);
 }
 
 export async function setFlag(flag, on) {

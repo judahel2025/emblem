@@ -2,10 +2,11 @@
   import { tick } from "svelte";
   import { fly } from "svelte/transition";
   import { marked } from "marked";
-  import { messages, thinking, approvals, decide, sendCommand, sendAttachment,
+  import { messages, thinking, approvals, decideAndContinue, sendCommand, sendAttachment,
            notify, me, showVoiceOverlay } from "../lib/store.js";
   import { api } from "../lib/api.js";
   import Composer from "./Composer.svelte";
+  import ApprovalCard from "./ApprovalCard.svelte";
   import Orb from "./Orb.svelte";
 
   marked.setOptions({ gfm: true, breaks: true });
@@ -15,6 +16,19 @@
 
   let uploading = false;
   let composer;
+
+  // ── Personalized suggestions (from what Emblem knows about the user) ──
+  import { onMount } from "svelte";
+  let suggestions = [];
+  const SUGG_ICONS = {
+    mail: "ti-mail", calendar: "ti-calendar", code: "ti-brand-github",
+    notes: "ti-file-text", bolt: "ti-bolt", share: "ti-share",
+    mic: "ti-microphone", plug: "ti-plug-connected",
+  };
+  onMount(async () => {
+    try { suggestions = (await api.suggestions()).items || []; }
+    catch (e) { console.warn("suggestions unavailable:", e?.message); }
+  });
 
   // ── Auto-scroll ────────────────────────────────────────────────
   let threadEl;
@@ -39,6 +53,42 @@
   function submit(e) { sendCommand(e.detail); }
   function chip(t) { sendCommand(t); }
 
+  // ── Approvals ──────────────────────────────────────────────────
+  // Cards drive running/done/error through decideAndContinue. A settled card
+  // stays visible briefly (done flash / error message) even after refresh()
+  // drops it from $approvals.pending, so we keep a local snapshot of it.
+  let apStates = {};    // id -> { state, error }
+  let apGhosts = {};    // id -> approval row snapshot (settled but still shown)
+
+  $: approvalCards = [
+    ...($approvals.pending || []).slice(0, 3),
+    ...Object.values(apGhosts).filter(
+      (g) => !($approvals.pending || []).some((p) => p.id === g.id)
+    ),
+  ];
+
+  async function decideApproval(ap, approved) {
+    apGhosts = { ...apGhosts, [ap.id]: ap };
+    apStates = { ...apStates, [ap.id]: { state: "running", error: "" } };
+    const r = await decideAndContinue(ap.id, approved, ap.summary);
+    if (approved && r && !r.ok) {
+      apStates = { ...apStates, [ap.id]: { state: "error", error: r.error || "The action failed." } };
+      dropCard(ap.id, 4000);
+    } else {
+      apStates = { ...apStates, [ap.id]: { state: "done", error: "" } };
+      dropCard(ap.id, 1400);
+    }
+  }
+
+  function dropCard(id, after) {
+    setTimeout(() => {
+      const { [id]: _g, ...ghosts } = apGhosts;
+      const { [id]: _s, ...states } = apStates;
+      apGhosts = ghosts;
+      apStates = states;
+    }, after);
+  }
+
   async function handleFile(e) {
     const file = e.detail; if (!file) return;
     uploading = true;
@@ -59,12 +109,29 @@
       <div class="empty-state" in:fly={{ y: 10, duration: 300 }}>
         <Orb size={58} state="idle" />
         <p class="empty-title">{$me.display_name ? `What are we doing today, ${$me.display_name}?` : "What are you working on?"}</p>
-        <div class="chips">
-          <button class="chip" on:click={() => chip("What's on my calendar today?")}>Today's calendar</button>
-          <button class="chip" on:click={() => chip("Summarize my unread email")}>Unread email</button>
-          <button class="chip" on:click={() => chip("Start a page for a new idea")}>New page</button>
-          <button class="chip" on:click={() => chip("Set up a morning briefing")}>Daily automation</button>
-        </div>
+        {#if suggestions.length}
+          <!-- Personalized workflow suggestions — generated from what Emblem
+               learned about this user, not canned chips. -->
+          <div class="sugg-grid">
+            {#each suggestions as s, i (s.title)}
+              <button class="sugg glass" in:fly={{ y: 8, duration: 200, delay: i * 50 }}
+                      on:click={() => chip(s.command)} title={s.command}>
+                <span class="sugg-icon"><i class="ti {SUGG_ICONS[s.icon] || 'ti-bolt'}"></i></span>
+                <span class="sugg-body">
+                  <span class="sugg-title">{s.title}</span>
+                  <span class="sugg-line">{s.line}</span>
+                </span>
+              </button>
+            {/each}
+          </div>
+        {:else}
+          <div class="chips">
+            <button class="chip" on:click={() => chip("What's on my calendar today?")}>Today's calendar</button>
+            <button class="chip" on:click={() => chip("Summarize my unread email")}>Unread email</button>
+            <button class="chip" on:click={() => chip("Start a page for a new idea")}>New page</button>
+            <button class="chip" on:click={() => chip("Set up a morning briefing")}>Daily automation</button>
+          </div>
+        {/if}
       </div>
     {:else}
       {#each $messages as msg, i}
@@ -98,19 +165,18 @@
     {/if}
   </div>
 
-  {#if ($approvals.pending || []).length > 0}
+  {#if approvalCards.length > 0}
     <div class="approvals-bar">
-      {#each $approvals.pending.slice(0, 3) as ap (ap.id)}
-        <div class="approval-card glass" in:fly={{ y: 10, duration: 250 }}>
-          <div class="ap-icon"><i class="ti ti-shield-question"></i></div>
-          <div class="ap-info">
-            <span class="ap-summary">{ap.summary}</span>
-            <span class="ap-hint">Nothing happens until you decide.</span>
-          </div>
-          <div class="ap-btns">
-            <button class="ap-btn approve" on:click={() => decide(ap.id, true)}>Approve</button>
-            <button class="ap-btn reject" on:click={() => decide(ap.id, false)}>Decline</button>
-          </div>
+      {#each approvalCards as ap (ap.id)}
+        <div class="approval-slot" in:fly={{ y: 10, duration: 250 }}>
+          <ApprovalCard
+            approval={ap}
+            variant="inline"
+            state={apStates[ap.id]?.state || "idle"}
+            error={apStates[ap.id]?.error || ""}
+            on:approve={() => decideApproval(ap, true)}
+            on:decline={() => decideApproval(ap, false)}
+          />
         </div>
       {/each}
     </div>
@@ -156,6 +222,24 @@
   }
   .chip:hover { border-color: var(--accent); color: var(--text); box-shadow: 0 0 0 3px var(--accent-bg); }
 
+  .sugg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 620px; width: 100%; }
+  @media (max-width: 640px) { .sugg-grid { grid-template-columns: 1fr; } }
+  .sugg {
+    display: flex; align-items: flex-start; gap: 12px; text-align: left;
+    padding: 13px 15px; border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm); cursor: pointer;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+  }
+  .sugg:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .sugg-icon {
+    width: 32px; height: 32px; border-radius: var(--r-sm); flex-shrink: 0;
+    background: var(--accent-bg); color: var(--accent-ink);
+    display: grid; place-items: center; font-size: 17px;
+  }
+  .sugg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .sugg-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .sugg-line { font-size: 12px; line-height: 1.45; color: var(--text-2); }
+
   .row { display: flex; max-width: 720px; width: 100%; margin: 0 auto; padding: 7px 0; }
   .row.user { justify-content: flex-end; }
   .row.assistant { justify-content: flex-start; }
@@ -199,28 +283,7 @@
   .md-body :global(th) { background: var(--s1); font-weight: 600; }
 
   .approvals-bar { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
-  .approval-card {
-    max-width: 720px; margin: 0 auto; width: 100%;
-    border-radius: var(--r-lg); padding: 12px 14px;
-    display: flex; align-items: center; gap: 12px;
-    border-color: var(--caution);
-    box-shadow: var(--shadow-md);
-  }
-  .ap-icon {
-    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-    background: var(--caution-bg); color: var(--caution);
-    display: grid; place-items: center; font-size: 18px;
-  }
-  .ap-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .ap-summary { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
-  .ap-hint { font-size: 12px; color: var(--text-3); }
-  .ap-btns { display: flex; gap: 6px; flex-shrink: 0; }
-  .ap-btn { padding: 7px 16px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: filter var(--t-fast), background var(--t-fast); }
-  .ap-btn.approve { background: var(--accent-grad); color: var(--accent-t); box-shadow: 0 2px 8px var(--accent-glow); }
-  .ap-btn.approve:hover { filter: brightness(1.07); }
-  .ap-btn.reject { background: transparent; color: var(--text-2); border: 1px solid var(--border-strong); }
-  .ap-btn.reject:hover { color: var(--danger); border-color: var(--danger); }
+  .approval-slot { max-width: 720px; margin: 0 auto; width: 100%; }
 
   .input-area { padding: 8px 16px 12px; flex-shrink: 0; }
   .input-area :global(.composer) { max-width: 720px; margin: 0 auto; }

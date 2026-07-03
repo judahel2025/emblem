@@ -83,14 +83,23 @@ export async function allToolkits(env: Env): Promise<string[]> {
 }
 
 const MAX_PER_TOOLKIT = 15;
-const MAX_TOTAL = 60;
+const MAX_TOTAL = 90;
 
 // Slugs that MUST be in the agent's tool list whenever the toolkit is connected —
-// `important=true` sometimes omits the very actions users ask for by name.
+// `important=true` sometimes omits the very actions users ask for by name
+// (LinkedIn posting was invisible to the model for exactly this reason).
+// Every slug here is VERIFIED against the live catalog — never guess these.
 const PINNED_SLUGS: Record<string, string[]> = {
   gmail: ["GMAIL_SEND_EMAIL", "GMAIL_FETCH_EMAILS", "GMAIL_REPLY_TO_THREAD"],
   googlecalendar: ["GOOGLECALENDAR_CREATE_EVENT", "GOOGLECALENDAR_EVENTS_LIST"],
   github: ["GITHUB_CREATE_OR_UPDATE_FILE_CONTENTS", "GITHUB_GET_A_REPOSITORY"],
+  linkedin: ["LINKEDIN_CREATE_LINKED_IN_POST", "LINKEDIN_GET_MY_INFO"],
+  twitter: ["TWITTER_CREATION_OF_A_POST"],
+  instagram: ["INSTAGRAM_CREATE_POST", "INSTAGRAM_GET_USER_MEDIA"],
+  facebook: ["FACEBOOK_CREATE_POST", "FACEBOOK_GET_PAGE_POSTS"],
+  notion: ["NOTION_ADD_PAGE_CONTENT", "NOTION_SEARCH_NOTION_PAGE"],
+  slack: ["SLACK_SEND_MESSAGE", "SLACK_CHAT_POST_MESSAGE"],
+  youtube: ["YOUTUBE_UPLOAD_VIDEO", "YOUTUBE_SEARCH_YOU_TUBE"],
 };
 
 export interface OpenAITool {
@@ -174,6 +183,19 @@ export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): str
     }
     case "GOOGLECALENDAR_CREATE_EVENT":
       return `Add “${(str("summary") || str("title") || "an event").slice(0, 60)}” to your Google Calendar`;
+    case "LINKEDIN_CREATE_LINKED_IN_POST": {
+      const body = str("commentary") || str("text") || str("content");
+      return `Publish a post on your LinkedIn${body ? ` — “${body.slice(0, 70)}…”` : ""}`;
+    }
+    case "TWITTER_CREATION_OF_A_POST":
+      return `Post on your X (Twitter)${str("text") ? ` — “${str("text").slice(0, 70)}…”` : ""}`;
+    case "INSTAGRAM_CREATE_POST":
+      return "Publish a post on your Instagram";
+    case "FACEBOOK_CREATE_POST":
+      return "Publish a post on your Facebook";
+    case "SLACK_SEND_MESSAGE":
+    case "SLACK_CHAT_POST_MESSAGE":
+      return `Send a Slack message${str("channel") ? ` to ${str("channel")}` : ""}`;
   }
   // Generic fallback: "Create issue in your GitHub" from the slug's toolkit + verb words.
   const toolkit = Object.keys(TOOLKIT_LABELS).find((k) => s.startsWith(k.toUpperCase() + "_"));

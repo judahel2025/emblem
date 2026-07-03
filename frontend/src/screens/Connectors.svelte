@@ -1,8 +1,8 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { fly, fade } from "svelte/transition";
   import { api } from "../lib/api.js";
-  import { appView, loadConnections } from "../lib/store.js";
+  import { appView, loadConnections, notify } from "../lib/store.js";
   import { hasWorkspace } from "../lib/workspaces.js";
   import { tilt } from "../lib/tilt.js";
 
@@ -34,13 +34,76 @@
     loading = false;
   }
 
+  // ── Connect lifecycle: spinner on the button, poll until the OAuth
+  //    round-trip lands, then flip the tile into the Active section. ──
+  const POLL_MS = 3000;
+  const TIMEOUT_MS = 2 * 60 * 1000;
+  let connecting = {};   // toolkit -> true while its OAuth flow is pending
+  let startedAt = {};    // toolkit -> Date.now() when the flow began
+  let pollTimer = null;
+  let polling = false;   // guard against overlapping poll requests
+
+  const anyPending = () => Object.values(connecting).some(Boolean);
+
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(poll, POLL_MS);
+    // The OAuth popup closing refocuses this window — check right away.
+    window.addEventListener("focus", poll);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    window.removeEventListener("focus", poll);
+  }
+
+  async function poll() {
+    if (polling) return;
+    if (!anyPending()) { stopPolling(); return; }
+    polling = true;
+    try {
+      const d = await api.connections();
+      const now = d.connected || [];
+      let landed = false;
+      for (const k of Object.keys(connecting)) {
+        if (!connecting[k]) continue;
+        if (now.includes(k)) {
+          delete connecting[k];
+          delete startedAt[k];
+          landed = true;
+          notify(`${meta(k).label} connected`, "safe");
+        } else if (Date.now() - (startedAt[k] || 0) > TIMEOUT_MS) {
+          delete connecting[k];
+          delete startedAt[k];
+          notify("Connection not completed — try again", "caution");
+        }
+      }
+      connecting = connecting;   // reactivity after deletes
+      if (landed) {
+        configured = d.configured;
+        connected = now;
+        featured = d.featured || featured;
+        all = d.all || all;
+        loadConnections();   // sync the sidebar's workspace list
+      }
+    } catch { /* transient — next tick retries */ }
+    polling = false;
+    if (!anyPending()) stopPolling();
+  }
+
   async function connect(toolkit) {
+    if (connecting[toolkit]) return;
     try {
       const r = await api.connectionLink(toolkit);
-      if (r.ok && r.url) window.open(r.url, "_blank", "noopener,width=600,height=760");
-      else error = r.error || "Couldn't start the connection.";
+      if (r.ok && r.url) {
+        window.open(r.url, "_blank", "noopener,width=600,height=760");
+        connecting = { ...connecting, [toolkit]: true };
+        startedAt[toolkit] = Date.now();
+        startPolling();
+      } else error = r.error || "Couldn't start the connection.";
     } catch { error = "Couldn't start the connection."; }
   }
+
+  onDestroy(stopPolling);
 
   // Active section always shows every live link; the available grid shows the rest.
   $: available = (query
@@ -104,8 +167,10 @@
                 {:else}
                   <span class="footnote">Ready in chat</span>
                 {/if}
-                <button class="iconbtn" on:click={() => connect(k)} aria-label={`Reconnect ${m.label}`}>
-                  <i class="ti ti-refresh"></i>
+                <button class="iconbtn" on:click={() => connect(k)}
+                  disabled={connecting[k]} title={connecting[k] ? "Reconnecting…" : "Reconnect"}
+                  aria-label={`Reconnect ${m.label}`}>
+                  {#if connecting[k]}<span class="spin"></span>{:else}<i class="ti ti-refresh"></i>{/if}
                 </button>
               </div>
             </div>
@@ -131,8 +196,9 @@
             <span class="bigicon"><i class="ti {m.icon}"></i></span>
             <div class="name center">{m.label}</div>
             <div class="desc center">{m.desc}</div>
-            <button class="btn primary cbtn" on:click={() => connect(k)} aria-label={`Connect ${m.label}`}>
-              Connect
+            <button class="btn primary cbtn" on:click={() => connect(k)}
+              disabled={connecting[k]} aria-label={`Connect ${m.label}`}>
+              {#if connecting[k]}<span class="spin"></span> Connecting…{:else}Connect{/if}
             </button>
           </div>
         {/each}
@@ -258,6 +324,12 @@
   .center { text-align: center; }
 
   .cbtn { width: 100%; font-size: 13px; padding: 8px 14px; cursor: pointer; margin-top: auto; }
+  /* Spinner inherits the button's text color (ink on the white-hot fill). */
+  .cbtn .spin, .iconbtn .spin {
+    width: 13px; height: 13px;
+    border-color: var(--accent-bg); border-top-color: currentColor;
+  }
+  .iconbtn:disabled { cursor: default; }
 
   .hint { text-align: center; color: var(--text-3); font-size: 13px; margin-top: 24px; }
 

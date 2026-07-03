@@ -10,6 +10,8 @@ import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
          listConnections, initiateConnection } from "./composio";
 import { synthesize } from "./tts";
+import { onboardingReply, extractAndSaveProfile } from "./onboarding";
+import { getSuggestions } from "./suggestions";
 
 export const apiRoutes = new Hono<AppContext>();
 
@@ -64,6 +66,35 @@ apiRoutes.put("/me/profile", async (c) => {
           b.onboarded === undefined ? null : (b.onboarded ? 1 : 0),
           b.toured === undefined ? null : (b.toured ? 1 : 0)).run();
   return c.json({ ok: true });
+});
+
+// ---- AI onboarding (text mode — same conversation the live voice runs) --------
+
+apiRoutes.post("/onboarding/chat", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { history?: Array<{ role: string; text: string }> }));
+  const history = (Array.isArray(b.history) ? b.history : [])
+    .filter((t: { role?: string; text?: unknown }) =>
+      (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
+    .map((t: { role: string; text: string }) =>
+      ({ role: t.role as "user" | "assistant", text: t.text.slice(0, 2000) }));
+  const r = await onboardingReply(c.env, history);
+  if (!r) return c.json({ ok: false, error: "unavailable" }, 503);
+  if (r.done) {
+    const full = [...history, { role: "assistant" as const, text: r.reply }];
+    const saved = await extractAndSaveProfile(c.env, c.get("userId"), full)
+      .catch((e) => { console.error("onboarding extract failed:", e); return null; });
+    return c.json({ ok: true, reply: r.reply, done: true, saved: Boolean(saved) });
+  }
+  return c.json({ ok: true, reply: r.reply, done: false });
+});
+
+// ---- personalized workflow suggestions -----------------------------------------
+
+apiRoutes.get("/suggestions", async (c) => {
+  const force = c.req.query("refresh") === "1";
+  const items = await getSuggestions(c.env, c.get("userId"), force)
+    .catch((e) => { console.error("suggestions failed:", e); return []; });
+  return c.json({ items });
 });
 
 // ---- one-shot narration (tour + spoken replies) -------------------------------
@@ -379,7 +410,7 @@ apiRoutes.post("/alerts/:id/seen", async (c) => {
 apiRoutes.get("/approvals", async (c) => {
   const uid = c.get("userId");
   const pending = await c.env.DB.prepare(
-    "SELECT id, tool, summary, risk, created_at FROM kernel_approvals " +
+    "SELECT id, tool, summary, risk, args_json, created_at FROM kernel_approvals " +
     "WHERE user_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 20").bind(uid).all();
   const recent = await c.env.DB.prepare(
     "SELECT id, tool, summary, status, decided_at FROM kernel_approvals " +

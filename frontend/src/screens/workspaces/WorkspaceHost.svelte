@@ -4,6 +4,7 @@
   import { fly } from "svelte/transition";
   import { appView } from "../../lib/store.js";
   import { WORKSPACES } from "../../lib/workspaces.js";
+  import ApprovalCard from "../../components/ApprovalCard.svelte";
 
   export let slug;
 
@@ -50,15 +51,17 @@
   {/if}
 
   {#if pendingApproval}
+    <!-- Workspace approvals resolve in place via runConnected's own approve/
+         decline callbacks — the shared card is visual only here, so it gets
+         callback props instead of the store's decideAndContinue flow. -->
     <div class="ap-veil">
-      <div class="ap-card glass gloss" in:fly={{ y: 14, duration: 220 }}>
-        <div class="ap-icon"><i class="ti ti-shield-question"></i></div>
-        <p class="ap-summary">{pendingApproval.summary}</p>
-        <p class="ap-hint">Nothing happens until you decide.</p>
-        <div class="ap-btns">
-          <button class="btn primary" on:click={pendingApproval.approve}>Approve</button>
-          <button class="btn ghost" on:click={pendingApproval.decline}>Decline</button>
-        </div>
+      <div class="ap-holder" in:fly={{ y: 14, duration: 220 }}>
+        <ApprovalCard
+          approval={{ id: pendingApproval.approval_id, summary: pendingApproval.summary, args_json: pendingApproval.args_json }}
+          variant="modal"
+          onApprove={pendingApproval.approve}
+          onDecline={pendingApproval.decline}
+        />
       </div>
     </div>
   {/if}
@@ -93,17 +96,5 @@
     background: rgba(0, 0, 0, 0.45);
     display: grid; place-items: center;
   }
-  .ap-card {
-    width: min(440px, calc(100vw - 40px));
-    border-radius: var(--r-lg); padding: 24px;
-    text-align: center; box-shadow: var(--shadow-lg);
-  }
-  .ap-icon {
-    width: 44px; height: 44px; border-radius: 13px; margin: 0 auto 12px;
-    background: var(--caution-bg); color: var(--caution);
-    display: grid; place-items: center; font-size: 24px;
-  }
-  .ap-summary { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--text); }
-  .ap-hint { margin: 0 0 18px; font-size: 12.5px; color: var(--text-3); }
-  .ap-btns { display: flex; justify-content: center; gap: 10px; }
+  .ap-holder { max-width: calc(100vw - 40px); }
 </style>

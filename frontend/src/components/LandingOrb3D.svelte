@@ -32,18 +32,19 @@
     renderer.setSize(width, height);
     host.appendChild(renderer.domElement);
 
+    // White-hot mono: a luminous silver sphere on the always-black hero.
     const orb = new THREE.Mesh(
       new THREE.SphereGeometry(1.5, 64, 64),
       new THREE.MeshPhongMaterial({
-        color: 0x0052ff, transparent: true, opacity: 0.8,
-        shininess: 100, emissive: 0x002266,
+        color: 0xe8e8e8, transparent: true, opacity: 0.85,
+        shininess: 120, emissive: 0x2a2a2a,
       }));
     scene.add(orb);
 
     const shell = new THREE.Mesh(
       new THREE.SphereGeometry(1.55, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x0052ff, wireframe: true, transparent: true, opacity: 0.1,
+        color: 0xffffff, wireframe: true, transparent: true, opacity: 0.08,
       }));
     scene.add(shell);
 

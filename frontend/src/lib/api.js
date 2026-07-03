@@ -195,6 +195,18 @@ export const api = {
   automationToggle: (id, enabled) => post(`/api/automations/${id}/toggle`, { enabled }),
   automationDelete: (id) => del(`/api/automations/${id}`),
 
+  // AI onboarding (text engine) + personalized suggestions
+  onboardingChat: (history) => post("/api/onboarding/chat", { history }),
+  suggestions: (refresh = false) => get(`/api/suggestions${refresh ? "?refresh=1" : ""}`),
+  async speechUrl(text) {
+    const res = await fetch(API_BASE + "/api/voice/tts", {
+      method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) return null;
+    return URL.createObjectURL(await res.blob());
+  },
+
   // Identity + profile
   me: () => get("/api/me"),
   profile: () => get("/api/me/profile"),

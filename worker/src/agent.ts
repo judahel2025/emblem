@@ -222,47 +222,13 @@ async function execNative(env: Env, userId: string, name: string,
   return [`Unknown tool ${name}.`, null];
 }
 
-// ---- model providers -------------------------------------------------------------
+// ---- model providers — the shared brain pool -------------------------------------
 
-interface ChatMsg { role: string; content: string | null;
-  tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }>;
-  tool_call_id?: string; }
+import { poolChat, type ChatMsg } from "./brainpool";
 
 async function chatCompletion(env: Env, messages: ChatMsg[], tools: OpenAITool[]):
     Promise<{ content: string; tool_calls: Array<{ id: string; name: string; args: Record<string, unknown> }>; raw: ChatMsg } | null> {
-  const providers = [
-    env.CEREBRAS_KEY && { url: "https://api.cerebras.ai/v1/chat/completions",
-      key: env.CEREBRAS_KEY, model: "gpt-oss-120b" },
-    env.GROQ_KEY && { url: "https://api.groq.com/openai/v1/chat/completions",
-      key: env.GROQ_KEY, model: "llama-3.3-70b-versatile" },
-  ].filter(Boolean) as Array<{ url: string; key: string; model: string }>;
-
-  for (const p of providers) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const res = await fetch(p.url, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${p.key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ model: p.model, messages, tools, tool_choice: "auto",
-                                 max_tokens: 2400 }),
-        });
-        if (res.status === 429 || res.status >= 500) {
-          await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
-          continue;
-        }
-        if (!res.ok) break; // provider rejects the request shape — try next provider
-        const data = await res.json<{ choices?: Array<{ message: ChatMsg }> }>();
-        const msg = data.choices?.[0]?.message;
-        if (!msg) break;
-        const calls = (msg.tool_calls || []).map((tc) => ({
-          id: tc.id, name: tc.function.name,
-          args: (() => { try { return JSON.parse(tc.function.arguments || "{}"); } catch { return {}; } })(),
-        }));
-        return { content: msg.content || "", tool_calls: calls, raw: msg };
-      } catch { /* network — retry/next */ }
-    }
-  }
-  return null;
+  return poolChat(env, messages, { tools, maxTokens: 2400 });
 }
 
 // ---- thread titling ----------------------------------------------------------------
@@ -342,7 +308,13 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
         } else if (e instanceof ApprovalRejected) {
           result = "The user declined that action.";
         } else {
-          result = `Tool failed: ${e instanceof Error ? e.message : e}`;
+          const msg = e instanceof Error ? e.message : String(e);
+          result = `Tool failed: ${msg}`;
+          // Connected-app failures must be VISIBLE, not silently deflected —
+          // the frontend toasts these so the user knows what actually happened.
+          if (composioNames.has(call.name)) {
+            uiActions.push({ type: "tool_error", summary: `${call.name.split("_")[0].toLowerCase()}: ${msg.slice(0, 140)}` });
+          }
         }
       }
       if (action) uiActions.push(action);
