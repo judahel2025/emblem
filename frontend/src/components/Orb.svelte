@@ -65,7 +65,7 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(circle at 42% 38%, #fff8ee 0%, var(--glow-core) 45%, #e8cfa8 100%);
+    background: radial-gradient(circle at 42% 38%, #eafeff 0%, var(--glow-core) 45%, #00b8d4 100%);
     animation: throb var(--speed) ease-in-out infinite;
   }
   .orb.off .halo, .orb.off .rim, .orb.off .core { animation: none; opacity: 0.4; }

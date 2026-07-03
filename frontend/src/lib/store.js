@@ -16,6 +16,43 @@ export const filesTab = writable("files");      // files | notes | memory | skil
 // The active workspace screen. The agent (open_screen tool) and the tour drive this
 // too, so it lives in a store rather than App.svelte local state.
 export const appView = writable("chat");
+export const showVoiceOverlay = writable(false);   // full-screen live voice (VoiceLive)
+
+// --- threads (ChatGPT-style conversation list) -----------------------------------
+export const threads = writable({ items: [], legacy_count: 0 });
+export const activeThread = writable(null);   // null = fresh chat (thread made on first message)
+
+export async function loadThreads() {
+  try { threads.set(await api.threads()); }
+  catch (e) { console.error("loadThreads failed:", e); }
+}
+
+export async function openThread(id) {
+  activeThread.set(id);
+  appView.set("chat");
+  messages.set([]);
+  try {
+    const r = await api.conversations(100, id);
+    messages.set((r.items || []).map((m) => ({ role: m.role, text: m.text })));
+  } catch (e) { console.error("openThread failed:", e); }
+}
+
+export function newChat() {
+  activeThread.set(null);
+  messages.set([]);
+  appView.set("chat");
+}
+
+export async function renameThread(id, title) {
+  await api.threadRename(id, title).catch((e) => notify(`Couldn't rename: ${e.message}`, "danger"));
+  loadThreads();
+}
+
+export async function deleteThread(id) {
+  await api.threadDelete(id).catch((e) => notify(`Couldn't delete: ${e.message}`, "danger"));
+  if (get(activeThread) === id) newChat();
+  loadThreads();
+}
 
 // --- conversation / voice ------------------------------------------------------
 export const messages = writable([]);
@@ -83,14 +120,14 @@ export async function speakText(text, cfg = {}) {
     _speaking = a;
     voiceState.set("speaking");
     a.onended = () => { if (_speaking === a) { _speaking = null; voiceState.set("idle"); } };
-    a.onerror = (e) => {
+    a.onerror = () => {
       if (_speaking === a) { _speaking = null; voiceState.set("idle"); }
-      notify("Voice playback failed — check your audio output", "danger");
     };
     await a.play();
   } catch (err) {
+    // Spoken replies are an enhancement — a missing TTS backend must never toast.
     voiceState.set("idle");
-    notify(`Voice error: ${err?.message || err}`, "danger");
+    console.warn("tts unavailable:", err?.message || err);
   }
 }
 
@@ -147,16 +184,23 @@ function _alertLine(al) {
   return `${al.title}. ${al.body}`;
 }
 
-// Bring back the recent conversation so the workspace picks up where it left off.
+// ChatGPT behavior: boot lands on a FRESH chat with the thread list in the sidebar;
+// past conversations open on click (including the pre-threads "Earlier" bucket).
 let _convoLoaded = false;
 export async function loadConversation() {
   if (_convoLoaded) return;
   _convoLoaded = true;
+  loadThreads();
+}
+
+export async function openLegacy() {
+  activeThread.set("legacy");
+  appView.set("chat");
+  messages.set([]);
   try {
-    const r = await api.conversations(60);
-    const items = (r.items || []).map((m) => ({ role: m.role, text: m.text }));
-    if (items.length) messages.set(items);
-  } catch {}
+    const r = await api.conversations(100, "legacy");
+    messages.set((r.items || []).map((m) => ({ role: m.role, text: m.text })));
+  } catch (e) { console.error("openLegacy failed:", e); }
 }
 
 // When Emblem comes on: a simple personal greeting. Runs once.
@@ -231,11 +275,27 @@ export async function sendCommand(text) {
   const clean = (text || "").trim();
   if (!clean || get(thinking)) return;
   stopSpeaking();
+
+  // First message of a fresh chat creates its thread. It shows the raw message
+  // instantly, then a model-generated 3–6 word title replaces it in the sidebar.
+  let tid = get(activeThread);
+  if (!tid) {
+    try {
+      const t = await api.threadCreate(clean.slice(0, 60));
+      tid = t.id;
+      activeThread.set(tid);
+      loadThreads();
+      api.threadAutotitle(tid, clean)
+        .then(() => loadThreads())
+        .catch((e) => console.warn("autotitle failed:", e));
+    } catch (e) { console.error("thread create failed:", e); }
+  }
+
   const prior = get(messages);
   const lastReply = [...prior].reverse().find((m) => m.role === "assistant")?.text || "";
   const history = prior.slice(-12).map((m) => ({ role: m.role, content: m.text }));
   messages.update((m) => [...m, { role: "user", text: clean }]);
-  api.conversationAdd("user", clean).catch(() => {});
+  api.conversationAdd("user", clean, tid).catch((e) => console.error("save msg:", e));
   thinking.set(true);
   voiceState.set("thinking");
   const r = await api.agent(clean, { model: get(model), lastReply, history, pending: pendingTask })
@@ -243,7 +303,7 @@ export async function sendCommand(text) {
   pendingTask = r.pending || null;
   const replyText = r.reply || "(no reply)";
   messages.update((m) => [...m, { role: "assistant", text: replyText }]);
-  api.conversationAdd("assistant", replyText).catch(() => {});
+  api.conversationAdd("assistant", replyText, tid).catch((e) => console.error("save msg:", e));
   thinking.set(false);
   voiceState.set("idle");
   runActions(r.actions);

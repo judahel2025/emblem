@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { requireUser, type AppContext } from "./auth";
 import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
          ApprovalRequired, ApprovalRejected } from "./kernel";
-import { runAgent } from "./agent";
+import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
          listConnections, initiateConnection } from "./composio";
 
@@ -66,18 +66,40 @@ apiRoutes.put("/me/profile", async (c) => {
 
 apiRoutes.get("/conversations", async (c) => {
   const limit = Math.min(parseInt(c.req.query("limit") || "100") || 100, 300);
-  const rows = await c.env.DB.prepare(
-    "SELECT id, role, text, created_at FROM conversations WHERE user_id = ? ORDER BY id DESC LIMIT ?")
-    .bind(c.get("userId"), limit).all();
+  const threadQ = c.req.query("thread_id");
+  let rows;
+  if (threadQ === "legacy") {
+    // Pre-threads history — shown as one "Earlier" bucket.
+    rows = await c.env.DB.prepare(
+      "SELECT id, role, text, created_at FROM conversations WHERE user_id = ? AND thread_id IS NULL ORDER BY id DESC LIMIT ?")
+      .bind(c.get("userId"), limit).all();
+  } else if (threadQ) {
+    rows = await c.env.DB.prepare(
+      "SELECT id, role, text, created_at FROM conversations WHERE user_id = ? AND thread_id = ? ORDER BY id DESC LIMIT ?")
+      .bind(c.get("userId"), parseInt(threadQ) || 0, limit).all();
+  } else {
+    rows = await c.env.DB.prepare(
+      "SELECT id, role, text, created_at FROM conversations WHERE user_id = ? ORDER BY id DESC LIMIT ?")
+      .bind(c.get("userId"), limit).all();
+  }
   return c.json({ items: (rows.results || []).reverse() });
 });
 
 apiRoutes.post("/conversations", async (c) => {
-  const { role = "", text = "" } = await c.req.json().catch(() => ({}));
+  const { role = "", text = "", thread_id = null } = await c.req.json().catch(() => ({}));
   if ((role === "user" || role === "assistant") && String(text).trim()) {
+    const tid = Number(thread_id) || null;
     await c.env.DB.prepare(
-      "INSERT INTO conversations (role, text, user_id) VALUES (?, ?, ?)")
-      .bind(role, String(text).slice(0, 8000), c.get("userId")).run();
+      "INSERT INTO conversations (role, text, thread_id, user_id) VALUES (?, ?, ?, ?)")
+      .bind(role, String(text).slice(0, 8000), tid, c.get("userId")).run();
+    if (tid) {
+      // Bump recency; auto-title from the first user message.
+      await c.env.DB.prepare(
+        `UPDATE threads SET updated_at = datetime('now'),
+           title = CASE WHEN title = 'New chat' AND ?2 = 'user' THEN ?3 ELSE title END
+         WHERE id = ?1 AND user_id = ?4`)
+        .bind(tid, role, String(text).slice(0, 60), c.get("userId")).run();
+    }
   }
   return c.json({ ok: true });
 });
@@ -85,6 +107,58 @@ apiRoutes.post("/conversations", async (c) => {
 apiRoutes.delete("/conversations", async (c) => {
   await c.env.DB.prepare("DELETE FROM conversations WHERE user_id = ?")
     .bind(c.get("userId")).run();
+  await c.env.DB.prepare("DELETE FROM threads WHERE user_id = ?")
+    .bind(c.get("userId")).run();
+  return c.json({ ok: true });
+});
+
+// ---- threads (ChatGPT-style conversation list) --------------------------------
+
+apiRoutes.get("/threads", async (c) => {
+  const rows = await c.env.DB.prepare(
+    "SELECT id, title, created_at, updated_at FROM threads WHERE user_id = ? ORDER BY updated_at DESC LIMIT 100")
+    .bind(c.get("userId")).all();
+  const legacy = await c.env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM conversations WHERE user_id = ? AND thread_id IS NULL")
+    .bind(c.get("userId")).first<{ n: number }>();
+  return c.json({ items: rows.results || [], legacy_count: legacy?.n || 0 });
+});
+
+apiRoutes.post("/threads", async (c) => {
+  const { title = "New chat" } = await c.req.json().catch(() => ({}));
+  const r = await c.env.DB.prepare(
+    "INSERT INTO threads (title, user_id) VALUES (?, ?)")
+    .bind(String(title).slice(0, 60) || "New chat", c.get("userId")).run();
+  return c.json({ ok: true, id: r.meta.last_row_id });
+});
+
+apiRoutes.post("/threads/:id/autotitle", async (c) => {
+  const { prompt = "" } = await c.req.json().catch(() => ({}));
+  if (!String(prompt).trim()) return c.json({ ok: false, error: "prompt required" });
+  const title = await generateTitle(c.env, String(prompt));
+  await c.env.DB.prepare(
+    "UPDATE threads SET title = ? WHERE id = ? AND user_id = ?")
+    .bind(title, c.req.param("id"), c.get("userId")).run();
+  return c.json({ ok: true, title });
+});
+
+apiRoutes.put("/threads/:id", async (c) => {
+  const { title = "" } = await c.req.json().catch(() => ({}));
+  if (!String(title).trim()) return c.json({ ok: false, error: "title required" });
+  await c.env.DB.prepare(
+    "UPDATE threads SET title = ? WHERE id = ? AND user_id = ?")
+    .bind(String(title).slice(0, 60), c.req.param("id"), c.get("userId")).run();
+  return c.json({ ok: true });
+});
+
+apiRoutes.delete("/threads/:id", async (c) => {
+  const id = c.req.param("id");
+  await c.env.DB.prepare(
+    "DELETE FROM conversations WHERE thread_id = ? AND user_id = ?")
+    .bind(id, c.get("userId")).run();
+  await c.env.DB.prepare(
+    "DELETE FROM threads WHERE id = ? AND user_id = ?")
+    .bind(id, c.get("userId")).run();
   return c.json({ ok: true });
 });
 

@@ -98,9 +98,18 @@ export const api = {
   alertSeen: (id) => post(`/api/alerts/${id}/seen`, {}),
   improvements: () => get("/api/improvements"),
   improvementResolve: (id) => post(`/api/improvements/${id}/resolve`, {}),
-  conversations: (limit = 100) => get(`/api/conversations?limit=${limit}`),
-  conversationAdd: (role, text) => post("/api/conversations", { role, text }),
+  conversations: (limit = 100, threadId = null) =>
+    get(`/api/conversations?limit=${limit}${threadId ? `&thread_id=${threadId}` : ""}`),
+  conversationAdd: (role, text, threadId = null) =>
+    post("/api/conversations", { role, text, thread_id: threadId }),
   conversationsClear: () => del("/api/conversations"),
+
+  // Threads (ChatGPT-style conversation list)
+  threads: () => get("/api/threads"),
+  threadCreate: (title = "New chat") => post("/api/threads", { title }),
+  threadRename: (id, title) => req(`/api/threads/${id}`, { method: "PUT", body: JSON.stringify({ title }) }),
+  threadAutotitle: (id, prompt) => post(`/api/threads/${id}/autotitle`, { prompt }),
+  threadDelete: (id) => del(`/api/threads/${id}`),
   emails: (status = "") => get(`/api/emails${status ? `?status=${status}` : ""}`),
   emailDraft: (recipient, subject, body) => post("/api/tools/execute", { name: "email.draft", args: { recipient, subject, body } }),
   emailSend: (id) => post(`/api/emails/${id}/send`, {}),

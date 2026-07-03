@@ -265,6 +265,24 @@ async function chatCompletion(env: Env, messages: ChatMsg[], tools: OpenAITool[]
   return null;
 }
 
+// ---- thread titling ----------------------------------------------------------------
+
+/** A 3–6 word conversation title from the opening prompt. Falls back to a trim. */
+export async function generateTitle(env: Env, firstMessage: string): Promise<string> {
+  const fallback = firstMessage.replace(/\s+/g, " ").trim().slice(0, 48) || "New chat";
+  try {
+    const resp = await chatCompletion(env, [
+      { role: "system", content:
+        "You title conversations. Reply with ONLY a title for the conversation that starts " +
+        "with the user's message: 3-6 words, no quotes, no punctuation at the end, same " +
+        "language as the message." },
+      { role: "user", content: firstMessage.slice(0, 500) },
+    ], []);
+    const t = (resp?.content || "").replace(/^["'\s]+|["'\s.]+$/g, "").replace(/\s+/g, " ");
+    return t && t.length <= 80 ? t : fallback;
+  } catch { return fallback; }
+}
+
 // ---- the loop ---------------------------------------------------------------------
 
 export async function runAgent(env: Env, userId: string, isOwner: boolean, command: string,
@@ -333,10 +351,11 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
   }
 
   // Deterministic assist: models sometimes SAY "I'll open the Connections screen"
-  // without calling open_screen. If the reply points at connecting an app and no
-  // navigation happened, take them there anyway.
+  // without calling open_screen. Fire ONLY on an explicit pointer (naming the
+  // Connections screen, or "connect X first") — a reply that merely mentions
+  // connecting apps in passing must not hijack the user's current screen.
   const pointsAtConnections =
-    /connect(ing|ed)?\s+(your\s+|the\s+)?(gmail|github|google|calendar|notion|slack|apps?|account)|connections\s+(page|screen)/i
+    /connections\s+(page|screen)|need\s+(your\s+)?\w+\s+connected|connect\s+(your\s+|the\s+)?\w+\s+(first|before)/i
       .test(finalReply);
   if (pointsAtConnections && !uiActions.some((a) => a.type === "navigate" || a.type === "open_url")) {
     uiActions.push({ type: "navigate", view: "connect" });
