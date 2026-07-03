@@ -65,7 +65,7 @@
     if (!composioKey || composioKey === "••••••••") return;
     try {
       await api.setSecret("composio_key", composioKey);
-      notify("Composio key saved", "safe");
+      notify("Service key saved", "safe");
       composioKey = "••••••••";
     } catch (e) { notify("Failed: " + e.message, "danger"); }
   }
@@ -154,15 +154,15 @@
 
     {:else if tab === "ai"}
       <div class="section">
-        <h3>AI Provider</h3>
+        <h3>Engine</h3>
         <div class="field">
-          <span>Provider</span>
+          <span>Engine tier</span>
           <select bind:value={brain.provider}>
-            <option value="cerebras">Cerebras (fast, free)</option>
-            <option value="groq">Groq (free)</option>
-            <option value="claude">Claude (Anthropic)</option>
-            <option value="openai">OpenAI</option>
-            <option value="gemini">Gemini</option>
+            <option value="cerebras">Fast</option>
+            <option value="groq">Balanced</option>
+            <option value="claude">Advanced A</option>
+            <option value="openai">Advanced B</option>
+            <option value="gemini">Advanced C</option>
           </select>
         </div>
         <div class="field">
@@ -178,13 +178,13 @@
 
     {:else if tab === "voice"}
       <div class="section">
-        <h3>Voice Engine</h3>
+        <h3>Voice</h3>
         <div class="field">
-          <span>Engine</span>
+          <span>Voice engine</span>
           <select bind:value={voice.engine}>
-            <option value="edge">Edge Neural (cloud)</option>
-            <option value="gemini">Gemini TTS (Google)</option>
-            <option value="piper">Piper (offline)</option>
+            <option value="edge">Neural (cloud)</option>
+            <option value="gemini">Neural HD</option>
+            <option value="piper">Offline</option>
           </select>
         </div>
         <div class="field">
@@ -200,11 +200,11 @@
 
     {:else if tab === "apps"}
       <div class="section">
-        <h3>Composio API Key</h3>
-        <p class="hint">Get your key at composio.dev — unlocks 250+ tool integrations.</p>
+        <h3>Connections service key</h3>
+        <p class="hint">The service credential that powers app connections.</p>
         <div class="field">
-          <span>API Key</span>
-          <input type="password" bind:value={composioKey} placeholder="ak_…" />
+          <span>Service key</span>
+          <input type="password" bind:value={composioKey} placeholder="key…" />
         </div>
         <button class="btn primary" on:click={saveComposioKey}>Save Key</button>
 
