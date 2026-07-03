@@ -9,6 +9,7 @@ import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
 import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
          listConnections, initiateConnection } from "./composio";
+import { synthesize } from "./tts";
 
 export const apiRoutes = new Hono<AppContext>();
 
@@ -22,13 +23,14 @@ const notFound = (c: { json: (o: unknown, s?: 404) => Response }) =>
 apiRoutes.get("/me", async (c) => {
   const uid = c.get("userId");
   const p = await c.env.DB.prepare(
-    "SELECT display_name, onboarded FROM profiles WHERE user_id = ?").bind(uid)
-    .first<{ display_name: string | null; onboarded: number | null }>();
+    "SELECT display_name, onboarded, toured FROM profiles WHERE user_id = ?").bind(uid)
+    .first<{ display_name: string | null; onboarded: number | null; toured: number | null }>();
   return c.json({
     user_id: uid,
     is_admin: c.get("isOwner"),
     display_name: p?.display_name || "",
     onboarded: Boolean(p?.onboarded),
+    toured: Boolean(p?.toured),
   });
 });
 
@@ -49,17 +51,26 @@ apiRoutes.put("/me/profile", async (c) => {
   await c.env.DB.prepare(
     // NOT NULL columns: the INSERT arm needs real values even when a field is
     // omitted; the UPDATE arm keeps whatever is already there.
-    `INSERT INTO profiles (user_id, display_name, role, tone, onboarded)
+    `INSERT INTO profiles (user_id, display_name, role, tone, onboarded, toured)
      VALUES (?1, COALESCE(?2, ''), COALESCE(?3, ''),
-             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?5, 0))
+             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?5, 0), COALESCE(?6, 0))
      ON CONFLICT(user_id) DO UPDATE SET
        display_name = COALESCE(?2, display_name),
        role = COALESCE(?3, role),
        tone = COALESCE(?4, tone),
-       onboarded = COALESCE(?5, onboarded)`)
+       onboarded = COALESCE(?5, onboarded),
+       toured = COALESCE(?6, toured)`)
     .bind(uid, b.display_name ?? null, b.role ?? null, b.tone ?? null,
-          b.onboarded === undefined ? null : (b.onboarded ? 1 : 0)).run();
+          b.onboarded === undefined ? null : (b.onboarded ? 1 : 0),
+          b.toured === undefined ? null : (b.toured ? 1 : 0)).run();
   return c.json({ ok: true });
+});
+
+// ---- one-shot narration (tour + spoken replies) -------------------------------
+
+apiRoutes.post("/voice/tts", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { text?: string; voice?: string }));
+  return synthesize(c.env, String(b.text || ""), b.voice ? String(b.voice) : undefined);
 });
 
 // ---- conversations ----------------------------------------------------------

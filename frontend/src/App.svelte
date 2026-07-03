@@ -16,6 +16,8 @@
   import VoiceLive from "./screens/VoiceLive.svelte";
   import { auth } from "./lib/supabase.js";
   import "./lib/theme.js";   // keeps data-theme live (toggle + OS changes)
+  import TourOverlay from "./components/TourOverlay.svelte";
+  import { startTour } from "./lib/tour.js";
 
   let engineUp = false;
   let engineFailed = false;
@@ -41,7 +43,11 @@
     await syncIdentity();
     boot();
   }
-  function onOnboarded() { onboarded = true; appView.set("connect"); }
+  // After meeting Emblem, the voice-guided tour shows them around — once.
+  function onOnboarded() {
+    onboarded = true;
+    startTour();
+  }
   function signOut() { auth.signOut(); loggedIn = false; appView.set("chat"); }
 
   // Server truth for onboarding — localStorage is just a hint that can go stale
@@ -51,6 +57,11 @@
     if (my?.user_id) {
       onboarded = !!my.onboarded;
       try { localStorage.setItem("emblem_onboarded", onboarded ? "1" : "0"); } catch {}
+      // Existing members who never saw the tour get it once (captions-only if the
+      // browser blocks un-gestured audio — Next still walks them through).
+      if (onboarded && !my.toured && !localStorage.getItem("emblem_toured")) {
+        setTimeout(startTour, 600);
+      }
     }
     identityReady = true;
   }
@@ -114,6 +125,7 @@
     {#if showSettings}
       <SettingsPanel on:close={() => showSettings = false} />
     {/if}
+    <TourOverlay />
   </div>
 {/if}
 

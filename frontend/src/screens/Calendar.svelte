@@ -64,7 +64,7 @@
   onMount(load);
 </script>
 
-<div class="page">
+<div class="page" data-tour="calendar-root">
   <header class="head">
     <div>
       <h1>Calendar</h1>

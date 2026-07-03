@@ -16,7 +16,7 @@
   onMount(load);
 </script>
 
-<div class="page">
+<div class="page" data-tour="automations-root">
   <header class="head">
     <div>
       <h1>Automations</h1>

@@ -26,7 +26,7 @@
   onMount(load);
 </script>
 
-<div class="page">
+<div class="page" data-tour="pages-root">
   {#if open}
     <div class="editor" in:fade={{ duration: 180 }}>
       <button class="btn ghost back" on:click={() => { open = null; }} aria-label="Back to all pages">
