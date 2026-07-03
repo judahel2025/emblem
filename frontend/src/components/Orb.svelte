@@ -51,7 +51,7 @@
     animation: throb var(--speed) ease-in-out infinite;
     will-change: transform, opacity;
   }
-  /* faint burnt-orange rim just outside the core */
+  /* faint rim just outside the core */
   .rim {
     position: absolute;
     inset: calc(var(--d) * -0.12);
@@ -60,12 +60,15 @@
     animation: throb var(--speed) ease-in-out infinite;
     animation-delay: calc(var(--speed) / -3);
   }
-  /* the point of light itself */
+  /* the point of light itself — white-hot in BOTH themes; the soft silver
+     shading + neutral keel keep it visible on a pure-white canvas */
   .core {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(circle at 42% 38%, #eafeff 0%, var(--glow-core) 45%, #00b8d4 100%);
+    background: radial-gradient(circle at 42% 38%, #ffffff 0%, var(--glow-core) 45%, #c9c9c9 100%);
+    box-shadow: inset 0 calc(var(--d) * -0.06) calc(var(--d) * 0.14) rgba(0, 0, 0, 0.08),
+                0 0 calc(var(--d) * 0.3) var(--glow-soft);
     animation: throb var(--speed) ease-in-out infinite;
   }
   .orb.off .halo, .orb.off .rim, .orb.off .core { animation: none; opacity: 0.4; }

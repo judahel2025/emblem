@@ -57,10 +57,11 @@
   --danger-bg:  rgba(185, 28, 28, 0.08);
   --info:       var(--text-2);
 
-  /* ── Glow (Orb, focus moments) ──────────────────────────────── */
-  --glow-core: rgba(10, 10, 10, 0.85);
-  --glow-soft: rgba(0, 0, 0, 0.18);
-  --glow-rim:  rgba(0, 0, 0, 0.12);
+  /* ── Glow (Orb, focus moments) — WHITE in light mode too: the orb is
+        always a ball of light; a silver rim keeps it visible on white. ── */
+  --glow-core: rgba(255, 255, 255, 0.95);
+  --glow-soft: rgba(255, 255, 255, 0.85);
+  --glow-rim:  rgba(0, 0, 0, 0.10);
 
   /* ── Shadows — soft ambient only ────────────────────────────── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
