@@ -18,7 +18,7 @@
   }
   import { tilt } from "../lib/tilt.js";
 
-  let loading = true, configured = false, connected = [], featured = [], all = [], query = "", error = "";
+  let loading = true, configured = false, connected = [], broken = [], featured = [], all = [], query = "", error = "";
 
   const META = {
     gmail: { icon: "ti-brand-gmail", label: "Gmail", desc: "Read, draft, send" },
@@ -39,7 +39,8 @@
     loading = true; error = "";
     try {
       const d = await api.connections();
-      configured = d.configured; connected = d.connected || []; featured = d.featured || []; all = d.all || [];
+      configured = d.configured; connected = d.connected || []; broken = d.broken || [];
+      featured = d.featured || []; all = d.all || [];
       loadConnections();   // keep the sidebar's workspace list in sync
       if (d.error) error = "Connections service is warming up.";
     } catch { error = "Couldn't load connections."; }
@@ -49,13 +50,14 @@
   // ── Connect lifecycle: spinner on the button, poll until the OAuth
   //    round-trip lands, then flip the tile into the Active section. ──
   const POLL_MS = 3000;
-  const TIMEOUT_MS = 2 * 60 * 1000;
+  const TIMEOUT_MS = 4 * 60 * 1000;   // OAuth (esp. Google consent) can be slow — be patient
   let connecting = {};   // toolkit -> true while its OAuth flow is pending
   let startedAt = {};    // toolkit -> Date.now() when the flow began
   let pollTimer = null;
   let polling = false;   // guard against overlapping poll requests
 
   const anyPending = () => Object.values(connecting).some(Boolean);
+  $: pending = Object.values(connecting).some(Boolean);
 
   function startPolling() {
     if (pollTimer) return;
@@ -90,6 +92,7 @@
         }
       }
       connecting = connecting;   // reactivity after deletes
+      broken = d.broken || broken;
       if (landed) {
         configured = d.configured;
         connected = now;
@@ -101,6 +104,9 @@
     polling = false;
     if (!anyPending()) stopPolling();
   }
+
+  // Manual re-check — for when a slow OAuth finished but auto-detect hasn't caught it yet.
+  async function checkNow() { await load(); if (anyPending()) poll(); }
 
   // Emblem-branded consent step: clicking Connect opens OUR dialog first
   // ("Emblem is requesting to connect…") — the user authorizes through Emblem,
@@ -181,9 +187,50 @@
 
   {#if error}<div class="banner" in:fade={{ duration: 150 }}>{error}</div>{/if}
 
+  {#if pending}
+    <div class="connecting-banner glass gloss" in:fly={{ y: -6, duration: 160 }}>
+      <span class="spin"></span>
+      <span>Finish the sign-in in the pop-up — we'll detect it automatically.</span>
+      <button class="btn ghost sm" on:click={checkNow}>Check now</button>
+    </div>
+  {/if}
+
   {#if loading}
     <div class="empty">Loading connections…</div>
   {:else}
+    {#if broken.length}
+      <!-- Expired / broken connections — one tap to reconnect. -->
+      <section class="section">
+        <div class="secthead">
+          <span class="pulse warn" aria-hidden="true"></span>
+          <h2>Needs reconnect</h2>
+        </div>
+        <div class="agrid">
+          {#each broken as k (k)}
+            {@const m = meta(k)}
+            <div class="acard glass gloss" in:fly={{ y: 8, duration: 200 }}>
+              <div class="atop">
+                <span class="appicon" class:mono={MONO_LOGOS.has(k)}>
+                  {#if brandLogo(k)}{@html brandLogo(k)}
+                  {:else}<img class="brandimg" src={logoUrl(k)} alt={m.label} loading="lazy" on:error={imgFallback} /><i class="ti {m.icon}" style="display:none"></i>{/if}
+                </span>
+                <span class="badge caution">Expired</span>
+              </div>
+              <div class="name">{m.label}</div>
+              <div class="desc">Its sign-in expired — reconnect to keep using it.</div>
+              <div class="afoot">
+                <span class="footnote">Access paused</span>
+                <button class="btn primary cbtn" on:click={() => connect(k)}
+                  disabled={connecting[k]} aria-label={`Reconnect ${m.label}`}>
+                  {#if connecting[k]}<span class="spin"></span> Reconnecting…{:else}Reconnect{/if}
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </section>
+    {/if}
+
     {#if connected.length}
       <!-- Active connectors: pulsing-dot section header + glass status cards -->
       <section class="section">
@@ -380,6 +427,16 @@
     background: var(--accent); flex: 0 0 auto;
     animation: pulsedot 2s ease-in-out infinite;
   }
+  .pulse.warn { background: var(--caution); }
+
+  .connecting-banner {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: var(--r-md); margin-bottom: 16px;
+    font-size: 13px; color: var(--text);
+  }
+  .connecting-banner span { flex: 1; }
+  .connecting-banner .spin { flex: 0 0 auto; }
+  .btn.sm { padding: 6px 14px; font-size: 12.5px; }
   @keyframes pulsedot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   /* ── Search (inline in section header) ── */

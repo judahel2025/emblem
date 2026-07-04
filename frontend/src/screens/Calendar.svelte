@@ -2,6 +2,26 @@
   import { onMount } from "svelte";
   import { fly, fade } from "svelte/transition";
   import { api } from "../lib/api.js";
+  import { connectedApps, appView } from "../lib/store.js";
+  import GcalWorkspace from "./workspaces/GcalWorkspace.svelte";
+  import ApprovalCard from "../components/ApprovalCard.svelte";
+
+  // When Google Calendar is connected it becomes the ONE calendar — the page shows
+  // and writes the user's real Google events (via the proven GcalWorkspace). The
+  // local store is only used when Google isn't connected.
+  $: gcalConnected = $connectedApps.includes("googlecalendar");
+
+  // Shared approval surface for GcalWorkspace's write actions (create/delete event).
+  let pendingApproval = null;
+  function onApproval(info) {
+    pendingApproval = {
+      ...info,
+      approve: async () => { const p = pendingApproval; pendingApproval = null; await p.__a(); },
+      decline: async () => { const p = pendingApproval; pendingApproval = null; await p.__d(); },
+      __a: info.approve, __d: info.decline,
+    };
+  }
+
   let items = [], loading = true, title = "", when = "";
   let selected = null;
 
@@ -80,6 +100,27 @@
   onMount(load);
 </script>
 
+{#if gcalConnected}
+  <!-- Google Calendar connected → it IS the calendar (real read/write). -->
+  <div class="gcal-page">
+    <header class="gcal-head reveal-in">
+      <div>
+        <h1>Calendar <span class="synced"><i class="ti ti-brand-google"></i> Synced with Google</span></h1>
+        <p class="sub">Your real Google Calendar. Adding or removing events asks for approval first.</p>
+      </div>
+      <button class="btn ghost" on:click={() => appView.set("connect")}>Manage connection</button>
+    </header>
+    <div class="gcal-host"><GcalWorkspace {onApproval} /></div>
+  </div>
+  {#if pendingApproval}
+    <div class="ap-veil">
+      <div class="ap-holder" in:fly={{ y: 14, duration: 200 }}>
+        <ApprovalCard approval={{ id: pendingApproval.approval_id, summary: pendingApproval.summary, args_json: pendingApproval.args_json }}
+          variant="modal" onApprove={pendingApproval.approve} onDecline={pendingApproval.decline} />
+      </div>
+    </div>
+  {/if}
+{:else}
 <div class="page" data-tour="calendar-root">
   <!-- Header: month as the display title, segmented pill nav on the right -->
   <header class="head reveal-in">
@@ -178,9 +219,25 @@
     </aside>
   </div>
 </div>
+{/if}
 
 <style>
   .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  /* Google-connected calendar host */
+  .gcal-page { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .gcal-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+    padding: 24px 24px 16px; flex-wrap: wrap; }
+  .gcal-head h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text);
+    display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .synced { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: var(--r-pill); background: var(--accent-bg); color: var(--text-2);
+    border: 1px solid var(--border); }
+  .synced i { font-size: 14px; }
+  .gcal-host { flex: 1; min-height: 0; display: flex; }
+  .gcal-host :global(.gcal), .gcal-host > :global(*) { flex: 1; min-height: 0; width: 100%; }
+  .ap-veil { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.45); display: grid; place-items: center; }
+  .ap-holder { max-width: calc(100vw - 40px); }
 
   /* ── Header ── */
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }

@@ -86,9 +86,10 @@
     acting = true;
     try {
       const start = new Date(cWhen).toISOString();
-      const end = new Date(new Date(cWhen).getTime() + 3600000).toISOString();
+      // Proven GOOGLECALENDAR_CREATE_EVENT shape (matches GcalWorkspace).
       await runConnected("GOOGLECALENDAR_CREATE_EVENT",
-        { summary: cTitle.trim(), start_datetime: start, end_datetime: end, start: { dateTime: start }, end: { dateTime: end } },
+        { calendar_id: "primary", summary: cTitle.trim(), start_datetime: start,
+          event_duration_hour: 1, event_duration_minutes: 0 },
         { act: true, onApproval });
       notify("Event added", "safe"); cTitle = ""; cWhen = ""; composeOpen = false; load();
     } catch (e) { if (e?.message !== "Declined.") notify(e?.message || "Couldn't add event", "danger"); }

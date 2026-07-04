@@ -8,7 +8,7 @@ import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
          ApprovalRequired, ApprovalRejected } from "./kernel";
 import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
-         listConnections, initiateConnection, disconnect } from "./composio";
+         listConnections, connectionStates, initiateConnection, disconnect } from "./composio";
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile } from "./onboarding";
 import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
@@ -622,10 +622,10 @@ apiRoutes.post("/agent", async (c) => {
 
 apiRoutes.get("/connections", async (c) => {
   const uid = c.get("userId");
-  const [connected, all] = await Promise.all([
-    listConnections(c.env, uid), allToolkits(c.env)]);
+  const [states, all] = await Promise.all([
+    connectionStates(c.env, uid), allToolkits(c.env)]);
   return c.json({ configured: composioConfigured(c.env),
-    featured: FEATURED_TOOLKITS, connected, all });
+    featured: FEATURED_TOOLKITS, connected: states.active, broken: states.broken, all });
 });
 
 apiRoutes.get("/connections/link", async (c) => {

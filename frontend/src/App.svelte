@@ -1,8 +1,10 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, showOperator, me,
-           startNotifPolling, askNotifPermission, loadNotifications } from "./lib/store.js";
+           startNotifPolling, askNotifPermission, loadNotifications, activeThread, newChat } from "./lib/store.js";
+  import { fade } from "svelte/transition";
   import { api } from "./lib/api.js";
+  import Logo from "./components/Logo.svelte";
   import ChatView from "./components/ChatView.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
   import Sidebar from "./components/Sidebar.svelte";
@@ -27,6 +29,14 @@
   let engineUp = false;
   let engineFailed = false;
   let timer;
+
+  // Sidebar: desktop rail (persisted) + mobile off-canvas drawer (ephemeral).
+  let collapsed = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_sidebar_collapsed") === "1");
+  let drawerOpen = false;
+  $: try { localStorage.setItem("emblem_sidebar_collapsed", collapsed ? "1" : "0"); } catch {}
+  // Navigating (nav item, thread, screen) closes the mobile drawer.
+  appView.subscribe(() => { drawerOpen = false; });
+  activeThread.subscribe(() => { drawerOpen = false; });
 
   // If we just returned from Google OAuth, capture the session before first render logic.
   if (typeof window !== "undefined" && auth.handleRedirect()) {
@@ -118,10 +128,28 @@
 {:else if !onboarded}
   <Onboarding on:done={onOnboarded} />
 {:else}
-  <div class="app">
+  <div class="app" class:drawer-open={drawerOpen}>
+    <!-- Mobile top bar (≤768px only): hamburger opens the drawer, brand, new chat. -->
+    <div class="mobilebar">
+      <button class="mb-btn" on:click={() => (drawerOpen = !drawerOpen)} aria-label="Menu">
+        <i class="ti ti-menu-2"></i>
+      </button>
+      <button class="mb-brand" on:click={() => { newChat(); }} aria-label="Emblem — new chat">
+        <Logo size={22} /> <span>Emblem</span>
+      </button>
+      <button class="mb-btn" on:click={() => { newChat(); }} aria-label="New chat">
+        <i class="ti ti-edit"></i>
+      </button>
+    </div>
+
+    {#if drawerOpen}
+      <div class="backdrop" on:click={() => (drawerOpen = false)} transition:fade={{ duration: 150 }}
+           role="presentation"></div>
+    {/if}
+
     <!-- Everyone gets the Account screen (profile, memory, master instructions);
          admins reach the operator/kernel panel from a button inside it. -->
-    <Sidebar on:settings={() => appView.set("account")} on:signout={signOut} />
+    <Sidebar bind:collapsed {drawerOpen} on:settings={() => appView.set("account")} on:signout={signOut} />
 
     <main class="main">
       {#if $appView === "chat"}<ChatView />
@@ -149,6 +177,31 @@
 <style>
   .app { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
   .main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+
+  /* Mobile top bar + drawer backdrop — hidden on desktop. */
+  .mobilebar { display: none; }
+  .backdrop { display: none; }
+
+  @media (max-width: 768px) {
+    .app { position: relative; }
+    .mobilebar {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 80;
+      padding: 0 10px; background: var(--s1); border-bottom: 1px solid var(--border);
+    }
+    .mb-btn {
+      width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+      color: var(--text-2); font-size: 21px; cursor: pointer;
+    }
+    .mb-btn:active { background: var(--s2); }
+    .mb-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--text); }
+    .mb-brand :global(svg) { color: var(--accent-ink); }
+    .main { padding-top: 52px; }
+    .backdrop {
+      display: block; position: fixed; inset: 0; z-index: 90;
+      background: rgba(0, 0, 0, 0.5); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+    }
+  }
 
   /* Splash */
   .splash {

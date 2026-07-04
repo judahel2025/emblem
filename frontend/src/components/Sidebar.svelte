@@ -11,9 +11,17 @@
   import ThemeToggle from "./ThemeToggle.svelte";
   import Logo from "./Logo.svelte";
 
-  export let collapsed = false;
+  export let collapsed = false;      // desktop rail
+  export let drawerOpen = false;     // mobile off-canvas drawer (open)
 
   const dispatch = createEventDispatcher();
+
+  // On mobile the sidebar is a full drawer (never a rail); `rail` is the desktop-only
+  // collapsed state that hides labels. This keeps a persisted desktop collapse from
+  // showing collapsed content inside the mobile drawer.
+  let innerWidth = 9999;
+  $: isMobile = innerWidth <= 768;
+  $: rail = collapsed && !isMobile;
 
   const NAV = [
     { id: "notifications", label: "Notifications", icon: "ti-bell" },
@@ -47,14 +55,19 @@
   onDestroy(() => { if (typeof window !== "undefined") window.removeEventListener("click", onWinClick, true); });
 </script>
 
-<aside class="sidebar" class:collapsed data-tour="sidebar">
-  <!-- ── Fixed top: brand + New chat ── -->
+<svelte:window bind:innerWidth />
+
+<aside class="sidebar" class:collapsed={rail} class:open={drawerOpen} data-tour="sidebar">
+  <!-- ── Fixed top: brand + New chat. When railed, only the toggle shows (centered)
+          so it's never clipped. ── -->
   <div class="top">
-    <button class="brand" on:click={newChat} title="Emblem">
-      <span class="mark"><Logo size={26} /></span>
-      {#if !collapsed}<span class="name">Emblem</span>{/if}
-    </button>
-    <button class="icon-btn" on:click={() => collapsed = !collapsed}
+    {#if !rail}
+      <button class="brand" on:click={newChat} title="Emblem">
+        <span class="mark"><Logo size={26} /></span>
+        <span class="name">Emblem</span>
+      </button>
+    {/if}
+    <button class="icon-btn toggle" on:click={() => collapsed = !collapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title="Toggle sidebar">
       <i class="ti {collapsed ? 'ti-layout-sidebar-filled' : 'ti-layout-sidebar'}"></i>
     </button>
@@ -62,7 +75,7 @@
 
   <button class="new-chat" on:click={newChat} data-tour="new-chat">
     <i class="ti ti-plus"></i>
-    {#if !collapsed}<span>New chat</span>{/if}
+    {#if !rail}<span>New chat</span>{/if}
   </button>
 
   <!-- ── The ONE scroll region: nav + recent chats. Nothing gets cut off; you
@@ -75,10 +88,10 @@
           <span class="ni-ic">
             <i class="ti {n.icon}"></i>
             {#if n.id === "notifications" && $notifications.unread > 0}
-              <span class="ni-badge" class:dot={collapsed}>{collapsed ? "" : ($notifications.unread > 99 ? "99+" : $notifications.unread)}</span>
+              <span class="ni-badge" class:dot={rail}>{rail ? "" : ($notifications.unread > 99 ? "99+" : $notifications.unread)}</span>
             {/if}
           </span>
-          {#if !collapsed}
+          {#if !rail}
             <span>{n.label}</span>
             {#if n.id === "notifications" && $notifications.unread > 0}
               <span class="ni-count">{$notifications.unread > 99 ? "99+" : $notifications.unread}</span>
@@ -90,12 +103,12 @@
         <button class="nav-item" class:active={$appView === `workspace:${s}`}
                 on:click={() => appView.set(`workspace:${s}`)} title={WORKSPACES[s].label}>
           <i class="ti {WORKSPACES[s].icon}"></i>
-          {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
+          {#if !rail}<span>{WORKSPACES[s].label}</span>{/if}
         </button>
       {/each}
     </nav>
 
-    {#if !collapsed}
+    {#if !rail}
       <div class="threads">
         {#if $threads.items.length || $threads.legacy_count}
           <p class="section-label">Recent</p>
@@ -152,7 +165,7 @@
     <button class="profile-btn" class:open={profileMenu} on:click={() => profileMenu = !profileMenu}
             title={displayName} aria-haspopup="true" aria-expanded={profileMenu}>
       <span class="avatar">{initial}<span class="status-dot" class:ready={$brainReady}></span></span>
-      {#if !collapsed}
+      {#if !rail}
         <span class="pinfo">
           <span class="pname">{displayName}</span>
           <span class="psub">{$brainReady ? "Online" : "Connecting…"}</span>
@@ -175,6 +188,8 @@
   .sidebar.collapsed { width: 62px; }
 
   .top { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; flex-shrink: 0; }
+  /* Railed: only the toggle remains, centered — never clipped. */
+  .sidebar.collapsed .top { justify-content: center; }
   .brand { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; }
   .mark { display: grid; place-items: center; color: var(--accent-ink); }
   .icon-btn {
@@ -311,4 +326,21 @@
   .pm-row span { display: inline-flex; align-items: center; gap: 10px; }
   .pm-row i { font-size: 17px; }
   .pm-sep { height: 1px; background: var(--divider); margin: 4px 6px; }
+
+  /* ── Mobile: off-canvas drawer, hidden until opened via the top-bar hamburger ── */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100%;
+      width: 82vw; max-width: 300px;
+      transform: translateX(-100%);
+      transition: transform var(--t-normal);
+      z-index: 100; box-shadow: var(--shadow-lg);
+    }
+    .sidebar.open { transform: translateX(0); }
+    /* Always full content in the drawer — never a rail. */
+    .sidebar.collapsed { width: 82vw; max-width: 300px; }
+    /* The desktop collapse toggle is meaningless inside the drawer. */
+    .top .toggle { display: none; }
+    .top { justify-content: flex-start; }
+  }
 </style>
