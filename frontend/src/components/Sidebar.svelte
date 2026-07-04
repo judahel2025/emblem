@@ -202,8 +202,10 @@
   }
   .sidebar.collapsed .nav-item { justify-content: center; padding: 9px 0; }
   .nav-item:hover { background: var(--s2); color: var(--text); }
-  .nav-item.active { background: var(--accent-bg); color: var(--text); }
-  .nav-item.active i { color: var(--accent-ink); }
+  /* Selected = filled accent (black in light, milk in dark), and it STAYS. */
+  .nav-item.active { background: var(--accent); color: var(--accent-t); font-weight: 600; }
+  .nav-item.active:hover { background: var(--accent); color: var(--accent-t); filter: brightness(1.05); }
+  .nav-item.active i { color: var(--accent-t); }
   .nav-item i { font-size: 18px; flex-shrink: 0; }
 
   .threads { padding: 6px 0 0; border-top: 1px solid var(--divider); }
@@ -215,13 +217,17 @@
     display: flex; align-items: center; border-radius: 10px; position: relative;
     transition: background var(--t-fast);
   }
-  .thread-row:hover, .thread-row.active { background: var(--s2); }
-  .thread-row.active { font-weight: 500; }
+  .thread-row:hover { background: var(--s2); }
+  /* Selected chat = filled accent, stays highlighted while it's the open thread. */
+  .thread-row.active { background: var(--accent); font-weight: 600; }
   .thread-btn {
     flex: 1; min-width: 0; text-align: left; padding: 6px 10px;
     font-size: 13.5px; line-height: 1.5; color: var(--text-2); cursor: pointer;
   }
-  .thread-row.active .thread-btn { color: var(--text); }
+  .thread-row.active .thread-btn { color: var(--accent-t); }
+  .thread-row.active .t-title.dim { color: var(--accent-t); opacity: 0.85; }
+  .thread-row.active .mini { color: var(--accent-t); opacity: 0.8; }
+  .thread-row.active .mini:hover { background: rgba(128,128,128,0.25); color: var(--accent-t); opacity: 1; }
   .t-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .t-title.dim { color: var(--text-3); font-style: italic; }
   .row-actions { display: none; align-items: center; gap: 2px; padding-right: 6px; }

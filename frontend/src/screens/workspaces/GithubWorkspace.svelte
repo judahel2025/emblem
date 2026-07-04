@@ -5,8 +5,27 @@
   import { fly } from "svelte/transition";
   import { runConnected } from "../../lib/workspaces.js";
   import MonacoEditor from "../../components/MonacoEditor.svelte";
+  import { canRun, langOf, runJs, runPython, githubDevUrl } from "../../lib/coderun.js";
 
   export let onApproval;
+
+  // ── Run code in the browser (free sandbox: iframe for JS/HTML, Pyodide for Python) ──
+  let running = false, runLogs = [], runPreview = "", pyStatus = "", showRun = false;
+  $: runnable = filePath && canRun(filePath);
+  async function runFile() {
+    if (running) return;
+    running = true; runLogs = []; runPreview = ""; pyStatus = ""; showRun = true;
+    const lang = langOf(filePath);
+    try {
+      if (lang === "html") { runPreview = text; }
+      else if (lang === "python") { const r = await runPython(text, (s) => pyStatus = s); runLogs = r.logs; }
+      else { const r = await runJs(text, lang); runLogs = r.logs; }   // js/ts
+    } catch (e) { runLogs = [{ level: "error", text: e?.message || String(e) }]; }
+    pyStatus = ""; running = false;
+  }
+  function openGithubDev() {
+    window.open(githubDevUrl(owner, repo, branch, filePath), "_blank", "noopener");
+  }
 
   const MAX_EDIT_BYTES = 1_000_000;
   const FLY_IN = { x: 16, duration: 180 };
@@ -470,6 +489,15 @@
         </span>
         <span class="grow"></span>
         <span class="branch-chip"><i class="ti ti-git-branch"></i> {branch}</span>
+        <button class="btn ghost gd-btn" on:click={openGithubDev} title="Open in github.dev (web VS Code)">
+          <i class="ti ti-brand-vscode"></i> github.dev
+        </button>
+        {#if runnable}
+          <button class="btn run-btn" on:click={runFile} disabled={running} title="Run in your browser">
+            {#if running}<span class="spin"></span>{:else}<i class="ti ti-player-play"></i>{/if}
+            {running ? "Running…" : "Run"}
+          </button>
+        {/if}
         <button
           class="btn primary commit-btn"
           disabled={!dirty || staleFile || committing}
@@ -547,6 +575,29 @@
           <MonacoEditor value={text} language={fileLanguage} on:change={(e) => (text = e.detail)} />
         {/if}
       </div>
+
+      {#if showRun}
+        <div class="run-out" transition:fly={{ y: 10, duration: 160 }}>
+          <div class="run-out-bar">
+            <span><i class="ti ti-terminal-2"></i> Output</span>
+            <span class="grow"></span>
+            <button class="icon-btn" on:click={() => (showRun = false)} aria-label="Close output"><i class="ti ti-x"></i></button>
+          </div>
+          {#if running && pyStatus}
+            <div class="run-status"><span class="spin"></span> {pyStatus}</div>
+          {/if}
+          {#if runPreview}
+            <iframe class="run-preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals"
+                    srcdoc={runPreview}></iframe>
+          {/if}
+          {#if runLogs.length}
+            <pre class="run-logs">{#each runLogs as l}<span class="rl rl-{l.level}">{l.text}
+</span>{/each}</pre>
+          {:else if !running && !runPreview}
+            <div class="run-status">No output.</div>
+          {/if}
+        </div>
+      {/if}
     </section>
   {/if}
 </div>
@@ -734,6 +785,34 @@
     white-space: nowrap;
   }
   .commit-btn { white-space: nowrap; }
+  .gd-btn { white-space: nowrap; }
+  .run-btn {
+    white-space: nowrap; background: var(--safe); color: #fff; border-color: transparent;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .run-btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .run-btn:disabled { opacity: 0.6; }
+
+  .run-out {
+    border-top: 1px solid var(--border); background: var(--bg-2);
+    display: flex; flex-direction: column; max-height: 42%; flex-shrink: 0;
+  }
+  .run-out-bar {
+    display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    border-bottom: 1px solid var(--divider);
+  }
+  .run-out-bar i { font-size: 15px; }
+  .run-status { padding: 10px 14px; font-size: 13px; color: var(--text-3); display: flex; align-items: center; gap: 8px; }
+  .run-preview { width: 100%; height: 240px; border: none; background: #fff; }
+  .run-logs {
+    margin: 0; padding: 10px 14px; overflow: auto; flex: 1;
+    font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12.5px; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word; color: var(--text);
+  }
+  .rl-error { color: var(--danger); }
+  .rl-warn { color: var(--caution); }
+  .rl-info { color: var(--text-2); }
   .dot {
     width: 8px;
     height: 8px;

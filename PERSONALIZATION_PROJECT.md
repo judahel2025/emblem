@@ -1,4 +1,18 @@
-# PERSONALIZATION PROJECT — build plan (awaiting Judah's approval)
+# PERSONALIZATION PROJECT — build plan
+
+Status: **ALL FIVE PHASES SHIPPED & VERIFIED (2026-07-04).** Approved by Judah and built.
+- **A — Personalization core**: tone chips + two-field master instruction, editable Memory
+  panel (add/edit/pin/delete), "Personalized from memory" transparency chip. LIVE.
+- **B — Document engine**: create docx/pptx/xlsx/pdf + read docx/pdf/xlsx/pptx, client-side,
+  in-chat card + Download + R2 save. LIVE.
+- **C — Skills**: 4 built-in master skills + user skills (describe→AI-drafts, paste-in,
+  save-from-chat) + runtime progressive-disclosure injection. LIVE.
+- **D — Proactive grounding**: one real-signal heads-up on app open (calendar + email). LIVE.
+- **E — In-chat document preview** + pdf-lib WinAnsi Unicode fix. LIVE.
+Also shipped alongside: sidebar redesign (pinned profile + real scrolling), Instagram media
+guard, Calendar decision (built-in Calendar is the single surface; GCal stays a connector).
+
+--- original plan below (kept for reference) ---
 
 Status: **PLAN ONLY. Nothing here is built yet.** Judah approves before implementation.
 Written 2026-07-04. Now backed by **full research** (all cited inline): personalization
