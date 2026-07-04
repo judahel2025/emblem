@@ -130,6 +130,16 @@ export async function executeTool(env: Env, userId: string, name: string,
       const auto = (await approvalMode(env)) === "auto" && FULL_AUTO_ALLOW.has(name);
       if (!auto) {
         const summary = spec.summarize?.(args) ?? spec.description;
+        // Dedupe: if the model re-emits the SAME action (tool + identical args)
+        // while a card for it is already pending, reuse that card instead of
+        // stacking a new one every turn.
+        const pending = await env.DB.prepare(
+          "SELECT id, args_json FROM kernel_approvals WHERE user_id = ? AND tool = ? AND status = 'pending'")
+          .bind(userId, name).all<{ id: number; args_json: string }>();
+        for (const p of pending.results || []) {
+          try { if (await argHash(JSON.parse(p.args_json)) === hash) throw new ApprovalRequired(p.id, summary); }
+          catch (e) { if (e instanceof ApprovalRequired) throw e; }
+        }
         const r = await env.DB.prepare(
           "INSERT INTO kernel_approvals (tool, summary, args_json, risk, status, requested_by, user_id) " +
           "VALUES (?, ?, ?, 'high', 'pending', ?, ?)")

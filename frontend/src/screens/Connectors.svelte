@@ -5,6 +5,7 @@
   import { appView, loadConnections, notify } from "../lib/store.js";
   import { hasWorkspace } from "../lib/workspaces.js";
   import { brandLogo, MONO_LOGOS, logoUrl } from "../lib/logos.js";
+  import Logo from "../components/Logo.svelte";
 
   // If the Composio logo endpoint ever 404s, drop the <img> and reveal the
   // Tabler icon sitting right after it — a real logo first, icon only as a
@@ -101,8 +102,19 @@
     if (!anyPending()) stopPolling();
   }
 
-  async function connect(toolkit) {
+  // Emblem-branded consent step: clicking Connect opens OUR dialog first
+  // ("Emblem is requesting to connect…") — the user authorizes through Emblem,
+  // not a third-party name — before we open the secure provider sign-in.
+  let confirmTk = null;
+  function connect(toolkit) {
     if (connecting[toolkit]) return;
+    confirmTk = toolkit;
+  }
+
+  async function proceedConnect() {
+    const toolkit = confirmTk;
+    confirmTk = null;
+    if (!toolkit || connecting[toolkit]) return;
     try {
       const r = await api.connectionLink(toolkit);
       if (r.ok && r.url) {
@@ -237,8 +249,60 @@
   {/if}
 </div>
 
+<!-- Emblem-branded connect consent — the user authorizes through Emblem -->
+{#if confirmTk}
+  {@const cm = meta(confirmTk)}
+  <div class="veil" on:click|self={() => (confirmTk = null)}
+       transition:fade={{ duration: 150 }} role="presentation">
+    <div class="consent glass gloss" transition:fly={{ y: 12, duration: 220 }}>
+      <div class="consent-marks">
+        <span class="cmark emblem"><Logo size={30} /></span>
+        <span class="cdots"><i class="ti ti-arrow-right"></i></span>
+        <span class="cmark app" class:mono={MONO_LOGOS.has(confirmTk)}>
+          {#if brandLogo(confirmTk)}{@html brandLogo(confirmTk)}
+          {:else}<img class="brandimg" src={logoUrl(confirmTk)} alt={cm.label} on:error={imgFallback} /><i class="ti {cm.icon}" style="display:none"></i>{/if}
+        </span>
+      </div>
+      <h3>Emblem is requesting to connect your {cm.label}</h3>
+      <p>You'll sign in securely with {cm.label} to authorize access. Emblem only acts with your
+         approval, and you can disconnect anytime.</p>
+      <div class="consent-btns">
+        <button class="btn ghost" on:click={() => (confirmTk = null)}>Cancel</button>
+        <button class="btn primary" on:click={proceedConnect}>Continue to {cm.label}</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  /* ── Emblem-branded connect consent ── */
+  .veil {
+    position: fixed; inset: 0; z-index: 60;
+    display: grid; place-items: center; padding: 20px;
+    background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  }
+  .consent {
+    width: min(420px, calc(100vw - 40px));
+    border-radius: var(--r-lg); padding: 28px 26px 22px;
+    text-align: center; box-shadow: var(--shadow-lg);
+  }
+  .consent-marks { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 18px; }
+  .cmark {
+    width: 56px; height: 56px; border-radius: var(--r-md);
+    display: grid; place-items: center;
+    background: var(--bg-2); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  }
+  .cmark.emblem { color: var(--text); }
+  .cmark :global(svg) { width: 30px; height: 30px; display: block; }
+  .cmark .brandimg { width: 30px; height: 30px; object-fit: contain; display: block; }
+  .cmark.app.mono :global(svg) { color: var(--text); }
+  .cdots { color: var(--text-3); font-size: 18px; display: grid; place-items: center; }
+  .consent h3 { font-size: 18px; font-weight: 600; margin: 0 0 8px; color: var(--text); letter-spacing: -0.01em; }
+  .consent p { font-size: 13px; color: var(--text-2); line-height: 1.55; margin: 0 0 20px; }
+  .consent-btns { display: flex; gap: 10px; justify-content: center; }
+  .consent-btns .btn { flex: 1; }
 
   /* ── Page header ── */
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }

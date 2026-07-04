@@ -311,14 +311,22 @@ function revealAssistant(fullText) {
       if (i >= 0 && m[i].role === "assistant") m[i] = { ...m[i], text: fullText.slice(0, n) };
       return m;
     });
+    // Background tabs throttle requestAnimationFrame to a standstill — if the user
+    // minimizes or switches away mid-reveal, snap to the full text so the reply is
+    // complete and readable the instant they come back (never stuck half-written).
+    const onHide = () => { if (document.hidden) finish(fullText); };
     const finish = (text) => {
       cancelled = true;
       if (_revealTimer) { cancelAnimationFrame(_revealTimer); _revealTimer = null; }
+      document.removeEventListener("visibilitychange", onHide);
       _revealCancel = null;
+      paint(text.length);
       writing.set(false);
       resolve(text);
     };
     _revealCancel = () => finish(fullText.slice(0, shown));   // freeze at the partial
+    document.addEventListener("visibilitychange", onHide);
+    if (document.hidden) return finish(fullText);
     const step = () => {
       if (cancelled) return;
       shown = Math.min(fullText.length, shown + perTick);

@@ -9,7 +9,7 @@
   import ThemeToggle from "../components/ThemeToggle.svelte";
 
   let tab = "profile";   // profile | preferences
-  let profile = { display_name: "", role: "", tone: "" };
+  let profile = { display_name: "", role: "", tone: "", comm_style: "" };
   let quiet = { quiet_start: "22:00", quiet_end: "07:00" };
   let email = "";
   let saving = false;
@@ -18,7 +18,8 @@
   onMount(async () => {
     try {
       const p = await api.profile();
-      profile = { display_name: p.display_name || "", role: p.role || "", tone: p.tone || "" };
+      profile = { display_name: p.display_name || "", role: p.role || "", tone: p.tone || "",
+                  comm_style: p.comm_style || "" };
       if (p.quiet_start) quiet.quiet_start = p.quiet_start;
       if (p.quiet_end) quiet.quiet_end = p.quiet_end;
     } catch (e) { console.error("profile load failed:", e); }
@@ -81,6 +82,24 @@
           <div class="actions">
             <button class="btn primary" on:click={save} disabled={saving}>
               {saving ? "Saving…" : "Save changes"}
+            </button>
+            {#if savedAt}<span class="savednote">Saved.</span>{/if}
+          </div>
+        </section>
+
+        <section class="panel glass gloss" in:fly={{ y: 10, duration: 200, delay: 40 }}>
+          <h3><i class="ti ti-message-2-cog"></i> Master instructions</h3>
+          <p class="paneltext">A standing note for how you want Emblem to communicate with
+             you — tone, language, how you like to be addressed, anything to always keep in
+             mind. Emblem follows this in every conversation. You can change it anytime.</p>
+          <label class="ufield wide">
+            <span>How Emblem should talk to you</span>
+            <textarea bind:value={profile.comm_style} rows="4"
+              placeholder="e.g. Keep it warm but professional. Call me Judah. Short, direct answers — skip the pep talk. Use British spelling. Be candid when you disagree."></textarea>
+          </label>
+          <div class="actions">
+            <button class="btn primary" on:click={save} disabled={saving}>
+              {saving ? "Saving…" : "Save instructions"}
             </button>
             {#if savedAt}<span class="savednote">Saved.</span>{/if}
           </div>
@@ -198,6 +217,14 @@
     transition: border-color var(--t-fast);
   }
   .ufield input:focus { border-bottom-color: var(--accent); }
+  .ufield textarea {
+    background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-md);
+    padding: 12px 14px; font-size: 15px; line-height: 1.55; color: var(--text);
+    outline: none; resize: vertical; min-height: 92px; font-family: inherit;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .ufield textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .paneltext { font-size: 13px; color: var(--text-2); line-height: 1.55; margin: 0 0 16px; }
 
   .actions { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
   .savednote { font-size: 12.5px; color: var(--safe); }

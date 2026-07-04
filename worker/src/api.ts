@@ -39,10 +39,12 @@ apiRoutes.get("/me", async (c) => {
 apiRoutes.get("/me/profile", async (c) => {
   const uid = c.get("userId");
   const p = await c.env.DB.prepare(
-    "SELECT display_name, role, tone, onboarded FROM profiles WHERE user_id = ?").bind(uid)
-    .first<{ display_name: string | null; role: string | null; tone: string | null; onboarded: number | null }>();
+    "SELECT display_name, role, tone, comm_style, onboarded FROM profiles WHERE user_id = ?").bind(uid)
+    .first<{ display_name: string | null; role: string | null; tone: string | null;
+             comm_style: string | null; onboarded: number | null }>();
   return c.json({
     display_name: p?.display_name || "", role: p?.role || "", tone: p?.tone || "",
+    comm_style: p?.comm_style || "",
     onboarded: Boolean(p?.onboarded),
   });
 });
@@ -53,18 +55,20 @@ apiRoutes.put("/me/profile", async (c) => {
   await c.env.DB.prepare(
     // NOT NULL columns: the INSERT arm needs real values even when a field is
     // omitted; the UPDATE arm keeps whatever is already there.
-    `INSERT INTO profiles (user_id, display_name, role, tone, onboarded, toured)
+    `INSERT INTO profiles (user_id, display_name, role, tone, comm_style, onboarded, toured)
      VALUES (?1, COALESCE(?2, ''), COALESCE(?3, ''),
-             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?5, 0), COALESCE(?6, 0))
+             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?7, ''), COALESCE(?5, 0), COALESCE(?6, 0))
      ON CONFLICT(user_id) DO UPDATE SET
        display_name = COALESCE(?2, display_name),
        role = COALESCE(?3, role),
        tone = COALESCE(?4, tone),
+       comm_style = COALESCE(?7, comm_style),
        onboarded = COALESCE(?5, onboarded),
        toured = COALESCE(?6, toured)`)
     .bind(uid, b.display_name ?? null, b.role ?? null, b.tone ?? null,
           b.onboarded === undefined ? null : (b.onboarded ? 1 : 0),
-          b.toured === undefined ? null : (b.toured ? 1 : 0)).run();
+          b.toured === undefined ? null : (b.toured ? 1 : 0),
+          b.comm_style ?? null).run();
   return c.json({ ok: true });
 });
 

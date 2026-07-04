@@ -31,11 +31,20 @@
   });
 
   // ── Auto-scroll ────────────────────────────────────────────────
+  // Stick to the bottom ONLY when the user is already near it. If they've scrolled
+  // up to read (even mid-typewriter), never yank them back down — they can scroll
+  // freely no matter what the assistant is doing.
   let threadEl;
-  $: if ($messages.length || $thinking || $writing) scrollBottom();
-  async function scrollBottom() {
+  let stick = true;
+  function onThreadScroll() {
+    if (!threadEl) return;
+    const gap = threadEl.scrollHeight - threadEl.scrollTop - threadEl.clientHeight;
+    stick = gap < 120;
+  }
+  $: if ($messages.length || $thinking || $writing) maybeScroll();
+  async function maybeScroll() {
     await tick();
-    if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
+    if (threadEl && stick) threadEl.scrollTop = threadEl.scrollHeight;
   }
 
   // ── Copy ───────────────────────────────────────────────────────
@@ -52,6 +61,11 @@
 
   function submit(e) { sendCommand(e.detail); }
   function chip(t) { sendCommand(t); }
+
+  // Copy-and-edit: drop a past prompt back into the composer to tweak and resend.
+  function editPrompt(text) {
+    composer?.setText(text);
+  }
 
   // ── Approvals ──────────────────────────────────────────────────
   // Cards drive running/done/error through decideAndContinue. A settled card
@@ -104,7 +118,7 @@
 </script>
 
 <div class="chat">
-  <div class="thread" bind:this={threadEl}>
+  <div class="thread" bind:this={threadEl} on:scroll={onThreadScroll}>
     {#if $messages.length === 0 && !$thinking}
       <div class="empty-state" in:fly={{ y: 10, duration: 300 }}>
         <Orb size={58} state="idle" />
@@ -137,22 +151,40 @@
       {#each $messages as msg, i}
         {#if msg.role === "user"}
           <div class="row user" in:fly={{ y: 8, duration: 200 }}>
-            <div class="user-pill">
-              {#if msg.imagePreview}<img src={msg.imagePreview} alt="attachment" class="attach-img"/>{/if}
-              {#if msg.isAttachment}
-                <span class="attach-label"><i class="ti ti-paperclip"></i> {msg.attachmentName}</span>
-              {:else}
-                {msg.text}
+            <div class="msg-col user-col">
+              <div class="user-pill">
+                {#if msg.imagePreview}<img src={msg.imagePreview} alt="attachment" class="attach-img"/>{/if}
+                {#if msg.isAttachment}
+                  <span class="attach-label"><i class="ti ti-paperclip"></i> {msg.attachmentName}</span>
+                {:else}
+                  {msg.text}
+                {/if}
+              </div>
+              {#if !msg.isAttachment}
+                <div class="msg-actions user-actions">
+                  <button class="act" on:click={() => copy(msg.text, i)} title="Copy">
+                    <i class="ti {copiedIdx === i ? 'ti-check' : 'ti-copy'}"></i>
+                    <span>{copiedIdx === i ? 'Copied' : 'Copy'}</span>
+                  </button>
+                  <button class="act" on:click={() => editPrompt(msg.text)} title="Edit and resend">
+                    <i class="ti ti-pencil"></i><span>Edit</span>
+                  </button>
+                </div>
               {/if}
             </div>
           </div>
         {:else}
           <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class="md-body" class:writing={$writing && i === $messages.length - 1}
-                 on:click={() => copy(msg.text, i)}>{@html render(msg.text)}
-              {#if copiedIdx === i}<span class="copied-badge">Copied</span>{/if}
+            <div class="msg-col">
+              <div class="md-body" class:writing={$writing && i === $messages.length - 1}>{@html render(msg.text)}</div>
+              {#if !($writing && i === $messages.length - 1)}
+                <div class="msg-actions">
+                  <button class="act" on:click={() => copy(msg.text, i)} title="Copy">
+                    <i class="ti {copiedIdx === i ? 'ti-check' : 'ti-copy'}"></i>
+                    <span>{copiedIdx === i ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              {/if}
             </div>
           </div>
         {/if}
@@ -266,27 +298,39 @@
   }
   @keyframes caret-blink { 50% { opacity: 0; } }
 
+  .msg-col { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+  .user-col { align-items: flex-end; max-width: 72%; }
+
   .user-pill {
     background: var(--s2); color: var(--text);
     padding: 10px 16px; font-size: 15px; line-height: 1.55;
-    border-radius: 20px 20px 6px 20px; max-width: 72%;
+    border-radius: 20px 20px 6px 20px;
     border: 1px solid var(--border);
   }
   .row.assistant .md-body {
     color: var(--text); font-size: 15px; line-height: 1.7;
-    max-width: 100%; position: relative; cursor: pointer;
+    max-width: 100%; position: relative;
   }
+
+  /* Hover actions under each message: Copy (both) + Edit (user prompts) */
+  .msg-actions {
+    display: flex; gap: 4px; padding: 0 2px;
+    opacity: 0; transition: opacity var(--t-fast);
+  }
+  .user-actions { justify-content: flex-end; }
+  .row:hover .msg-actions, .msg-actions:focus-within { opacity: 1; }
+  .act {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 8px; border-radius: var(--r-sm);
+    font-size: 12px; color: var(--text-3);
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .act:hover { color: var(--text); background: var(--s2); }
+  .act i { font-size: 14px; }
+  @media (hover: none) { .msg-actions { opacity: 1; } }
 
   .attach-img { max-width: 220px; border-radius: 12px; display: block; margin-bottom: 6px; }
   .attach-label { font-size: 13px; color: var(--text-2); }
-
-  .copied-badge {
-    position: absolute; top: -24px; right: 6px;
-    font-size: 11px; color: var(--safe);
-    background: var(--safe-bg); border: 1px solid var(--safe);
-    padding: 2px 8px; border-radius: 9px;
-    pointer-events: none;
-  }
 
   .md-body :global(p) { margin: 0 0 10px; }
   .md-body :global(p:last-child) { margin: 0; }

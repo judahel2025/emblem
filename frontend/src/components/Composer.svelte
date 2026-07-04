@@ -37,7 +37,12 @@
     fileInput.value = "";
   }
 
-  export function setText(v) { text = v; autogrow(); }
+  export function setText(v) {
+    text = v;
+    autogrow();
+    // Focus + place the caret at the end so an edited prompt is ready to tweak.
+    requestAnimationFrame(() => { if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; } });
+  }
 </script>
 
 <div class="composer glass gloss" data-tour="composer">
