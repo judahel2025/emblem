@@ -216,7 +216,8 @@ export async function openLegacy() {
   } catch (e) { console.error("openLegacy failed:", e); }
 }
 
-// When Emblem comes on: a simple personal greeting. Runs once.
+// When Emblem comes on: a personal greeting + ONE real-signal proactive line,
+// grounded in the user's actual calendar/email (never a timer nag). Runs once.
 let _briefed = false;
 export async function loadBriefing() {
   if (_briefed) return;
@@ -224,6 +225,15 @@ export async function loadBriefing() {
   const my = get(me);
   const name = my.display_name ? `, ${my.display_name}` : "";
   briefing.set({ greeting: `Welcome back${name}.`, summary: "" });
+
+  // Proactive grounding — surface a real signal only if there is one, and only
+  // into a fresh chat so it reads as a natural heads-up, not an interruption.
+  try {
+    const r = await api.briefing();
+    if (r?.line && get(messages).length === 0 && !get(thinking)) {
+      messages.update((m) => [...m, { role: "assistant", text: r.line, proactive: true }]);
+    }
+  } catch (e) { console.warn("briefing unavailable:", e?.message); }
 }
 
 // Execute the UI actions the agent returns (open editor + write, run terminal, etc.).

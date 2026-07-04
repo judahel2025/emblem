@@ -12,6 +12,7 @@ import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile } from "./onboarding";
 import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
+import { proactiveBriefing } from "./briefing";
 import { getSuggestions } from "./suggestions";
 
 export const apiRoutes = new Hono<AppContext>();
@@ -93,6 +94,13 @@ apiRoutes.post("/onboarding/chat", async (c) => {
     return c.json({ ok: true, reply: r.reply, done: true, saved: Boolean(saved) });
   }
   return c.json({ ok: true, reply: r.reply, done: false });
+});
+
+// ---- proactive grounding (one real-signal line, surfaced on app open) ----------
+
+apiRoutes.get("/briefing", async (c) => {
+  const r = await proactiveBriefing(c.env, c.get("userId")).catch(() => ({ line: "" }));
+  return c.json(r);
 });
 
 // ---- personalized workflow suggestions -----------------------------------------

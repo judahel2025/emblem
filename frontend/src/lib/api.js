@@ -209,6 +209,9 @@ export const api = {
   automationToggle: (id, enabled) => post(`/api/automations/${id}/toggle`, { enabled }),
   automationDelete: (id) => del(`/api/automations/${id}`),
 
+  // Proactive grounding (one real-signal line on app open)
+  briefing: () => get("/api/briefing"),
+
   // AI onboarding (text engine) + personalized suggestions
   onboardingChat: (history) => post("/api/onboarding/chat", { history }),
   suggestions: (refresh = false) => get(`/api/suggestions${refresh ? "?refresh=1" : ""}`),
