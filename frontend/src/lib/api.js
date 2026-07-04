@@ -221,6 +221,13 @@ export const api = {
     return URL.createObjectURL(await res.blob());
   },
 
+  // Skills
+  skills: () => get("/api/skills"),
+  skillCreate: (skill) => post("/api/skills", skill),
+  skillUpdate: (id, patch) => req(`/api/skills/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  skillDelete: (id) => del(`/api/skills/${id}`),
+  skillDraft: (description, paste = false) => post("/api/skills/draft", { description, paste }),
+
   // Identity + profile
   me: () => get("/api/me"),
   profile: () => get("/api/me/profile"),

@@ -11,6 +11,7 @@ import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
          listConnections, initiateConnection, disconnect } from "./composio";
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile } from "./onboarding";
+import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
 import { getSuggestions } from "./suggestions";
 
 export const apiRoutes = new Hono<AppContext>();
@@ -289,6 +290,58 @@ apiRoutes.delete("/memory/:id", async (c) => {
   await c.env.DB.prepare("UPDATE memory SET deleted = 1 WHERE id = ? AND user_id = ?")
     .bind(c.req.param("id"), c.get("userId")).run();
   return c.json({ ok: true });
+});
+
+// ---- skills -------------------------------------------------------------------
+
+apiRoutes.get("/skills", async (c) => {
+  const rows = await c.env.DB.prepare(
+    "SELECT id, name, description, instructions, source, enabled, updated_at FROM skills " +
+    "WHERE user_id = ? ORDER BY id DESC LIMIT 200").bind(c.get("userId")).all().catch(() => ({ results: [] }));
+  const builtin = BUILTIN_SKILLS.map((s) => ({ name: s.name, description: s.description, builtin: true }));
+  return c.json({ items: rows.results || [], builtin });
+});
+
+apiRoutes.post("/skills", async (c) => {
+  const b = await c.req.json().catch(() => ({}));
+  const name = String(b.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64);
+  const description = String(b.description || "").trim().slice(0, 1024);
+  const instructions = String(b.instructions || "").trim().slice(0, 8000);
+  if (!name || !description) return c.json({ ok: false, error: "Name and description are required." }, 400);
+  const src = ["user_chat", "user_paste", "imported"].includes(b.source) ? b.source : "user_chat";
+  const r = await c.env.DB.prepare(
+    "INSERT INTO skills (user_id, name, description, instructions, source) VALUES (?, ?, ?, ?, ?)")
+    .bind(c.get("userId"), name, description, instructions, src).run();
+  return c.json({ ok: true, id: r.meta.last_row_id });
+});
+
+apiRoutes.put("/skills/:id", async (c) => {
+  const b = await c.req.json().catch(() => ({}));
+  const sets: string[] = [], binds: unknown[] = [];
+  if (typeof b.name === "string") { sets.push("name = ?"); binds.push(b.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 64)); }
+  if (typeof b.description === "string") { sets.push("description = ?"); binds.push(b.description.slice(0, 1024)); }
+  if (typeof b.instructions === "string") { sets.push("instructions = ?"); binds.push(b.instructions.slice(0, 8000)); }
+  if (b.enabled !== undefined) { sets.push("enabled = ?"); binds.push(b.enabled ? 1 : 0); }
+  if (!sets.length) return c.json({ ok: false, error: "Nothing to update." }, 400);
+  sets.push("updated_at = datetime('now')");
+  binds.push(c.req.param("id"), c.get("userId"));
+  await c.env.DB.prepare(`UPDATE skills SET ${sets.join(", ")} WHERE id = ? AND user_id = ?`).bind(...binds).run();
+  return c.json({ ok: true });
+});
+
+apiRoutes.delete("/skills/:id", async (c) => {
+  await c.env.DB.prepare("DELETE FROM skills WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId")).run();
+  return c.json({ ok: true });
+});
+
+apiRoutes.post("/skills/draft", async (c) => {
+  const b = await c.req.json().catch(() => ({}));
+  const desc = String(b.description || "").trim();
+  if (!desc) return c.json({ ok: false, error: "Describe what you want the skill to do." }, 400);
+  const draft = b.paste ? await normalizeSkill(c.env, desc) : await draftSkill(c.env, desc);
+  return draft ? c.json({ ok: true, skill: draft })
+               : c.json({ ok: false, error: "Couldn't draft that — try describing it a bit more." }, 502);
 });
 
 /** Keyword recall + always-on pinned facts. Pinned memories are never dropped

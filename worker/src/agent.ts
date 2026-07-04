@@ -6,6 +6,7 @@ import type { Env } from "./env";
 import { executeTool, ApprovalRequired, ApprovalRejected } from "./kernel";
 import { recallMemory } from "./api";
 import { userTools, isReadOnly, initiateConnection, listConnections, connectionStates, configured, type OpenAITool } from "./composio";
+import { selectSkills } from "./skills";
 
 const SYSTEM_OWNER = `You are Emblem — and the person talking to you is the OWNER of this
 deployment: the operator with full administrative access.
@@ -201,6 +202,15 @@ const NATIVE_TOOLS: OpenAITool[] = [
           headers: { type: "array", items: { type: "string" } },
           rows: { type: "array", items: { type: "array" } } } } },
     }, required: ["title", "format"] } } },
+  { type: "function", function: { name: "save_skill",
+    description: "Save a reusable SKILL for this user when they ask you to 'save this as a skill', " +
+      "'remember how to do this', or turn a repeatable workflow into a saved capability. The skill " +
+      "is instructions you'll follow next time its trigger comes up.",
+    parameters: { type: "object", properties: {
+      name: { type: "string", description: "short kebab-case slug" },
+      description: { type: "string", description: "one line: what it does AND when to use it (trigger words)" },
+      instructions: { type: "string", description: "step-by-step guidance to follow" },
+    }, required: ["name", "description", "instructions"] } } },
   { type: "function", function: { name: "connect_app",
     description: "Create a connect (or reconnect) link for an app the user needs — gmail, github, " +
       "googlecalendar, linkedin, twitter, notion, slack, …. Returns a URL: include it in your reply " +
@@ -324,6 +334,17 @@ async function execNative(env: Env, userId: string, name: string,
               `yourself (there is no path to give; the card handles the download).`,
               { type: "document.generate", doc }];
     }
+    case "save_skill": {
+      const name = String(a.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64);
+      const description = String(a.description || "").trim().slice(0, 1024);
+      const instructions = String(a.instructions || "").trim().slice(0, 8000);
+      if (!name || !description) return ["Couldn't save the skill — it needs a name and a description.", null];
+      await env.DB.prepare(
+        "INSERT INTO skills (user_id, name, description, instructions, source) VALUES (?, ?, ?, ?, 'user_chat')")
+        .bind(userId, name, description, instructions).run();
+      return [`Saved the skill “${name}”. I'll use it next time it's relevant. Manage it in Settings → Skills.`,
+              { type: "refresh" }];
+    }
     case "connect_app": {
       const toolkit = String(a.toolkit || "").toLowerCase().trim();
       const url = await initiateConnection(env, toolkit, userId);
@@ -426,6 +447,18 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
       "message): " + decl.map((a) => `“${a.summary}”`).join("; "));
     if (notes.length) messages.push({ role: "system", content: notes.join("\n") });
   } catch { /* approval context is best-effort */ }
+  // Skills — Level 1/2 progressive disclosure: pick the 1-2 skills whose triggers
+  // match this message and inject their full instructions for this turn only.
+  try {
+    const skills = await selectSkills(env, userId, command);
+    if (skills.length) {
+      messages.push({ role: "system", content:
+        "Relevant skill" + (skills.length > 1 ? "s" : "") + " for this request — follow " +
+        "the guidance, using your normal tools:\n\n" +
+        skills.map((s) => `## ${s.name}\n${s.instructions}`).join("\n\n") });
+    }
+  } catch { /* skills are best-effort */ }
+
   let recalledMem: Array<{ id: number; content: string }> = [];
   try {
     recalledMem = await recallMemory(env.DB, userId, command);

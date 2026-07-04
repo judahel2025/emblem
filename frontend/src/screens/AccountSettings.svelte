@@ -73,6 +73,48 @@
     catch (e) { notify(`Couldn't delete: ${e.message}`, "danger"); }
   }
 
+  // ── Skills ──
+  let skills = [], builtinSkills = [], skillsLoading = false;
+  let skillMode = null;        // null | 'describe' | 'paste' | 'edit'
+  let skillInput = "";         // the describe/paste textarea
+  let drafting = false;
+  let draft = { id: null, name: "", description: "", instructions: "" };
+
+  async function loadSkills() {
+    skillsLoading = true;
+    try { const r = await api.skills(); skills = r.items || []; builtinSkills = r.builtin || []; }
+    catch (e) { console.error("skills load failed:", e); }
+    skillsLoading = false;
+  }
+  function newSkill(mode) { skillMode = mode; skillInput = ""; draft = { id: null, name: "", description: "", instructions: "" }; }
+  function editSkill(s) { skillMode = "edit"; draft = { id: s.id, name: s.name, description: s.description, instructions: s.instructions }; }
+  async function runDraft() {
+    if (!skillInput.trim()) return;
+    drafting = true;
+    try {
+      const r = await api.skillDraft(skillInput.trim(), skillMode === "paste");
+      if (r.ok) { draft = { id: null, ...r.skill }; skillMode = "edit"; }
+      else notify(r.error || "Couldn't draft that", "danger");
+    } catch (e) { notify(`Couldn't draft: ${e.message}`, "danger"); }
+    drafting = false;
+  }
+  async function saveSkill() {
+    if (!draft.name.trim() || !draft.description.trim()) { notify("Name and description are required", "caution"); return; }
+    try {
+      if (draft.id) await api.skillUpdate(draft.id, { name: draft.name, description: draft.description, instructions: draft.instructions });
+      else await api.skillCreate({ name: draft.name, description: draft.description, instructions: draft.instructions, source: skillMode === "paste" ? "user_paste" : "user_chat" });
+      skillMode = null; notify("Skill saved", "safe"); loadSkills();
+    } catch (e) { notify(`Couldn't save: ${e.message}`, "danger"); }
+  }
+  async function toggleSkill(s) {
+    try { await api.skillUpdate(s.id, { enabled: !s.enabled }); loadSkills(); }
+    catch (e) { notify(`Couldn't update: ${e.message}`, "danger"); }
+  }
+  async function deleteSkill(s) {
+    try { await api.skillDelete(s.id); loadSkills(); }
+    catch (e) { notify(`Couldn't delete: ${e.message}`, "danger"); }
+  }
+
   async function save() {
     saving = true;
     try {
@@ -98,6 +140,7 @@
   <div class="subtabs">
     <button class:active={tab === "profile"} on:click={() => tab = "profile"}>Profile</button>
     <button class:active={tab === "memory"} on:click={() => tab = "memory"}>Memory</button>
+    <button class:active={tab === "skills"} on:click={() => { tab = "skills"; loadSkills(); }}>Skills</button>
     <button class:active={tab === "preferences"} on:click={() => tab = "preferences"}>Preferences</button>
   </div>
 
@@ -205,6 +248,81 @@
                 </li>
               {/each}
             </ul>
+          {/if}
+        </section>
+      {:else if tab === "skills"}
+        <section class="panel glass gloss" in:fly={{ y: 10, duration: 200 }}>
+          <h3><i class="ti ti-wand"></i> Skills</h3>
+          <p class="paneltext">Reusable capabilities Emblem follows. Describe one in plain
+             language and Emblem drafts it, paste one from elsewhere, or just say “save this as
+             a skill” in chat. Emblem picks the right skill automatically when it fits.</p>
+
+          {#if skillMode === null}
+            <div class="skill-cta">
+              <button class="btn primary" on:click={() => newSkill('describe')}><i class="ti ti-plus"></i> New skill</button>
+              <button class="btn ghost" on:click={() => newSkill('paste')}><i class="ti ti-clipboard"></i> Paste a skill</button>
+            </div>
+
+            {#if skillsLoading}
+              <div class="memempty">Loading…</div>
+            {:else}
+              {#if skills.length}
+                <ul class="skill-list">
+                  {#each skills as s (s.id)}
+                    <li class="skill-row" class:off={!s.enabled} in:fly={{ y: 6, duration: 150 }}>
+                      <div class="skill-info">
+                        <span class="skill-name">{s.name}</span>
+                        <span class="skill-desc">{s.description}</span>
+                      </div>
+                      <div class="memacts">
+                        <button class="mem-icon" class:active={s.enabled} title={s.enabled ? "Enabled" : "Disabled"} on:click={() => toggleSkill(s)}><i class="ti {s.enabled ? 'ti-toggle-right' : 'ti-toggle-left'}"></i></button>
+                        <button class="mem-icon" title="Edit" on:click={() => editSkill(s)}><i class="ti ti-pencil"></i></button>
+                        <button class="mem-icon danger" title="Delete" on:click={() => deleteSkill(s)}><i class="ti ti-trash"></i></button>
+                      </div>
+                    </li>
+                  {/each}
+                </ul>
+              {:else}
+                <div class="memempty">No skills yet — create your first above.</div>
+              {/if}
+
+              {#if builtinSkills.length}
+                <p class="skill-builtin-label">Built in · always available</p>
+                <ul class="skill-list">
+                  {#each builtinSkills as s (s.name)}
+                    <li class="skill-row builtin">
+                      <div class="skill-info">
+                        <span class="skill-name">{s.name} <span class="badge">core</span></span>
+                        <span class="skill-desc">{s.description}</span>
+                      </div>
+                    </li>
+                  {/each}
+                </ul>
+              {/if}
+            {/if}
+          {:else if skillMode === 'describe' || skillMode === 'paste'}
+            <label class="ufield wide">
+              <span>{skillMode === 'paste' ? 'Paste a skill (SKILL.md or a description)' : 'Describe what you want this skill to do'}</span>
+              <textarea bind:value={skillInput} rows="5"
+                placeholder={skillMode === 'paste' ? 'Paste the skill text here…' : 'e.g. When I say “weekly review”, pull my calendar and unread email, summarize what happened, and draft next week’s priorities.'}></textarea>
+            </label>
+            <div class="actions">
+              <button class="btn primary" on:click={runDraft} disabled={drafting || !skillInput.trim()}>
+                {drafting ? "Drafting…" : "Draft with Emblem"}
+              </button>
+              <button class="btn ghost" on:click={() => skillMode = null}>Cancel</button>
+            </div>
+          {:else if skillMode === 'edit'}
+            <label class="ufield wide"><span>Name</span>
+              <input bind:value={draft.name} placeholder="kebab-case-name" /></label>
+            <label class="ufield wide" style="margin-top:14px"><span>Description — what it does + when to use it</span>
+              <textarea bind:value={draft.description} rows="2"></textarea></label>
+            <label class="ufield wide" style="margin-top:14px"><span>Instructions Emblem follows</span>
+              <textarea bind:value={draft.instructions} rows="7"></textarea></label>
+            <div class="actions">
+              <button class="btn primary" on:click={saveSkill}>Save skill</button>
+              <button class="btn ghost" on:click={() => skillMode = null}>Cancel</button>
+            </div>
           {/if}
         </section>
       {:else}
@@ -384,6 +502,24 @@
   .mem-icon:hover { color: var(--text); background: var(--s3); }
   .mem-icon.active { color: var(--accent-ink); }
   .mem-icon.danger:hover { color: var(--danger); background: var(--danger-bg); }
+
+  /* Skills */
+  .skill-cta { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .skill-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .skill-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 13px 14px; background: var(--s1);
+    border: 1px solid var(--border); border-radius: var(--r-md);
+  }
+  .skill-row.off { opacity: 0.55; }
+  .skill-row.builtin { background: transparent; border-style: dashed; }
+  .skill-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .skill-name { font-size: 13.5px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; }
+  .skill-desc { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+  .skill-builtin-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-3); margin: 18px 0 8px;
+  }
 
   .actions { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
   .savednote { font-size: 12.5px; color: var(--safe); }
