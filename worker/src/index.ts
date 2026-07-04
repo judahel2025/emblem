@@ -33,6 +33,29 @@ app.use("/auth/*", cors({
 // Never reveal what powers Emblem — health is name + readiness only.
 app.get("/api/health", (c) => c.json({ name: "Emblem", status: "online", ready: true }));
 
+// Connector logos, proxied same-origin so the browser never sees the upstream
+// provider (provider secrecy — no third-party host in the network tab). Public
+// on purpose: <img> can't send an auth header, and a brand logo isn't sensitive.
+// The SVG is returned for <img> only, where any embedded script can't execute.
+app.get("/api/logo/:slug", async (c) => {
+  const slug = (c.req.param("slug") || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  if (!slug) return c.text("not found", 404);
+  try {
+    const res = await fetch(`https://logos.composio.dev/api/${slug}`, {
+      cf: { cacheTtl: 86400, cacheEverything: true },
+    });
+    if (!res.ok) return c.text("not found", 404);
+    return new Response(await res.arrayBuffer(), {
+      headers: {
+        "Content-Type": res.headers.get("content-type") || "image/svg+xml",
+        "Cache-Control": "public, max-age=86400, immutable",
+      },
+    });
+  } catch {
+    return c.text("not found", 404);
+  }
+});
+
 // Voice WebSocket → a fresh Durable Object per session (holds both sockets alive).
 app.get("/api/voice/live", (c) => {
   if (c.req.header("Upgrade")?.toLowerCase() !== "websocket") {

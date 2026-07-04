@@ -47,12 +47,11 @@ export function brandLogo(slug) {
   return LOGOS[String(slug || "").toLowerCase()] || null;
 }
 
-// Every Composio toolkit has a real brand logo at this slug-keyed endpoint
-// (Composio's CDN mirror of ComposioHQ/open-logos) — covers all 20k+ connectors,
-// so the long tail beyond our inlined set still gets its true logo, never a
-// generic icon. Used as an <img> src with the Tabler icon only as an onerror
-// last resort.
+// Real brand logo for any connector, served SAME-ORIGIN through the Emblem
+// worker (/api/logo/<slug>) which proxies the upstream logo CDN — so the browser
+// never sees the provider (provider secrecy) and there's still no generic icon
+// for the long tail. Tabler icon is only an onerror last resort.
 export function logoUrl(slug) {
-  const s = String(slug || "").toLowerCase().trim();
-  return s ? `https://logos.composio.dev/api/${encodeURIComponent(s)}` : "";
+  const s = String(slug || "").toLowerCase().trim().replace(/[^a-z0-9_-]/g, "");
+  return s ? `/api/logo/${s}` : "";
 }
