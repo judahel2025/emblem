@@ -55,8 +55,8 @@
       {#if !collapsed}<span class="name">Emblem</span>{/if}
     </button>
     <button class="icon-btn" on:click={() => collapsed = !collapsed}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
-      <i class="ti {collapsed ? 'ti-layout-sidebar-left-expand' : 'ti-layout-sidebar-left-collapse'}"></i>
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title="Toggle sidebar">
+      <i class="ti {collapsed ? 'ti-layout-sidebar-filled' : 'ti-layout-sidebar'}"></i>
     </button>
   </div>
 

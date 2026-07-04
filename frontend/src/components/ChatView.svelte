@@ -142,29 +142,23 @@
       <div class="empty-state" in:fly={{ y: 10, duration: 300 }}>
         <Orb size={58} state="idle" />
         <p class="empty-title">{$me.display_name ? `What are we doing today, ${$me.display_name}?` : "What are you working on?"}</p>
-        {#if suggestions.length}
-          <!-- Personalized workflow suggestions — generated from what Emblem
-               learned about this user, not canned chips. -->
-          <div class="sugg-grid">
-            {#each suggestions as s, i (s.title)}
-              <button class="sugg glass" in:fly={{ y: 8, duration: 200, delay: i * 50 }}
-                      on:click={() => chip(s.command)} title={s.command}>
-                <span class="sugg-icon"><i class="ti {SUGG_ICONS[s.icon] || 'ti-bolt'}"></i></span>
-                <span class="sugg-body">
-                  <span class="sugg-title">{s.title}</span>
-                  <span class="sugg-line">{s.line}</span>
-                </span>
+        <!-- One clean, consistent look for everyone: personalized suggestion pills
+             when Emblem knows the user, the same-styled defaults otherwise. -->
+        <div class="chips">
+          {#if suggestions.length}
+            {#each suggestions.slice(0, 4) as s, i (s.title)}
+              <button class="chip" in:fly={{ y: 8, duration: 200, delay: i * 40 }}
+                      on:click={() => chip(s.command)} title={s.line || s.command}>
+                <i class="ti {SUGG_ICONS[s.icon] || 'ti-bolt'}"></i> {s.title}
               </button>
             {/each}
-          </div>
-        {:else}
-          <div class="chips">
-            <button class="chip" on:click={() => chip("What's on my calendar today?")}>Today's calendar</button>
-            <button class="chip" on:click={() => chip("Summarize my unread email")}>Unread email</button>
-            <button class="chip" on:click={() => chip("Start a page for a new idea")}>New page</button>
-            <button class="chip" on:click={() => chip("Set up a morning briefing")}>Daily automation</button>
-          </div>
-        {/if}
+          {:else}
+            <button class="chip" on:click={() => chip("What's on my calendar today?")}><i class="ti ti-calendar"></i> Today's calendar</button>
+            <button class="chip" on:click={() => chip("Summarize my unread email")}><i class="ti ti-mail"></i> Unread email</button>
+            <button class="chip" on:click={() => chip("Start a page for a new idea")}><i class="ti ti-file-text"></i> New page</button>
+            <button class="chip" on:click={() => chip("Set up a morning briefing")}><i class="ti ti-bolt"></i> Daily automation</button>
+          {/if}
+        </div>
       </div>
     {:else}
       {#each $messages as msg, i}
@@ -338,32 +332,17 @@
   .empty-title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 480px; }
   .chip {
-    padding: 8px 16px; border-radius: var(--r-pill);
-    background: var(--bg); border: 1px solid var(--border);
-    font-size: 13px; color: var(--text-2);
-    box-shadow: var(--shadow-sm);
-    transition: border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
-    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 15px; border-radius: var(--r-pill);
+    background: var(--s1); border: 1px solid var(--border);
+    font-size: 13px; font-weight: 500; color: var(--text-2);
+    transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+    cursor: pointer; max-width: 100%;
   }
-  .chip:hover { border-color: var(--accent); color: var(--text); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .chip i { font-size: 15px; opacity: 0.75; }
+  .chip:hover { border-color: var(--border-strong); color: var(--text); background: var(--s2); transform: translateY(-1px); }
+  .chip:hover i { opacity: 1; }
 
-  .sugg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 620px; width: 100%; }
-  @media (max-width: 640px) { .sugg-grid { grid-template-columns: 1fr; } }
-  .sugg {
-    display: flex; align-items: flex-start; gap: 12px; text-align: left;
-    padding: 13px 15px; border-radius: var(--r-md);
-    box-shadow: var(--shadow-sm); cursor: pointer;
-    transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
-  }
-  .sugg:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-  .sugg-icon {
-    width: 32px; height: 32px; border-radius: var(--r-sm); flex-shrink: 0;
-    background: var(--accent-bg); color: var(--accent-ink);
-    display: grid; place-items: center; font-size: 17px;
-  }
-  .sugg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .sugg-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
-  .sugg-line { font-size: 12px; line-height: 1.45; color: var(--text-2); }
 
   .row { display: flex; max-width: 720px; width: 100%; margin: 0 auto; padding: 7px 0; }
   .row.user { justify-content: flex-end; }
