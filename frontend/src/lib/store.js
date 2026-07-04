@@ -17,6 +17,7 @@ export const filesTab = writable("files");      // files | notes | memory | skil
 // too, so it lives in a store rather than App.svelte local state.
 export const appView = writable("chat");
 export const showVoiceOverlay = writable(false);   // full-screen live voice (VoiceLive)
+export const showOperator = writable(false);       // admin-only operator/kernel panel (SettingsPanel)
 
 // The user's connected apps (toolkit slugs) — drives sidebar workspaces + tiles.
 export const connectedApps = writable([]);

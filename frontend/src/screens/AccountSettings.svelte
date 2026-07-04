@@ -5,7 +5,7 @@
   import { onMount } from "svelte";
   import { fly } from "svelte/transition";
   import { api } from "../lib/api.js";
-  import { appView, connectedApps, notify, loadMe } from "../lib/store.js";
+  import { appView, connectedApps, notify, loadMe, me, showOperator } from "../lib/store.js";
   import ThemeToggle from "../components/ThemeToggle.svelte";
 
   let tab = "profile";   // profile | memory | preferences
@@ -251,6 +251,16 @@
           Manage connections <i class="ti ti-arrow-right"></i>
         </button>
       </section>
+
+      {#if $me.is_admin}
+        <section class="panel glass" in:fly={{ y: 10, duration: 200, delay: 90 }}>
+          <h4>Operator</h4>
+          <p class="railtext">Kernel controls, approvals, audit trail and safety switches.</p>
+          <button class="link" on:click={() => showOperator.set(true)}>
+            Open operator panel <i class="ti ti-arrow-right"></i>
+          </button>
+        </section>
+      {/if}
 
       <section class="panel glass" in:fly={{ y: 10, duration: 200, delay: 120 }}>
         <h4>Help</h4>

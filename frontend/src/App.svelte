@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, me } from "./lib/store.js";
+  import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, showOperator, me } from "./lib/store.js";
   import { api } from "./lib/api.js";
   import ChatView from "./components/ChatView.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
@@ -24,7 +24,6 @@
 
   let engineUp = false;
   let engineFailed = false;
-  let showSettings = false;
   let timer;
 
   // If we just returned from Google OAuth, capture the session before first render logic.
@@ -115,8 +114,9 @@
   <Onboarding on:done={onOnboarded} />
 {:else}
   <div class="app">
-    <!-- Users get the Account screen (Stitch account_settings); the admin keeps the full panel. -->
-    <Sidebar on:settings={() => $me.is_admin ? showSettings = true : appView.set("account")} on:signout={signOut} />
+    <!-- Everyone gets the Account screen (profile, memory, master instructions);
+         admins reach the operator/kernel panel from a button inside it. -->
+    <Sidebar on:settings={() => appView.set("account")} on:signout={signOut} />
 
     <main class="main">
       {#if $appView === "chat"}<ChatView />
@@ -131,8 +131,8 @@
     </main>
 
     {#if $showVoiceOverlay}<VoiceLive on:close={() => showVoiceOverlay.set(false)} />{/if}
-    {#if showSettings}
-      <SettingsPanel on:close={() => showSettings = false} />
+    {#if $showOperator}
+      <SettingsPanel on:close={() => showOperator.set(false)} />
     {/if}
     <TourOverlay />
   </div>
