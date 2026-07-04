@@ -13,6 +13,7 @@ import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile } from "./onboarding";
 import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
 import { proactiveBriefing } from "./briefing";
+import { pollNotifications, listNotifications } from "./notifications";
 import { getSuggestions } from "./suggestions";
 
 export const apiRoutes = new Hono<AppContext>();
@@ -101,6 +102,37 @@ apiRoutes.post("/onboarding/chat", async (c) => {
 apiRoutes.get("/briefing", async (c) => {
   const r = await proactiveBriefing(c.env, c.get("userId")).catch(() => ({ line: "" }));
   return c.json(r);
+});
+
+// ---- notifications ------------------------------------------------------------
+
+apiRoutes.get("/notifications", async (c) =>
+  c.json(await listNotifications(c.env, c.get("userId")).catch(() => ({ items: [], unread: 0 }))));
+
+// Poll connectors for new activity → returns any freshly-created notifications so
+// the client can pop Chrome alerts. Called on app open + on an interval while open.
+apiRoutes.post("/notifications/poll", async (c) => {
+  const fresh = await pollNotifications(c.env, c.get("userId")).catch(() => []);
+  const { unread } = await listNotifications(c.env, c.get("userId")).catch(() => ({ unread: 0 }));
+  return c.json({ fresh, unread });
+});
+
+apiRoutes.post("/notifications/:id/read", async (c) => {
+  await c.env.DB.prepare("UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId")).run();
+  return c.json({ ok: true });
+});
+
+apiRoutes.post("/notifications/read-all", async (c) => {
+  await c.env.DB.prepare("UPDATE notifications SET read = 1 WHERE user_id = ? AND read = 0")
+    .bind(c.get("userId")).run();
+  return c.json({ ok: true });
+});
+
+apiRoutes.delete("/notifications/:id", async (c) => {
+  await c.env.DB.prepare("DELETE FROM notifications WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId")).run();
+  return c.json({ ok: true });
 });
 
 // ---- personalized workflow suggestions -----------------------------------------

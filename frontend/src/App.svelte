@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, showOperator, me } from "./lib/store.js";
+  import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, showOperator, me,
+           startNotifPolling, askNotifPermission, loadNotifications } from "./lib/store.js";
   import { api } from "./lib/api.js";
   import ChatView from "./components/ChatView.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
@@ -15,6 +16,7 @@
   import Automations from "./screens/Automations.svelte";
   import VoiceLive from "./screens/VoiceLive.svelte";
   import Help from "./screens/Help.svelte";
+  import Notifications from "./screens/Notifications.svelte";
   import AccountSettings from "./screens/AccountSettings.svelte";
   import { auth } from "./lib/supabase.js";
   import "./lib/theme.js";   // keeps data-theme live (toggle + OS changes)
@@ -84,6 +86,9 @@
     loadConversation();
     loadBriefing();
     loadConnections();
+    loadNotifications();
+    startNotifPolling();
+    askNotifPermission();
     timer = setInterval(refresh, 6000);
   }
 
@@ -125,6 +130,7 @@
       {:else if $appView === "calendar"}<Calendar />
       {:else if $appView === "automations"}<Automations />
       {:else if $appView === "help"}<Help />
+      {:else if $appView === "notifications"}<Notifications />
       {:else if $appView === "account"}<AccountSettings />
       {:else if $appView.startsWith("workspace:")}
         <WorkspaceHost slug={$appView.slice(10)} />{/if}

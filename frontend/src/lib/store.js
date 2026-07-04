@@ -19,6 +19,65 @@ export const appView = writable("chat");
 export const showVoiceOverlay = writable(false);   // full-screen live voice (VoiceLive)
 export const showOperator = writable(false);       // admin-only operator/kernel panel (SettingsPanel)
 
+// --- notifications: connector activity feed + badge + Chrome popups --------------
+export const notifications = writable({ items: [], unread: 0 });
+
+export async function loadNotifications() {
+  try { notifications.set(await api.notifications()); }
+  catch (e) { console.warn("notifications load failed:", e?.message); }
+}
+export async function markNotifRead(id) {
+  await api.notificationRead(id).catch(() => {});
+  notifications.update((n) => ({
+    items: n.items.map((x) => x.id === id ? { ...x, read: 1 } : x),
+    unread: Math.max(0, n.unread - 1),
+  }));
+}
+export async function markAllNotifsRead() {
+  await api.notificationsReadAll().catch(() => {});
+  notifications.update((n) => ({ items: n.items.map((x) => ({ ...x, read: 1 })), unread: 0 }));
+}
+export async function deleteNotif(id) {
+  await api.notificationDelete(id).catch(() => {});
+  notifications.update((n) => {
+    const gone = n.items.find((x) => x.id === id);
+    return { items: n.items.filter((x) => x.id !== id),
+             unread: Math.max(0, n.unread - (gone && !gone.read ? 1 : 0)) };
+  });
+}
+
+// Ask for Chrome notification permission (once, quietly).
+export function askNotifPermission() {
+  try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }
+  catch {}
+}
+function popChrome(n) {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const note = new Notification(n.title || "Emblem", { body: n.body || "", tag: `emblem-${n.id}`, icon: "/icon.svg" });
+    note.onclick = () => { window.focus(); appView.set("notifications"); note.close(); };
+  } catch {}
+}
+
+// Poll connectors while the app is open: new activity → badge + Chrome popup.
+let _notifTimer = null;
+export function startNotifPolling() {
+  if (_notifTimer) return;
+  const tick = async () => {
+    try {
+      const r = await api.notificationsPoll();
+      if (r) {
+        notifications.update((n) => ({ items: n.items, unread: r.unread ?? n.unread }));
+        for (const f of (r.fresh || [])) popChrome(f);
+        if ((r.fresh || []).length) loadNotifications();
+      }
+    } catch { /* transient */ }
+  };
+  tick();
+  _notifTimer = setInterval(tick, 60000);
+  window.addEventListener("focus", tick);
+}
+
 // The user's connected apps (toolkit slugs) — drives sidebar workspaces + tiles.
 export const connectedApps = writable([]);
 export async function loadConnections() {
@@ -162,25 +221,18 @@ export async function refresh() {
     config.set({ kill_switch: false, local_only: false, approval_mode: "ask", remembered_approvals: [], ...cfg });
     auditLog.set(aud.items || []);
   }
-  checkAlerts();
+  loadNotifications();
 }
 
-// Emblem comes alive: when an alert arrives (new support mail, signup, product change), she
-// speaks up unprompted in the conversation and offers to act — then marks the alert seen.
+// Legacy alerts are drained silently (marked seen) — activity now lives ONLY on the
+// Notifications page, never pushed into the chat.
 let _alertBusy = false;
 async function checkAlerts() {
   if (_alertBusy) return;
   _alertBusy = true;
   try {
     const r = await api.alerts().catch(() => ({ items: [] }));
-    const items = r.items || [];
-    for (const al of items) {
-      const line = _alertLine(al);
-      messages.update((m) => [...m, { role: "assistant", text: line, alert: true }]);
-      notify(al.title || "New activity", al.kind === "support" ? "accent" : "safe");
-      if (!get(thinking)) speakText(line);
-      await api.alertSeen(al.id).catch(() => {});
-    }
+    for (const al of (r.items || [])) await api.alertSeen(al.id).catch(() => {});
   } catch {}
   _alertBusy = false;
 }
@@ -216,8 +268,9 @@ export async function openLegacy() {
   } catch (e) { console.error("openLegacy failed:", e); }
 }
 
-// When Emblem comes on: a personal greeting + ONE real-signal proactive line,
-// grounded in the user's actual calendar/email (never a timer nag). Runs once.
+// When Emblem comes on: just a quiet greeting. Connector activity is NOT dumped
+// into the chat anymore — the Notifications page + badge + Chrome popups own that,
+// so a fresh chat stays a fresh chat.
 let _briefed = false;
 export async function loadBriefing() {
   if (_briefed) return;
@@ -225,15 +278,6 @@ export async function loadBriefing() {
   const my = get(me);
   const name = my.display_name ? `, ${my.display_name}` : "";
   briefing.set({ greeting: `Welcome back${name}.`, summary: "" });
-
-  // Proactive grounding — surface a real signal only if there is one, and only
-  // into a fresh chat so it reads as a natural heads-up, not an interruption.
-  try {
-    const r = await api.briefing();
-    if (r?.line && get(messages).length === 0 && !get(thinking)) {
-      messages.update((m) => [...m, { role: "assistant", text: r.line, proactive: true }]);
-    }
-  } catch (e) { console.warn("briefing unavailable:", e?.message); }
 }
 
 // Execute the UI actions the agent returns (open editor + write, run terminal, etc.).

@@ -5,7 +5,7 @@
   import { createEventDispatcher, onDestroy } from "svelte";
   import { slide, fade } from "svelte/transition";
   import { threads, activeThread, appView, openThread, openLegacy, newChat,
-           renameThread, deleteThread, brainReady, connectedApps, me } from "../lib/store.js";
+           renameThread, deleteThread, brainReady, connectedApps, me, notifications } from "../lib/store.js";
   import { auth } from "../lib/supabase.js";
   import { WORKSPACES } from "../lib/workspaces.js";
   import ThemeToggle from "./ThemeToggle.svelte";
@@ -16,6 +16,7 @@
   const dispatch = createEventDispatcher();
 
   const NAV = [
+    { id: "notifications", label: "Notifications", icon: "ti-bell" },
     { id: "connect",     label: "Connections", icon: "ti-plug-connected" },
     { id: "pages",       label: "Pages",       icon: "ti-file-text" },
     { id: "calendar",    label: "Calendar",    icon: "ti-calendar" },
@@ -71,8 +72,18 @@
       {#each NAV as n}
         <button class="nav-item" class:active={$appView === n.id}
                 on:click={() => appView.set(n.id)} data-tour="nav-{n.id}" title={n.label}>
-          <i class="ti {n.icon}"></i>
-          {#if !collapsed}<span>{n.label}</span>{/if}
+          <span class="ni-ic">
+            <i class="ti {n.icon}"></i>
+            {#if n.id === "notifications" && $notifications.unread > 0}
+              <span class="ni-badge" class:dot={collapsed}>{collapsed ? "" : ($notifications.unread > 99 ? "99+" : $notifications.unread)}</span>
+            {/if}
+          </span>
+          {#if !collapsed}
+            <span>{n.label}</span>
+            {#if n.id === "notifications" && $notifications.unread > 0}
+              <span class="ni-count">{$notifications.unread > 99 ? "99+" : $notifications.unread}</span>
+            {/if}
+          {/if}
         </button>
       {/each}
       {#each wsItems as s (s)}
@@ -207,6 +218,19 @@
   .nav-item.active:hover { background: var(--accent); color: var(--accent-t); filter: brightness(1.05); }
   .nav-item.active i { color: var(--accent-t); }
   .nav-item i { font-size: 18px; flex-shrink: 0; }
+  .ni-ic { position: relative; display: grid; place-items: center; }
+  .ni-count {
+    margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--r-pill);
+    background: var(--accent-grad); color: var(--accent-t); font-size: 11px; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .nav-item.active .ni-count { background: var(--accent-t); color: var(--accent); }
+  /* collapsed: a small dot on the bell */
+  .ni-badge.dot {
+    position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; padding: 0;
+    border-radius: 50%; background: var(--danger); border: 2px solid var(--s1);
+  }
+  .ni-badge:not(.dot) { display: none; }
 
   .threads { padding: 6px 0 0; border-top: 1px solid var(--divider); }
   .section-label {

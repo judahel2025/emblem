@@ -209,6 +209,13 @@ export const api = {
   automationToggle: (id, enabled) => post(`/api/automations/${id}/toggle`, { enabled }),
   automationDelete: (id) => del(`/api/automations/${id}`),
 
+  // Notifications
+  notifications: () => get("/api/notifications"),
+  notificationsPoll: () => post("/api/notifications/poll", {}),
+  notificationRead: (id) => post(`/api/notifications/${id}/read`, {}),
+  notificationsReadAll: () => post("/api/notifications/read-all", {}),
+  notificationDelete: (id) => del(`/api/notifications/${id}`),
+
   // Proactive grounding (one real-signal line on app open)
   briefing: () => get("/api/briefing"),
 

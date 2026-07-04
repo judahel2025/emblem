@@ -6,6 +6,7 @@
 
 import type { Env } from "./env";
 import { runAgent } from "./agent";
+import { notify } from "./notifications";
 
 function inQuietHours(now: Date, start: string, end: string): boolean {
   const [sh, sm] = (start || "22:00").split(":").map(Number);
@@ -45,9 +46,7 @@ export async function heartbeat(env: Env): Promise<void> {
     }
     await env.DB.prepare(
       "UPDATE automations SET last_result = ? WHERE id = ?").bind(summary, a.id).run();
-    await env.DB.prepare(
-      "INSERT INTO alerts (kind, title, body, user_id) VALUES ('automation', ?, ?, ?)")
-      .bind(a.instruction.slice(0, 80), summary, a.user_id).run();
+    await notify(env, a.user_id, "system", "automation", a.instruction.slice(0, 80), summary);
   }
 
   // ---- calendar reminders ----------------------------------------------------
@@ -59,9 +58,7 @@ export async function heartbeat(env: Env): Promise<void> {
     .all<{ id: number; user_id: string; title: string; starts_at: string }>();
 
   for (const r of reminders.results || []) {
-    await env.DB.prepare(
-      "INSERT INTO alerts (kind, title, body, user_id) VALUES ('reminder', ?, ?, ?)")
-      .bind(`Coming up: ${r.title}`, `Starts ${r.starts_at}`, r.user_id).run();
+    await notify(env, r.user_id, "system", "reminder", `Coming up: ${r.title}`, `Starts ${r.starts_at}`);
     // fire once: clear the lead time
     await env.DB.prepare("UPDATE calendar_events SET remind_secs = NULL WHERE id = ?")
       .bind(r.id).run();
