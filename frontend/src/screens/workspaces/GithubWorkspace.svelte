@@ -10,7 +10,8 @@
   export let onApproval;
 
   // ── Run code in the browser (free sandbox: iframe for JS/HTML, Pyodide for Python) ──
-  let running = false, runLogs = [], runPreview = "", pyStatus = "", showRun = false;
+  let running = false, runLogs = [], runPreview = "", pyStatus = "", showRun = false, runFullscreen = false;
+  function onWinKey(e) { if (e.key === "Escape" && runFullscreen) runFullscreen = false; }
   $: runnable = filePath && canRun(filePath);
   async function runFile() {
     if (running) return;
@@ -372,6 +373,8 @@
   onMount(loadRepos);
 </script>
 
+<svelte:window on:keydown={onWinKey} />
+
 <div class="gh">
   {#if pane === "repos"}
     <section class="pane" in:fly={FLY_IN}>
@@ -577,11 +580,16 @@
       </div>
 
       {#if showRun}
-        <div class="run-out" transition:fly={{ y: 10, duration: 160 }}>
+        <div class="run-out" class:fullscreen={runFullscreen} transition:fly={{ y: 10, duration: 160 }}>
           <div class="run-out-bar">
             <span><i class="ti ti-terminal-2"></i> Output</span>
             <span class="grow"></span>
-            <button class="icon-btn" on:click={() => (showRun = false)} aria-label="Close output"><i class="ti ti-x"></i></button>
+            <button class="icon-btn" on:click={() => (runFullscreen = !runFullscreen)}
+                    aria-label={runFullscreen ? "Exit full screen" : "Full screen"}
+                    title={runFullscreen ? "Exit full screen (Esc)" : "Full screen"}>
+              <i class="ti {runFullscreen ? 'ti-arrows-minimize' : 'ti-arrows-maximize'}"></i>
+            </button>
+            <button class="icon-btn" on:click={() => { showRun = false; runFullscreen = false; }} aria-label="Close output"><i class="ti ti-x"></i></button>
           </div>
           {#if running && pyStatus}
             <div class="run-status"><span class="spin"></span> {pyStatus}</div>
@@ -797,6 +805,13 @@
     border-top: 1px solid var(--border); background: var(--bg-2);
     display: flex; flex-direction: column; max-height: 42%; flex-shrink: 0;
   }
+  /* Full-screen preview — fills the viewport; Esc or the icon returns to normal. */
+  .run-out.fullscreen {
+    position: fixed; inset: 0; z-index: 200; max-height: none;
+    background: var(--bg); border-top: none;
+  }
+  .run-out.fullscreen .run-preview { flex: 1; height: auto; }
+  .run-out.fullscreen .run-logs { flex: 1; }
   .run-out-bar {
     display: flex; align-items: center; gap: 8px; padding: 8px 14px;
     font-size: 12px; font-weight: 600; color: var(--text-2);
