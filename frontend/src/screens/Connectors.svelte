@@ -4,7 +4,17 @@
   import { api } from "../lib/api.js";
   import { appView, loadConnections, notify } from "../lib/store.js";
   import { hasWorkspace } from "../lib/workspaces.js";
-  import { brandLogo, MONO_LOGOS } from "../lib/logos.js";
+  import { brandLogo, MONO_LOGOS, logoUrl } from "../lib/logos.js";
+
+  // If the Composio logo endpoint ever 404s, drop the <img> and reveal the
+  // Tabler icon sitting right after it — a real logo first, icon only as a
+  // last resort (never a bare generic tile).
+  function imgFallback(e) {
+    const img = e.currentTarget;
+    img.style.display = "none";
+    const icon = img.nextElementSibling;
+    if (icon) icon.style.display = "";
+  }
   import { tilt } from "../lib/tilt.js";
 
   let loading = true, configured = false, connected = [], featured = [], all = [], query = "", error = "";
@@ -155,7 +165,11 @@
             <div class="acard glass gloss" use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
               <div class="atop">
                 <span class="appicon" class:mono={MONO_LOGOS.has(k)}>
-                  {#if brandLogo(k)}{@html brandLogo(k)}{:else}<i class="ti {m.icon}"></i>{/if}
+                  {#if brandLogo(k)}{@html brandLogo(k)}
+                  {:else}
+                    <img class="brandimg" src={logoUrl(k)} alt={m.label} loading="lazy" on:error={imgFallback} />
+                    <i class="ti {m.icon}" style="display:none"></i>
+                  {/if}
                 </span>
                 <span class="badge safe">Connected</span>
               </div>
@@ -197,7 +211,11 @@
           {@const m = meta(k)}
           <div class="tile glass gloss" use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
             <span class="bigicon" class:mono={MONO_LOGOS.has(k)}>
-              {#if brandLogo(k)}{@html brandLogo(k)}{:else}<i class="ti {m.icon}"></i>{/if}
+              {#if brandLogo(k)}{@html brandLogo(k)}
+              {:else}
+                <img class="brandimg" src={logoUrl(k)} alt={m.label} loading="lazy" on:error={imgFallback} />
+                <i class="ti {m.icon}" style="display:none"></i>
+              {/if}
             </span>
             <div class="name center">{m.label}</div>
             <div class="desc center">{m.desc}</div>
@@ -283,6 +301,7 @@
   }
   .appicon i { font-size: 26px; color: var(--accent-ink); }
   .appicon :global(svg) { width: 26px; height: 26px; display: block; }
+  .appicon .brandimg { width: 26px; height: 26px; object-fit: contain; display: block; }
   .appicon.mono :global(svg) { color: var(--text); }
   .afoot {
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--divider);
@@ -326,6 +345,7 @@
   .bigicon i { font-size: 28px; color: var(--text-2); }
   .tile:hover .bigicon i { color: var(--accent-ink); }
   .bigicon :global(svg) { width: 30px; height: 30px; display: block; }
+  .bigicon .brandimg { width: 30px; height: 30px; object-fit: contain; display: block; }
   .bigicon.mono :global(svg) { color: var(--text-2); }
   .tile:hover .bigicon.mono :global(svg) { color: var(--text); }
 

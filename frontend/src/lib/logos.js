@@ -46,3 +46,13 @@ export const MONO_LOGOS = new Set(["github", "twitter", "x"]);
 export function brandLogo(slug) {
   return LOGOS[String(slug || "").toLowerCase()] || null;
 }
+
+// Every Composio toolkit has a real brand logo at this slug-keyed endpoint
+// (Composio's CDN mirror of ComposioHQ/open-logos) — covers all 20k+ connectors,
+// so the long tail beyond our inlined set still gets its true logo, never a
+// generic icon. Used as an <img> src with the Tabler icon only as an onerror
+// last resort.
+export function logoUrl(slug) {
+  const s = String(slug || "").toLowerCase().trim();
+  return s ? `https://logos.composio.dev/api/${encodeURIComponent(s)}` : "";
+}
