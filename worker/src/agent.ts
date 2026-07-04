@@ -173,9 +173,28 @@ const NATIVE_TOOLS: OpenAITool[] = [
     parameters: { type: "object", properties: { view: { type: "string",
       enum: ["chat", "connect", "pages", "calendar", "automations"] } }, required: ["view"] } } },
   { type: "function", function: { name: "generate_document",
-    description: "Write a document (report, letter, notes) and save it to the user's Files.",
+    description: "Save a PLAIN-TEXT note (markdown/txt/html) to the user's Files. For real " +
+      "Word/PDF/PowerPoint/Excel documents use create_document instead.",
     parameters: { type: "object", properties: { title: { type: "string" }, content: { type: "string", description: "full document in markdown" },
       format: { type: "string", enum: ["md", "txt", "html"] } }, required: ["title", "content"] } } },
+  { type: "function", function: { name: "create_document",
+    description: "Create a real, downloadable Word (docx), PDF, PowerPoint (pptx) or Excel (xlsx) " +
+      "document and show it in chat with a Download button. Use this whenever the user asks for a " +
+      "document, report, letter, deck, slides, spreadsheet, or PDF. Write GOOD, well-structured " +
+      "content — headings, sections, real substance — not a stub.",
+    parameters: { type: "object", properties: {
+      title: { type: "string" },
+      format: { type: "string", enum: ["docx", "pdf", "pptx", "xlsx"] },
+      content: { type: "string", description: "For docx/pdf: the full document body in markdown " +
+        "(# H1, ## H2, - bullets, **bold**, > quote)." },
+      slides: { type: "array", description: "For pptx: one object per slide.",
+        items: { type: "object", properties: { title: { type: "string" },
+          bullets: { type: "array", items: { type: "string" } }, notes: { type: "string" } } } },
+      sheets: { type: "array", description: "For xlsx: one object per sheet.",
+        items: { type: "object", properties: { name: { type: "string" },
+          headers: { type: "array", items: { type: "string" } },
+          rows: { type: "array", items: { type: "array" } } } } },
+    }, required: ["title", "format"] } } },
   { type: "function", function: { name: "connect_app",
     description: "Create a connect (or reconnect) link for an app the user needs — gmail, github, " +
       "googlecalendar, linkedin, twitter, notion, slack, …. Returns a URL: include it in your reply " +
@@ -281,6 +300,23 @@ async function execNative(env: Env, userId: string, name: string,
       const res = r as { ok?: boolean; name?: string };
       return [res.ok ? `Saved "${res.name}" to your Files.` : "Couldn't save the document.",
               { type: "file.created", path: (r as { path?: string }).path }];
+    }
+    case "create_document": {
+      const fmt = ["docx", "pdf", "pptx", "xlsx"].includes(String(a.format)) ? String(a.format) : "docx";
+      const doc = {
+        title: String(a.title || "Document"),
+        format: fmt,
+        content: typeof a.content === "string" ? a.content : "",
+        slides: Array.isArray(a.slides) ? a.slides : undefined,
+        sheets: Array.isArray(a.sheets) ? a.sheets : undefined,
+      };
+      // Rendered client-side (browser has the libs); the frontend uploads to R2 and
+      // shows a download CARD with its own button. The model must NOT invent a link.
+      return [`The ${fmt.toUpperCase()} “${doc.title}” is being generated and a download ` +
+              `card with a button will appear automatically. In your reply, say it's ready ` +
+              `in ONE short sentence — do NOT write any link, URL, path, or markdown link ` +
+              `yourself (there is no path to give; the card handles the download).`,
+              { type: "document.generate", doc }];
     }
     case "connect_app": {
       const toolkit = String(a.toolkit || "").toLowerCase().trim();

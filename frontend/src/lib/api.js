@@ -141,6 +141,14 @@ export const api = {
   schedulePause: (id, paused) => post(`/api/schedule/${id}/pause`, { paused }),
 
   filesAll: () => get("/api/files/all"),
+  async fileUpload(name, blob) {
+    const res = await fetch(`${API_BASE}/api/files/upload?name=${encodeURIComponent(name)}`, {
+      method: "POST",
+      headers: { "Content-Type": blob.type || "application/octet-stream", ...authHeaders() },
+      body: blob,
+    });
+    return res.json().catch(() => ({ ok: res.ok }));
+  },
   skills: () => get("/api/skills"),
   skill: (path) => get(`/api/skill?path=${encodeURIComponent(path)}`),
 

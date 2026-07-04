@@ -245,6 +245,8 @@ function runActions(actions) {
       else goTo(a.mode || "converse", a.tab); // legacy mode navigation
     } else if (a.type === "open_url") {
       if (a.url) window.open(a.url, "_blank", "noopener");
+    } else if (a.type === "document.generate") {
+      if (a.doc) generateDocument(a.doc);
     } else if (a.type === "connect.pending") {
       // Emblem handed the user a connect link in-chat. Open it, then watch the
       // connections list; the moment the toolkit turns ACTIVE, feed an internal
@@ -272,6 +274,34 @@ function runActions(actions) {
       messages.set([]);
       notify("Chat history cleared", "safe");
     }
+  }
+}
+
+// Render an agent-specified document client-side, offer immediate download, and
+// upload to R2 for the Files list. Shows a live "document card" message in chat.
+export async function generateDocument(doc) {
+  const placeholder = { role: "assistant", isDoc: true, doc: {
+    title: doc.title, format: doc.format, status: "generating" } };
+  messages.update((m) => [...m, placeholder]);
+  const patch = (fields) => messages.update((m) => {
+    const idx = [...m].reverse().findIndex((x) => x.isDoc && x.doc?.status === "generating");
+    if (idx === -1) return m;
+    const real = m.length - 1 - idx;
+    m[real] = { ...m[real], doc: { ...m[real].doc, ...fields } };
+    return m;
+  });
+  try {
+    const { generateDoc } = await import("./docgen.js");
+    const { blob, filename, mime } = await generateDoc(doc);
+    const url = URL.createObjectURL(blob);
+    patch({ status: "ready", filename, url, size: blob.size, mime });
+    // Persist to R2 in the background (best-effort; download works from the blob url).
+    api.fileUpload(filename, blob).catch((e) => console.warn("doc upload failed:", e?.message));
+    notify(`${doc.format.toUpperCase()} ready — ${filename}`, "safe");
+  } catch (e) {
+    console.error("doc generation failed:", e);
+    patch({ status: "error", error: e?.message || "Couldn't generate the document." });
+    notify("Couldn't generate the document", "danger");
   }
 }
 

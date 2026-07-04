@@ -63,6 +63,13 @@
   function submit(e) { sendCommand(e.detail); }
   function chip(t) { sendCommand(t); }
 
+  const DOC_ICON = { docx: "ti-file-type-docx", pdf: "ti-file-type-pdf",
+                     pptx: "ti-file-type-ppt", xlsx: "ti-file-type-xls" };
+  function fmtSize(n) {
+    if (!n) return "";
+    return n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+  }
+
   // Copy-and-edit: drop a past prompt back into the composer to tweak and resend.
   function editPrompt(text) {
     composer?.setText(text);
@@ -110,9 +117,18 @@
     const preview = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
     notify(`Reading ${file.name}…`, "safe");
     try {
-      const r = await api.analyzeUpload(file);
-      if (!r.ok) { notify(`Couldn't read ${file.name}`, "danger"); uploading = false; return; }
-      await sendAttachment(file.name, file.type, r.reply, preview);
+      // Real documents (docx/pdf/xlsx/pptx/csv) parse client-side — no server round-trip,
+      // works for any size. Images still go to the vision endpoint.
+      const { canParse, parseDocument } = await import("../lib/docparse.js");
+      if (canParse(file.name)) {
+        const text = await parseDocument(file);
+        if (!text.trim()) { notify(`Couldn't read ${file.name}`, "danger"); uploading = false; return; }
+        await sendAttachment(file.name, file.type, text.slice(0, 60000), preview);
+      } else {
+        const r = await api.analyzeUpload(file);
+        if (!r.ok) { notify(`Couldn't read ${file.name}`, "danger"); uploading = false; return; }
+        await sendAttachment(file.name, file.type, r.reply, preview);
+      }
     } catch (err) { notify(`Upload failed: ${err?.message}`, "danger"); }
     uploading = false;
   }
@@ -171,6 +187,27 @@
                     <i class="ti ti-pencil"></i><span>Edit</span>
                   </button>
                 </div>
+              {/if}
+            </div>
+          </div>
+        {:else if msg.isDoc}
+          <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>
+            <div class="doc-card glass gloss">
+              <span class="doc-ic doc-{msg.doc.format}"><i class="ti {DOC_ICON[msg.doc.format] || 'ti-file'}"></i></span>
+              <div class="doc-meta">
+                <span class="doc-title">{msg.doc.filename || msg.doc.title}</span>
+                {#if msg.doc.status === 'generating'}
+                  <span class="doc-sub"><span class="doc-spin"></span> Generating your {msg.doc.format.toUpperCase()}…</span>
+                {:else if msg.doc.status === 'ready'}
+                  <span class="doc-sub">{msg.doc.format.toUpperCase()} · {fmtSize(msg.doc.size)}</span>
+                {:else}
+                  <span class="doc-sub err">{msg.doc.error || 'Failed to generate.'}</span>
+                {/if}
+              </div>
+              {#if msg.doc.status === 'ready'}
+                <a class="doc-dl" href={msg.doc.url} download={msg.doc.filename}>
+                  <i class="ti ti-download"></i> Download
+                </a>
               {/if}
             </div>
           </div>
@@ -362,6 +399,31 @@
   }
   .mem-used li { font-size: 12.5px; line-height: 1.45; color: var(--text-2); padding-left: 16px; position: relative; }
   .mem-used li::before { content: "🧠"; position: absolute; left: 0; font-size: 11px; }
+
+  /* Document card (create_document result) */
+  .doc-card {
+    display: flex; align-items: center; gap: 14px; width: 100%; max-width: 460px;
+    padding: 14px 16px; border-radius: var(--r-lg); box-shadow: var(--shadow-md);
+  }
+  .doc-ic {
+    width: 44px; height: 44px; border-radius: var(--r-md); flex-shrink: 0;
+    display: grid; place-items: center; font-size: 24px;
+    background: var(--s2); color: var(--text);
+  }
+  .doc-docx { color: #2b7cd3; } .doc-pdf { color: #d3402b; }
+  .doc-pptx { color: #d35b2b; } .doc-xlsx { color: #1f9d55; }
+  .doc-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .doc-title { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .doc-sub { font-size: 12px; color: var(--text-3); display: inline-flex; align-items: center; gap: 6px; }
+  .doc-sub.err { color: var(--danger); }
+  .doc-spin { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--text-2); animation: spin 0.7s linear infinite; display: inline-block; }
+  .doc-dl {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: var(--r-sm); text-decoration: none;
+    background: var(--accent-grad); color: var(--accent-t); font-size: 13px; font-weight: 600;
+    box-shadow: 0 2px 10px var(--accent-glow); transition: filter var(--t-fast);
+  }
+  .doc-dl:hover { filter: brightness(1.08); }
 
   .attach-img { max-width: 220px; border-radius: 12px; display: block; margin-bottom: 6px; }
   .attach-label { font-size: 13px; color: var(--text-2); }
