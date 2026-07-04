@@ -8,7 +8,7 @@ import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
          ApprovalRequired, ApprovalRejected } from "./kernel";
 import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
-         listConnections, initiateConnection } from "./composio";
+         listConnections, initiateConnection, disconnect } from "./composio";
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile } from "./onboarding";
 import { getSuggestions } from "./suggestions";
@@ -508,6 +508,14 @@ apiRoutes.get("/connections/link", async (c) => {
   if (!toolkit) return c.json({ ok: false, error: "toolkit required" });
   const url = await initiateConnection(c.env, toolkit, c.get("userId"));
   return c.json(url ? { ok: true, url } : { ok: false, error: "Couldn't start the connection." });
+});
+
+apiRoutes.post("/connections/disconnect", async (c) => {
+  const b = await c.req.json().catch(() => ({}));
+  const toolkit = String(b.toolkit || "").toLowerCase().trim();
+  if (!toolkit) return c.json({ ok: false, error: "toolkit required" });
+  const removed = await disconnect(c.env, c.get("userId"), toolkit);
+  return c.json({ ok: removed > 0, removed });
 });
 
 apiRoutes.all("*", (c) => notFound(c));

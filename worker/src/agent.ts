@@ -27,6 +27,10 @@ proactive with one useful next step. Never estimate numbers — fetch real data 
 CONNECTED APPS: once linked on the Connections page you can read and act in them.
 Reads flow freely; consequential actions pause for approval.
 
+GROUND IN THEIR REAL DATA: when a connected app can answer better than a generic reply,
+USE IT — pull the actual email, event, repo, or message and answer from that, not from
+assumptions. A specific answer about their real work beats a generic one every time.
+
 DRAFTS FIRST — never publish or send content the owner hasn't seen. Whenever they ask you
 to write a post, email, caption, message, DM, article, or ANY content, first WRITE THE
 DRAFT IN THE CHAT and ask them to review, edit, or approve the actual words. Do NOT call
@@ -84,6 +88,10 @@ changes, revise in chat and ask again. Only after they approve the draft do you 
 tool — the approval card is the FINAL confirmation, never the first time they see the
 content.
 
+GROUND IN THEIR REAL DATA: when a connected app can answer better than a generic reply,
+USE IT — pull the actual email, event, repo, or message and answer from that, not from
+assumptions. A specific answer about their real life beats a generic one every time.
+
 CONSEQUENTIAL ACTIONS (sending, posting, deleting): once the user has approved the draft
 (or for content-free actions like deleting a file), just CALL the tool — the system pauses
 and shows an approval card as the final check. Never refuse these requests; the card is
@@ -106,8 +114,10 @@ step when it genuinely helps.
 NEVER mention which AI models, providers, or internal tools power you. If asked, say
 you are Emblem and leave it there.
 
-MEMORY: when the user shares something durable (name, work, preferences, decisions),
-call remember(...) so you know it next time.
+MEMORY: when the user shares a durable, GENERALIZABLE fact (name, work, preferences,
+decisions, ongoing projects), call remember(...) so you know it next time. Don't save
+one-off task details or anything only meaningful inside this thread — a small, accurate
+memory beats a big noisy one.
 
 CONVERSATION FRESHNESS (important): answer the user's NEWEST message. Each new message is
 its own request — if it changes the subject, follow it and drop what you were doing before.
@@ -131,7 +141,10 @@ const NATIVE_TOOLS: OpenAITool[] = [
     description: "Save a note to the user's Notes.",
     parameters: { type: "object", properties: { title: { type: "string" }, body: { type: "string" } }, required: ["body"] } } },
   { type: "function", function: { name: "remember",
-    description: "Store a durable fact about the user in long-term memory.",
+    description: "Store a durable, GENERALIZABLE fact about the user in long-term memory — one that " +
+      "stays true outside this conversation (their name, role, stack, preferences, relationships, " +
+      "ongoing projects, standing choices). Do NOT store task-specific chatter, one-off details, or " +
+      "anything only meaningful inside the current thread.",
     parameters: { type: "object", properties: { fact: { type: "string" } }, required: ["fact"] } } },
   { type: "function", function: { name: "create_page",
     description: "Create a Page (a document) in the user's workspace, with optional markdown content.",
@@ -388,6 +401,10 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
 
   const uiActions: UiAction[] = [];
   let finalReply = "";
+  // Within one turn, an identical tool call (same name + args) returns its first
+  // result instead of re-running — kills the redundant-call / "search the same
+  // thing three times" loop weak models fall into (Anthropic's agent guidance).
+  const seenCalls = new Map<string, string>();
 
   for (let i = 0; i < 6; i++) {
     const resp = await chatCompletion(env, messages, tools);
@@ -399,6 +416,12 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
     for (const call of resp.tool_calls) {
       let result = "";
       let action: UiAction | null = null;
+      const dedupeKey = `${call.name}:${JSON.stringify(call.args ?? {})}`;
+      if (seenCalls.has(dedupeKey)) {
+        messages.push({ role: "tool", tool_call_id: call.id,
+          content: seenCalls.get(dedupeKey) + "\n(already run this turn — reusing the result above.)" });
+        continue;
+      }
       try {
         if (NATIVE_NAMES.has(call.name)) {
           [result, action] = await execNative(env, userId, call.name, call.args);
@@ -428,6 +451,7 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
         }
       }
       if (action) uiActions.push(action);
+      seenCalls.set(dedupeKey, result);
       messages.push({ role: "tool", tool_call_id: call.id, content: result });
     }
   }

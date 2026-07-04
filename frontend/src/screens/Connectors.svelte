@@ -126,6 +126,26 @@
     } catch { error = "Couldn't start the connection."; }
   }
 
+  // Disconnect — revoke Emblem's access to an app. Always confirm first.
+  let disconnectTk = null;
+  let disconnecting = {};
+  async function proceedDisconnect() {
+    const toolkit = disconnectTk;
+    disconnectTk = null;
+    if (!toolkit) return;
+    disconnecting = { ...disconnecting, [toolkit]: true };
+    try {
+      const r = await api.connectionDisconnect(toolkit);
+      if (r.ok) {
+        connected = connected.filter((c) => c !== toolkit);
+        loadConnections();
+        notify(`${meta(toolkit).label} disconnected`, "safe");
+        load();
+      } else notify(`Couldn't disconnect ${meta(toolkit).label}`, "danger");
+    } catch { notify(`Couldn't disconnect ${meta(toolkit).label}`, "danger"); }
+    const { [toolkit]: _x, ...rest } = disconnecting; disconnecting = rest;
+  }
+
   onDestroy(stopPolling);
 
   // Active section always shows every live link; the available grid shows the rest.
@@ -201,6 +221,10 @@
                   aria-label={`Reconnect ${m.label}`}>
                   {#if connecting[k]}<span class="spin"></span>{:else}<i class="ti ti-refresh"></i>{/if}
                 </button>
+                <button class="iconbtn danger" on:click={() => (disconnectTk = k)}
+                  disabled={disconnecting[k]} title="Disconnect" aria-label={`Disconnect ${m.label}`}>
+                  {#if disconnecting[k]}<span class="spin"></span>{:else}<i class="ti ti-plug-off"></i>{/if}
+                </button>
               </div>
             </div>
           {/each}
@@ -269,6 +293,30 @@
       <div class="consent-btns">
         <button class="btn ghost" on:click={() => (confirmTk = null)}>Cancel</button>
         <button class="btn primary" on:click={proceedConnect}>Continue to {cm.label}</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Disconnect confirmation -->
+{#if disconnectTk}
+  {@const dm = meta(disconnectTk)}
+  <div class="veil" on:click|self={() => (disconnectTk = null)}
+       transition:fade={{ duration: 150 }} role="presentation">
+    <div class="consent glass gloss" transition:fly={{ y: 12, duration: 220 }}>
+      <div class="consent-marks">
+        <span class="cmark app" class:mono={MONO_LOGOS.has(disconnectTk)}>
+          {#if brandLogo(disconnectTk)}{@html brandLogo(disconnectTk)}
+          {:else}<img class="brandimg" src={logoUrl(disconnectTk)} alt={dm.label} on:error={imgFallback} /><i class="ti {dm.icon}" style="display:none"></i>{/if}
+        </span>
+      </div>
+      <h3>Disconnect {dm.label}?</h3>
+      <p>Emblem will immediately lose access to your {dm.label} account and can no longer read
+         your data or take actions there. Nothing in {dm.label} will be deleted — this only
+         removes Emblem's access. You can reconnect anytime.</p>
+      <div class="consent-btns">
+        <button class="btn ghost" on:click={() => (disconnectTk = null)}>Cancel</button>
+        <button class="btn danger" on:click={proceedDisconnect}>Disconnect</button>
       </div>
     </div>
   </div>
@@ -386,6 +434,7 @@
     transition: color var(--t-fast), background var(--t-fast);
   }
   .iconbtn:hover { color: var(--accent-ink); background: var(--accent-bg); }
+  .iconbtn.danger:hover { color: var(--danger); background: var(--danger-bg); }
   .iconbtn i { font-size: 17px; }
 
   /* ── Available bento grid ── */

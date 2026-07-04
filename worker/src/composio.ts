@@ -91,6 +91,27 @@ export async function connectionStates(env: Env, userId: string):
   } catch { return { active: [], broken: [] }; }
 }
 
+// Disconnect: revoke every connected account this user holds for a toolkit.
+// Scoped to the user's OWN accounts (user_ids filter) so one user can never
+// revoke another's. Returns how many were removed.
+export async function disconnect(env: Env, userId: string, toolkit: string): Promise<number> {
+  const slug = String(toolkit || "").toLowerCase().trim();
+  if (!slug) return 0;
+  let removed = 0;
+  try {
+    const res = await cf(env,
+      `/connected_accounts?user_ids=${encodeURIComponent(userId)}&toolkit_slugs=${slug}&limit=50`) as
+      { items?: Array<{ id?: string; toolkit?: { slug?: string } }> };
+    for (const a of res.items || []) {
+      if (!a.id) continue;
+      if (a.toolkit?.slug && String(a.toolkit.slug).toLowerCase() !== slug) continue;
+      try { await cf(env, `/connected_accounts/${a.id}`, { method: "DELETE" }); removed++; }
+      catch { /* skip one, keep going */ }
+    }
+  } catch { /* nothing to remove */ }
+  return removed;
+}
+
 export async function allToolkits(env: Env): Promise<string[]> {
   if (!toolkitsCache.length) {
     try {
