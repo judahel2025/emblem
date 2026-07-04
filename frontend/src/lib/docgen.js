@@ -87,6 +87,25 @@ async function makeDocx(spec) {
   return { blob, filename: safeName(spec.title, "docx"), mime: MIME.docx };
 }
 
+// pdf-lib's standard fonts are WinAnsi (CP1252) only — models love emitting
+// Unicode punctuation (non-breaking hyphen U+2011, minus, thin spaces, arrows,
+// emoji) that WinAnsi can't encode, which throws. Map the common offenders to
+// safe equivalents, then strip anything still outside CP1252 so it never crashes.
+const CP1252_HIGH = new Set([0x2013,0x2014,0x2018,0x2019,0x201A,0x201C,0x201D,0x201E,
+  0x2020,0x2021,0x2022,0x2026,0x2030,0x2039,0x203A,0x20AC,0x2122,0x0152,0x0153,
+  0x0160,0x0161,0x0178,0x017D,0x017E,0x0192,0x02C6,0x02DC]);
+function pdfSafe(s) {
+  return String(s == null ? "" : s)
+    .replace(/[‐‑‒―−]/g, "-")   // odd hyphens/minus → -
+    .replace(/[      ⁠﻿]/g, " ")  // exotic spaces
+    .replace(/[​‌‍]/g, "")                 // zero-width
+    .replace(/[^\S\r\n]/g, (c) => (c === "\t" ? "    " : " "))  // tabs/nbsp → spaces
+    .split("").map((ch) => {
+      const c = ch.codePointAt(0);
+      return c <= 0xFF || CP1252_HIGH.has(c) ? ch : "";    // keep CP1252, drop the rest
+    }).join("");
+}
+
 // ── PDF ─────────────────────────────────────────────────────────────────────
 async function makePdf(spec) {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
@@ -110,7 +129,7 @@ async function makePdf(spec) {
   };
   const nl = (h) => { if (y - h < M) { page = pdf.addPage([W, H]); y = H - M; } };
   const draw = (text, { f = font, size = 11, gap = 5, color = ink, x = M, indent = 0 } = {}) => {
-    for (const ln of wrap(text, f, size)) { nl(size + gap); page.drawText(ln, { x: x + indent, y: y - size, size, font: f, color }); y -= size + gap; }
+    for (const ln of wrap(pdfSafe(text), f, size)) { nl(size + gap); page.drawText(ln, { x: x + indent, y: y - size, size, font: f, color }); y -= size + gap; }
   };
 
   draw(spec.title || "Document", { f: bold, size: 24, gap: 14 });

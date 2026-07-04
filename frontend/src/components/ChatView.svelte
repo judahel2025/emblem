@@ -50,6 +50,7 @@
   // ── Copy ───────────────────────────────────────────────────────
   let copiedIdx = null;
   let memOpen = null;   // which message's "used memory" list is expanded
+  let docOpen = null;   // which document card's preview is expanded
   async function copy(t, i) {
     try { await navigator.clipboard.writeText(t); } catch {
       const el = document.createElement("textarea");
@@ -192,22 +193,53 @@
           </div>
         {:else if msg.isDoc}
           <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>
-            <div class="doc-card glass gloss">
-              <span class="doc-ic doc-{msg.doc.format}"><i class="ti {DOC_ICON[msg.doc.format] || 'ti-file'}"></i></span>
-              <div class="doc-meta">
-                <span class="doc-title">{msg.doc.filename || msg.doc.title}</span>
-                {#if msg.doc.status === 'generating'}
-                  <span class="doc-sub"><span class="doc-spin"></span> Generating your {msg.doc.format.toUpperCase()}…</span>
-                {:else if msg.doc.status === 'ready'}
-                  <span class="doc-sub">{msg.doc.format.toUpperCase()} · {fmtSize(msg.doc.size)}</span>
-                {:else}
-                  <span class="doc-sub err">{msg.doc.error || 'Failed to generate.'}</span>
+            <div class="doc-wrap">
+              <div class="doc-card glass gloss">
+                <span class="doc-ic doc-{msg.doc.format}"><i class="ti {DOC_ICON[msg.doc.format] || 'ti-file'}"></i></span>
+                <div class="doc-meta">
+                  <span class="doc-title">{msg.doc.filename || msg.doc.title}</span>
+                  {#if msg.doc.status === 'generating'}
+                    <span class="doc-sub"><span class="doc-spin"></span> Generating your {msg.doc.format.toUpperCase()}…</span>
+                  {:else if msg.doc.status === 'ready'}
+                    <span class="doc-sub">{msg.doc.format.toUpperCase()} · {fmtSize(msg.doc.size)}</span>
+                  {:else}
+                    <span class="doc-sub err">{msg.doc.error || 'Failed to generate.'}</span>
+                  {/if}
+                </div>
+                {#if msg.doc.status === 'ready'}
+                  {#if msg.doc.spec}
+                    <button class="doc-prev-btn" on:click={() => docOpen = docOpen === i ? null : i}
+                            title="Preview">
+                      <i class="ti {docOpen === i ? 'ti-eye-off' : 'ti-eye'}"></i>
+                    </button>
+                  {/if}
+                  <a class="doc-dl" href={msg.doc.url} download={msg.doc.filename}>
+                    <i class="ti ti-download"></i> Download
+                  </a>
                 {/if}
               </div>
-              {#if msg.doc.status === 'ready'}
-                <a class="doc-dl" href={msg.doc.url} download={msg.doc.filename}>
-                  <i class="ti ti-download"></i> Download
-                </a>
+              {#if docOpen === i && msg.doc.spec}
+                <div class="doc-preview glass" transition:fly={{ y: -4, duration: 160 }}>
+                  {#if msg.doc.format === 'pptx' && msg.doc.spec.slides}
+                    {#each msg.doc.spec.slides as sl, si}
+                      <div class="pv-slide"><span class="pv-slide-n">{si + 1}</span>
+                        <div><strong>{sl.title || ''}</strong>
+                          <ul>{#each (sl.bullets || []) as b}<li>{b}</li>{/each}</ul>
+                        </div>
+                      </div>
+                    {/each}
+                  {:else if msg.doc.format === 'xlsx' && msg.doc.spec.sheets}
+                    {#each msg.doc.spec.sheets as sh}
+                      <p class="pv-sheet">{sh.name || 'Sheet'}</p>
+                      <div class="pv-tablewrap"><table class="pv-table">
+                        {#if sh.headers}<tr>{#each sh.headers as h}<th>{h}</th>{/each}</tr>{/if}
+                        {#each (sh.rows || []).slice(0, 12) as row}<tr>{#each row as cell}<td>{cell}</td>{/each}</tr>{/each}
+                      </table></div>
+                    {/each}
+                  {:else}
+                    <div class="pv-doc md-body">{@html render(msg.doc.spec.content || '')}</div>
+                  {/if}
+                </div>
               {/if}
             </div>
           </div>
@@ -424,6 +456,31 @@
     box-shadow: 0 2px 10px var(--accent-glow); transition: filter var(--t-fast);
   }
   .doc-dl:hover { filter: brightness(1.08); }
+  .doc-prev-btn {
+    width: 36px; height: 36px; border-radius: var(--r-sm); flex-shrink: 0;
+    display: grid; place-items: center; color: var(--text-2); font-size: 17px;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .doc-prev-btn:hover { color: var(--text); background: var(--s2); }
+
+  .doc-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 460px; width: 100%; }
+  .doc-preview {
+    border-radius: var(--r-md); padding: 16px 18px; max-height: 340px; overflow-y: auto;
+    font-size: 13px; line-height: 1.55;
+  }
+  .doc-preview .pv-doc :global(h1) { font-size: 18px; margin: 0 0 8px; }
+  .doc-preview .pv-doc :global(h2) { font-size: 15px; margin: 12px 0 4px; }
+  .doc-preview .pv-doc :global(p) { margin: 0 0 8px; color: var(--text-2); }
+  .doc-preview .pv-doc :global(ul) { margin: 4px 0; padding-left: 18px; color: var(--text-2); }
+  .pv-slide { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--divider); }
+  .pv-slide:last-child { border-bottom: none; }
+  .pv-slide-n { flex-shrink: 0; width: 22px; height: 22px; border-radius: 5px; background: var(--s2); color: var(--text-3); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+  .pv-slide ul { margin: 4px 0 0; padding-left: 16px; color: var(--text-2); }
+  .pv-sheet { font-size: 12px; font-weight: 600; color: var(--text-3); margin: 8px 0 4px; }
+  .pv-tablewrap { overflow-x: auto; }
+  .pv-table { border-collapse: collapse; font-size: 12px; }
+  .pv-table th, .pv-table td { border: 1px solid var(--border); padding: 4px 9px; text-align: left; color: var(--text-2); }
+  .pv-table th { background: var(--s1); font-weight: 600; color: var(--text); }
 
   .attach-img { max-width: 220px; border-radius: 12px; display: block; margin-bottom: 6px; }
   .attach-label { font-size: 13px; color: var(--text-2); }

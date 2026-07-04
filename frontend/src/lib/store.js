@@ -292,7 +292,7 @@ function runActions(actions) {
 // upload to R2 for the Files list. Shows a live "document card" message in chat.
 export async function generateDocument(doc) {
   const placeholder = { role: "assistant", isDoc: true, doc: {
-    title: doc.title, format: doc.format, status: "generating" } };
+    title: doc.title, format: doc.format, status: "generating", spec: doc } };
   messages.update((m) => [...m, placeholder]);
   const patch = (fields) => messages.update((m) => {
     const idx = [...m].reverse().findIndex((x) => x.isDoc && x.doc?.status === "generating");
