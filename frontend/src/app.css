@@ -16,10 +16,13 @@
   --s3:    #e8e8e8;   /* hover */
   --s4:    #0a0a0a;   /* high-contrast fill */
 
-  /* glass */
-  --surface:    rgba(255, 255, 255, 0.7);
-  --glass-blur: blur(20px);
-  --gloss:      linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%);
+  /* glass — translucent enough to see through, top-lit like real glass */
+  --surface:    rgba(255, 255, 255, 0.58);
+  --glass-blur: blur(24px);
+  --glass-sat:  saturate(1.5);
+  --gloss:      linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0) 42%);
+  --glass-hi:   inset 0 1px 0 rgba(255,255,255,0.85), inset 0 0 0 1px rgba(255,255,255,0.25);
+  --glass-sheen: radial-gradient(120% 80% at 15% -10%, rgba(255,255,255,.5), rgba(255,255,255,0) 55%);
 
   /* ── Borders ────────────────────────────────────────────────── */
   --border:        rgba(0, 0, 0, 0.08);
@@ -99,9 +102,12 @@
   --s3:    #1d1d1d;
   --s4:    #f5f5f5;
 
-  --surface:    rgba(14, 14, 14, 0.72);
-  --glass-blur: blur(20px);
-  --gloss:      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 45%);
+  --surface:    rgba(18, 18, 18, 0.55);
+  --glass-blur: blur(24px);
+  --glass-sat:  saturate(1.4);
+  --gloss:      linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%);
+  --glass-hi:   inset 0 1px 0 rgba(255,255,255,0.1), inset 0 0 0 1px rgba(255,255,255,0.04);
+  --glass-sheen: radial-gradient(120% 80% at 15% -10%, rgba(255,255,255,.08), rgba(255,255,255,0) 55%);
 
   --border:        rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.18);
@@ -169,10 +175,13 @@ a { color: var(--accent-ink); }
 /* ── Glass & gloss utilities ──────────────────────────────────── */
 .glass {
   background: var(--surface);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur) var(--glass-sat);
+  backdrop-filter: var(--glass-blur) var(--glass-sat);
   border: 1px solid var(--border);
+  box-shadow: var(--glass-hi);
 }
+/* gloss adds two stacked light layers: a top-edge sheen (::before) and a soft
+   corner highlight (::after) — the "wet glass" read, not paper. */
 .gloss { position: relative; overflow: hidden; }
 .gloss::before {
   content: "";
@@ -180,7 +189,17 @@ a { color: var(--accent-ink); }
   background: var(--gloss);
   pointer-events: none;
   border-radius: inherit;
+  z-index: 0;
 }
+.gloss::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: var(--glass-sheen);
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+.gloss > * { position: relative; z-index: 1; }
 
 /* ── Badges ───────────────────────────────────────────────────── */
 .badge { font-size: 11px; padding: 2px 10px; border-radius: 99px; font-weight: 500; white-space: nowrap;
@@ -222,15 +241,27 @@ a { color: var(--accent-ink); }
 
 /* ── Cards / tiles ────────────────────────────────────────────── */
 .card {
-  background: var(--bg);
+  background: var(--surface);
+  -webkit-backdrop-filter: var(--glass-blur) var(--glass-sat);
+  backdrop-filter: var(--glass-blur) var(--glass-sat);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 16px 18px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), var(--glass-hi);
   transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
-.card.hoverable:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.tile { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; }
+.card.hoverable:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md), var(--glass-hi);
+  transform: translateY(-1px);
+}
+.tile {
+  background: var(--surface);
+  -webkit-backdrop-filter: var(--glass-blur) var(--glass-sat);
+  backdrop-filter: var(--glass-blur) var(--glass-sat);
+  border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px;
+  box-shadow: var(--glass-hi);
+}
 .tile small { display: block; font-size: 11px; color: var(--text-3); margin-bottom: 5px; }
 .tile b { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
 
@@ -319,6 +350,30 @@ a { color: var(--accent-ink); }
   from { background-position: -400px 0; }
   to   { background-position: 400px 0; }
 }
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* ── Entrance utilities — drop a class on a container/element ──────
+   .reveal-in: single element rises + fades once.
+   .stagger:   its direct children cascade in, up to 14 deep. ── */
+.reveal-in { animation: fade-up 0.5s var(--spring) both; }
+.rise-in   { animation: reveal 0.55s var(--spring) both; }
+.stagger > * { animation: fade-up 0.5s var(--spring) both; }
+.stagger > *:nth-child(1)  { animation-delay: 0.03s; }
+.stagger > *:nth-child(2)  { animation-delay: 0.07s; }
+.stagger > *:nth-child(3)  { animation-delay: 0.11s; }
+.stagger > *:nth-child(4)  { animation-delay: 0.15s; }
+.stagger > *:nth-child(5)  { animation-delay: 0.19s; }
+.stagger > *:nth-child(6)  { animation-delay: 0.23s; }
+.stagger > *:nth-child(7)  { animation-delay: 0.27s; }
+.stagger > *:nth-child(8)  { animation-delay: 0.31s; }
+.stagger > *:nth-child(9)  { animation-delay: 0.35s; }
+.stagger > *:nth-child(10) { animation-delay: 0.39s; }
+.stagger > *:nth-child(11) { animation-delay: 0.43s; }
+.stagger > *:nth-child(12) { animation-delay: 0.47s; }
+.stagger > *:nth-child(n+13) { animation-delay: 0.5s; }
 
 /* ── Reduced motion: kill it all ──────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

@@ -52,15 +52,11 @@
 </script>
 
 <div class="ap-card glass gloss {variant}" class:settled={state !== "idle"}>
-  <div class="ap-top">
-    <div class="ap-disc"><i class="ti ti-shield-check"></i></div>
-    <div class="ap-info">
-      <p class="ap-summary">{approval.summary}</p>
-      {#if state === "idle"}
-        <p class="ap-hint">Nothing happens until you decide.</p>
-      {/if}
-    </div>
+  <!-- Header chip — Claude AskUserQuestion style: a small tag, then the question -->
+  <div class="ap-head">
+    <span class="ap-chip"><i class="ti ti-shield-half-filled"></i> Approval needed</span>
   </div>
+  <p class="ap-summary">{approval.summary}</p>
 
   {#if state === "idle" && details.length}
     <button class="ap-toggle" on:click={() => (showDetails = !showDetails)}>
@@ -80,10 +76,20 @@
   {/if}
 
   {#if state === "idle"}
-    <div class="ap-btns">
-      <button class="ap-approve" on:click={approve}>Approve</button>
-      <button class="ap-decline" on:click={decline}>Decline</button>
+    <!-- Option rows — like the AskUserQuestion answer buttons -->
+    <div class="ap-options">
+      <button class="ap-option approve" on:click={approve}>
+        <span class="ap-opt-key"><i class="ti ti-check"></i></span>
+        <span class="ap-opt-label">Approve</span>
+        <span class="ap-opt-hint">run it now</span>
+      </button>
+      <button class="ap-option decline" on:click={decline}>
+        <span class="ap-opt-key"><i class="ti ti-x"></i></span>
+        <span class="ap-opt-label">Decline</span>
+        <span class="ap-opt-hint">don't run</span>
+      </button>
     </div>
+    <p class="ap-foot">Nothing happens until you choose.</p>
   {:else if state === "running"}
     <div class="ap-status">
       <span class="ap-spin" aria-hidden="true"></span>
@@ -105,41 +111,33 @@
     display: flex; flex-direction: column; gap: 10px;
     transition: opacity var(--t-fast);
   }
-  .ap-card.settled { gap: 6px; }
+  .ap-card.settled { gap: 8px; }
 
   /* ── inline: compact card for the chat approvals bar ─────────── */
-  .ap-card.inline { padding: 13px 16px; width: 100%; }
+  .ap-card.inline { padding: 14px 16px; width: 100%; }
 
   /* ── modal: centered sheet inside a workspace veil ────────────── */
   .ap-card.modal {
     width: min(440px, calc(100vw - 40px));
-    padding: 26px 24px 22px;
-    text-align: center;
+    padding: 22px 22px 18px;
     box-shadow: var(--shadow-lg);
   }
-  .ap-card.modal .ap-top { flex-direction: column; align-items: center; gap: 12px; }
-  .ap-card.modal .ap-info { align-items: center; }
-  .ap-card.modal .ap-btns, .ap-card.modal .ap-status { justify-content: center; }
-  .ap-card.modal .ap-toggle { align-self: center; }
 
-  .ap-top { display: flex; align-items: center; gap: 13px; }
-
-  /* Glow disc — white-hot ball of light, shield in ink */
-  .ap-disc {
-    width: 40px; height: 40px; border-radius: var(--r-pill); flex-shrink: 0;
-    background: radial-gradient(circle at 35% 30%, var(--accent), var(--accent-2));
-    color: var(--accent-t);
-    box-shadow: 0 0 18px var(--accent-glow), 0 1px 3px var(--glow-rim);
-    display: grid; place-items: center; font-size: 20px;
+  /* Header chip — the small tag above the question (AskUserQuestion style) */
+  .ap-head { display: flex; align-items: center; }
+  .ap-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: var(--r-pill);
+    background: var(--accent-bg); border: 1px solid var(--border);
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em;
+    color: var(--text-2);
   }
-  .ap-card.modal .ap-disc { width: 48px; height: 48px; font-size: 24px; }
+  .ap-chip i { font-size: 13px; }
 
-  .ap-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .ap-summary {
-    margin: 0; font-size: 14.5px; font-weight: 600; line-height: 1.4;
+    margin: 0; font-size: 15px; font-weight: 600; line-height: 1.45;
     color: var(--text); overflow-wrap: break-word;
   }
-  .ap-hint { margin: 0; font-size: 12px; color: var(--text-3); }
 
   .ap-toggle {
     align-self: flex-start;
@@ -170,23 +168,36 @@
     overflow-wrap: anywhere;
   }
 
-  .ap-btns { display: flex; gap: 8px; }
-  .ap-approve {
-    padding: 8px 20px; border-radius: var(--r-sm);
+  /* Option rows — selectable answer buttons, like Claude's question card */
+  .ap-options { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
+  .ap-option {
+    display: flex; align-items: center; gap: 11px; text-align: left;
+    padding: 11px 13px; border-radius: var(--r-md);
+    background: var(--s1); border: 1px solid var(--border);
+    transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+  }
+  .ap-option:hover { transform: translateY(-1px); }
+  .ap-opt-key {
+    width: 24px; height: 24px; border-radius: var(--r-sm); flex-shrink: 0;
+    display: grid; place-items: center; font-size: 14px;
+    background: var(--s3); color: var(--text-2);
+    transition: background var(--t-fast), color var(--t-fast);
+  }
+  .ap-opt-label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ap-opt-hint { margin-left: auto; font-size: 12px; color: var(--text-3); }
+
+  .ap-option.approve:hover {
+    border-color: var(--accent); background: var(--accent-bg);
+  }
+  .ap-option.approve:hover .ap-opt-key {
     background: var(--accent-grad); color: var(--accent-t);
-    font-size: 13px; font-weight: 600;
-    box-shadow: 0 2px 10px var(--accent-glow);
-    transition: filter var(--t-fast), box-shadow var(--t-fast);
+    box-shadow: 0 0 12px var(--accent-glow);
   }
-  .ap-approve:hover { filter: brightness(1.07); box-shadow: 0 2px 14px var(--accent-glow); }
-  .ap-decline {
-    padding: 8px 18px; border-radius: var(--r-sm);
-    background: transparent; color: var(--text-2);
-    border: 1px solid var(--border-strong);
-    font-size: 13px; font-weight: 500;
-    transition: color var(--t-fast), border-color var(--t-fast);
-  }
-  .ap-decline:hover { color: var(--danger); border-color: var(--danger); }
+  .ap-option.decline:hover { border-color: var(--danger); }
+  .ap-option.decline:hover .ap-opt-key,
+  .ap-option.decline:hover .ap-opt-label { color: var(--danger); }
+
+  .ap-foot { margin: 2px 0 0; font-size: 11.5px; color: var(--text-3); }
 
   .ap-status {
     display: flex; align-items: center; gap: 8px;

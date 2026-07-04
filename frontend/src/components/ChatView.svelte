@@ -2,8 +2,8 @@
   import { tick } from "svelte";
   import { fly } from "svelte/transition";
   import { marked } from "marked";
-  import { messages, thinking, approvals, decideAndContinue, sendCommand, sendAttachment,
-           notify, me, showVoiceOverlay } from "../lib/store.js";
+  import { messages, thinking, writing, generating, approvals, decideAndContinue, sendCommand,
+           sendAttachment, stopGeneration, notify, me, showVoiceOverlay } from "../lib/store.js";
   import { api } from "../lib/api.js";
   import Composer from "./Composer.svelte";
   import ApprovalCard from "./ApprovalCard.svelte";
@@ -32,7 +32,7 @@
 
   // ── Auto-scroll ────────────────────────────────────────────────
   let threadEl;
-  $: if ($messages.length || $thinking) scrollBottom();
+  $: if ($messages.length || $thinking || $writing) scrollBottom();
   async function scrollBottom() {
     await tick();
     if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
@@ -150,7 +150,8 @@
           <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class="md-body" on:click={() => copy(msg.text, i)}>{@html render(msg.text)}
+            <div class="md-body" class:writing={$writing && i === $messages.length - 1}
+                 on:click={() => copy(msg.text, i)}>{@html render(msg.text)}
               {#if copiedIdx === i}<span class="copied-badge">Copied</span>{/if}
             </div>
           </div>
@@ -158,8 +159,10 @@
       {/each}
 
       {#if $thinking}
-        <div class="row assistant thinking-row">
-          <Orb size={18} state="thinking" />
+        <div class="row assistant thinking-row" in:fly={{ y: 6, duration: 200 }}>
+          <div class="dots" aria-label="Emblem is thinking">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       {/if}
     {/if}
@@ -185,11 +188,12 @@
   <div class="input-area">
     <Composer
       bind:this={composer}
-      disabled={$thinking}
+      generating={$generating}
       {uploading}
       on:submit={submit}
       on:attach={handleFile}
       on:mic={() => showVoiceOverlay.set(true)}
+      on:stop={stopGeneration}
     />
     <p class="footnote">Emblem can act in your connected apps — consequential actions always ask first.</p>
   </div>
@@ -244,6 +248,23 @@
   .row.user { justify-content: flex-end; }
   .row.assistant { justify-content: flex-start; }
   .thinking-row { padding: 14px 0; }
+
+  /* Three-dot thinking indicator (replaces the orb) */
+  .dots { display: inline-flex; gap: 5px; align-items: center; height: 20px; padding-left: 2px; }
+  .dots span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--text-3);
+    animation: dot-bounce 1.2s ease-in-out infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.15s; }
+  .dots span:nth-child(3) { animation-delay: 0.3s; }
+
+  /* Blinking caret trailing the message being typed */
+  .md-body.writing :global(> :last-child)::after {
+    content: "▍"; display: inline-block; margin-left: 1px;
+    color: var(--text-2); font-weight: 400;
+    animation: caret-blink 1s step-end infinite;
+  }
+  @keyframes caret-blink { 50% { opacity: 0; } }
 
   .user-pill {
     background: var(--s2); color: var(--text);

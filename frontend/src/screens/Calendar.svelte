@@ -82,7 +82,7 @@
 
 <div class="page" data-tour="calendar-root">
   <!-- Header: month as the display title, segmented pill nav on the right -->
-  <header class="head">
+  <header class="head reveal-in">
     <div>
       <h1>{monthLabel}</h1>
       <p class="sub">Your schedule, at a glance. Emblem can add events for you from chat.</p>

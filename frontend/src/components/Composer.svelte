@@ -3,7 +3,8 @@
   // Pure input component — the parent owns submit/attach/mic behavior.
   import { createEventDispatcher } from "svelte";
 
-  export let disabled = false;
+  export let disabled = false;      // block typing/submit (e.g. legacy callers)
+  export let generating = false;    // model is thinking or writing → Send becomes Stop
   export let uploading = false;
   export let placeholder = "Ask anything";
 
@@ -20,7 +21,7 @@
 
   function submit() {
     const v = text.trim();
-    if (!v || disabled) return;
+    if (!v || disabled || generating) return;
     text = "";
     autogrow();
     dispatch("submit", v);
@@ -56,7 +57,7 @@
     {placeholder}
     rows="1"
     aria-label="Message Emblem"
-    {disabled}
+    disabled={disabled && !generating}
   ></textarea>
 
   <button class="icon-btn" on:click={() => dispatch("mic")}
@@ -64,10 +65,17 @@
     <i class="ti ti-microphone"></i>
   </button>
 
-  <button class="send" on:click={submit} disabled={!text.trim() || disabled}
-          aria-label="Send message" title="Send">
-    {#if disabled}<span class="spin-sm on-accent"></span>{:else}<i class="ti ti-arrow-up"></i>{/if}
-  </button>
+  {#if generating}
+    <button class="send stop" on:click={() => dispatch("stop")}
+            aria-label="Stop generating" title="Stop">
+      <span class="stop-glyph" aria-hidden="true"></span>
+    </button>
+  {:else}
+    <button class="send" on:click={submit} disabled={!text.trim() || disabled}
+            aria-label="Send message" title="Send">
+      <i class="ti ti-arrow-up"></i>
+    </button>
+  {/if}
 </div>
 
 <style>
@@ -113,6 +121,17 @@
   }
   .send:hover:not(:disabled) { filter: brightness(1.08); }
   .send:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+
+  /* Stop: same disc, a crisp square glyph, subtle breathing halo */
+  .send.stop { animation: stop-halo 1.6s ease-in-out infinite; }
+  .stop-glyph {
+    width: 11px; height: 11px; border-radius: 2px;
+    background: var(--accent-t); display: block;
+  }
+  @keyframes stop-halo {
+    0%, 100% { box-shadow: 0 2px 10px var(--accent-glow); }
+    50%      { box-shadow: 0 2px 18px var(--accent-glow); }
+  }
 
   .spin-sm {
     width: 13px; height: 13px; border-radius: 50%;

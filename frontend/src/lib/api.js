@@ -27,9 +27,11 @@ function authHeaders() {
 }
 
 async function req(path, options = {}) {
+  const { signal, ...rest } = options;
   const res = await fetch(API_BASE + path, {
     headers: { "Content-Type": "application/json", ...authHeaders() },
-    ...options,
+    ...rest,
+    ...(signal ? { signal } : {}),
   });
   if (res.status === 401) {
     // Session expired/invalid — let the shell sign out cleanly.
@@ -84,7 +86,8 @@ export const api = {
   lockVerify: (password) => post("/api/lock/verify", { password }),
   lockSet: (password, current = "") => post("/api/lock/set", { password, current }),
   lockDisable: (password) => post("/api/lock/disable", { password }),
-  agent: (command, context = {}) => post("/api/agent", { command, context }),
+  agent: (command, context = {}, signal = null) =>
+    req("/api/agent", { method: "POST", body: JSON.stringify({ command, context }), signal }),
   brain: () => get("/api/brain"),
   setBrain: (cfg) => post("/api/brain", cfg),
   notes: () => get("/api/notes"),

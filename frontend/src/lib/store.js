@@ -65,7 +65,10 @@ export async function deleteThread(id) {
 
 // --- conversation / voice ------------------------------------------------------
 export const messages = writable([]);
-export const thinking = writable(false);
+export const thinking = writable(false);        // waiting on the model (three-dot indicator)
+export const writing = writable(false);         // typewriter reveal in progress
+// One flag the composer keys off: while either is true, Send becomes Stop.
+export const generating = derived([thinking, writing], ([$t, $w]) => $t || $w);
 export const voiceState = writable("idle");     // idle | listening | thinking | speaking
 export const voiceLive = writable(false);       // mic stays on until toggled off
 export const model = writable("llama3.2:3b");
@@ -242,6 +245,12 @@ function runActions(actions) {
       else goTo(a.mode || "converse", a.tab); // legacy mode navigation
     } else if (a.type === "open_url") {
       if (a.url) window.open(a.url, "_blank", "noopener");
+    } else if (a.type === "connect.pending") {
+      // Emblem handed the user a connect link in-chat. Open it, then watch the
+      // connections list; the moment the toolkit turns ACTIVE, feed an internal
+      // continuation back to the agent so it confirms + resumes — no user retype.
+      if (a.url) window.open(a.url, "_blank", "noopener,width=600,height=760");
+      if (a.toolkit) watchConnection(a.toolkit);
     } else if (a.type === "approval.pending") {
       notify(a.summary ? `Waiting for your approval: ${a.summary}` : "An action is waiting for your approval", "caution");
       refresh();
@@ -282,10 +291,127 @@ export async function clearConversations() {
 // Holds a clarifying-question task between turns (task continuation).
 let pendingTask = null;
 
+// --- generation control: abort the fetch, or halt the typewriter -----------------
+let _abort = null;         // AbortController for the in-flight agent fetch
+let _revealTimer = null;   // rAF id for the typewriter
+let _revealCancel = null;  // halts the current reveal, keeping the partial text
+
+// Reveal an assistant reply with a fast-but-visible typewriter. Pushes an empty
+// assistant bubble, grows its text in place, and resolves with the text actually
+// shown — the FULL reply normally, or the PARTIAL if the user hit Stop mid-reveal.
+function revealAssistant(fullText) {
+  return new Promise((resolve) => {
+    messages.update((m) => [...m, { role: "assistant", text: "" }]);
+    if (!fullText) { resolve(""); return; }
+    writing.set(true);
+    let shown = 0, cancelled = false;
+    const perTick = Math.max(4, Math.ceil(fullText.length / 90));   // ~1.5s cap, always visible
+    const paint = (n) => messages.update((m) => {
+      const i = m.length - 1;
+      if (i >= 0 && m[i].role === "assistant") m[i] = { ...m[i], text: fullText.slice(0, n) };
+      return m;
+    });
+    const finish = (text) => {
+      cancelled = true;
+      if (_revealTimer) { cancelAnimationFrame(_revealTimer); _revealTimer = null; }
+      _revealCancel = null;
+      writing.set(false);
+      resolve(text);
+    };
+    _revealCancel = () => finish(fullText.slice(0, shown));   // freeze at the partial
+    const step = () => {
+      if (cancelled) return;
+      shown = Math.min(fullText.length, shown + perTick);
+      paint(shown);
+      if (shown >= fullText.length) return finish(fullText);
+      _revealTimer = requestAnimationFrame(step);
+    };
+    _revealTimer = requestAnimationFrame(step);
+  });
+}
+
+// The Stop button. Aborts a pending fetch (nothing shown yet) AND/OR freezes an
+// in-progress reveal, keeping whatever text is on screen.
+export function stopGeneration() {
+  if (_abort) { try { _abort.abort(); } catch {} _abort = null; }
+  if (_revealCancel) _revealCancel();
+  thinking.set(false);
+  voiceState.set("idle");
+}
+
+// Post an internal continuation to the agent — a system note that is NOT shown as
+// a user bubble and NOT persisted as a user message; only the assistant reply is
+// pushed + saved. Shared by decideAndContinue (approvals) and watchConnection.
+export async function continueTask(command) {
+  const prior = get(messages);
+  const lastReply = [...prior].reverse().find((m) => m.role === "assistant")?.text || "";
+  const history = prior.slice(-12).map((m) => ({ role: m.role, content: m.text }));
+  const tid = get(activeThread);
+
+  _abort = new AbortController();
+  thinking.set(true);
+  voiceState.set("thinking");
+  let ar;
+  try {
+    ar = await api.agent(command, { model: get(model), lastReply, history, pending: pendingTask }, _abort.signal);
+  } catch (e) {
+    _abort = null;
+    if (e?.name === "AbortError") { thinking.set(false); voiceState.set("idle"); return { reply: "", actions: [] }; }
+    ar = { reply: String(e), actions: [] };
+  }
+  _abort = null;
+  pendingTask = ar.pending || null;
+  thinking.set(false);
+  const shown = await revealAssistant(ar.reply || "(no reply)");
+  api.conversationAdd("assistant", shown, tid).catch((e) => console.error("save msg:", e));
+  voiceState.set("idle");
+  runActions(ar.actions);
+  refresh();
+  return ar;
+}
+
+// Watch a just-started connection: poll the live connections list (same pattern as
+// the Connectors screen — interval + window focus), and when the toolkit turns
+// ACTIVE, tell the agent so it confirms and picks the task back up seamlessly.
+const _watching = new Map();   // toolkit -> { timer, startedAt }
+export function watchConnection(toolkit) {
+  const tk = String(toolkit || "").toLowerCase();
+  if (!tk || _watching.has(tk)) return;
+  const POLL_MS = 3000, TIMEOUT_MS = 3 * 60 * 1000;
+  const startedAt = Date.now();
+
+  const check = async () => {
+    let live = [];
+    try { live = (await api.connections()).connected || []; }
+    catch { return; }                       // transient — next tick retries
+    if (live.includes(tk)) {
+      stop();
+      connectedApps.set(live);
+      loadConnections();
+      const label = tk.charAt(0).toUpperCase() + tk.slice(1);
+      notify(`${label} connected`, "safe");
+      if (!get(thinking)) {
+        continueTask(`[system note — not typed by the user] They just finished connecting ${tk}. ` +
+          `It is now active. Confirm you detect the connection in one short sentence, then continue ` +
+          `the task you were doing without asking them to repeat anything.`);
+      }
+    } else if (Date.now() - startedAt > TIMEOUT_MS) {
+      stop();
+    }
+  };
+  const stop = () => {
+    const w = _watching.get(tk);
+    if (w) { clearInterval(w.timer); window.removeEventListener("focus", check); _watching.delete(tk); }
+  };
+  const timer = setInterval(check, POLL_MS);
+  window.addEventListener("focus", check);
+  _watching.set(tk, { timer, startedAt });
+}
+
 // Spoken or typed command — routed through the agent brain (intent -> action).
 export async function sendCommand(text) {
   const clean = (text || "").trim();
-  if (!clean || get(thinking)) return;
+  if (!clean || get(thinking) || get(writing)) return;
   stopSpeaking();
 
   // First message of a fresh chat creates its thread. It shows the raw message
@@ -308,15 +434,24 @@ export async function sendCommand(text) {
   const history = prior.slice(-12).map((m) => ({ role: m.role, content: m.text }));
   messages.update((m) => [...m, { role: "user", text: clean }]);
   api.conversationAdd("user", clean, tid).catch((e) => console.error("save msg:", e));
+
+  _abort = new AbortController();
   thinking.set(true);
   voiceState.set("thinking");
-  const r = await api.agent(clean, { model: get(model), lastReply, history, pending: pendingTask })
-    .catch((e) => ({ reply: String(e), actions: [] }));
+  let r;
+  try {
+    r = await api.agent(clean, { model: get(model), lastReply, history, pending: pendingTask }, _abort.signal);
+  } catch (e) {
+    _abort = null;
+    // User hit Stop before the reply arrived — leave the chat as-is, no bubble.
+    if (e?.name === "AbortError") { thinking.set(false); voiceState.set("idle"); return { reply: "", actions: [] }; }
+    r = { reply: String(e), actions: [] };
+  }
+  _abort = null;
   pendingTask = r.pending || null;
-  const replyText = r.reply || "(no reply)";
-  messages.update((m) => [...m, { role: "assistant", text: replyText }]);
-  api.conversationAdd("assistant", replyText, tid).catch((e) => console.error("save msg:", e));
   thinking.set(false);
+  const shown = await revealAssistant(r.reply || "(no reply)");
+  api.conversationAdd("assistant", shown, tid).catch((e) => console.error("save msg:", e));
   voiceState.set("idle");
   runActions(r.actions);
   refresh();
@@ -328,7 +463,7 @@ export async function sendCommand(text) {
 //  2. Emblem acknowledges immediately ("Got it, reading…")
 //  3. Agent receives the extracted content and replies with a short summary + intention question
 export async function sendAttachment(fileName, fileType, extractedContent, imagePreview = null) {
-  if (get(thinking)) return;
+  if (get(thinking) || get(writing)) return;
   stopSpeaking();
 
   const isImage = (fileType || "").startsWith("image/");
@@ -433,26 +568,10 @@ export async function decideAndContinue(id, approved, summary = "") {
       ? `[system note — not typed by the user] They approved the pending action "${summary}". Result: ${JSON.stringify(r.result ?? null).slice(0, 1500)}. Confirm the outcome to the user in one short sentence (mention any id/link), and continue the task if anything was left unfinished.`
       : `[system note — not typed by the user] They declined the action "${summary}". Acknowledge briefly and offer an alternative if there is one.`;
 
-    const prior = get(messages);
-    const lastReply = [...prior].reverse().find((m) => m.role === "assistant")?.text || "";
-    const history = prior.slice(-12).map((m) => ({ role: m.role, content: m.text }));
-
-    thinking.set(true);
-    voiceState.set("thinking");
-    const ar = await api.agent(command, { model: get(model), lastReply, history, pending: pendingTask })
-      .catch((e) => ({ reply: String(e), actions: [] }));
-    pendingTask = ar.pending || null;
-    const replyText = ar.reply || "(no reply)";
-    messages.update((m) => [...m, { role: "assistant", text: replyText }]);
-    api.conversationAdd("assistant", replyText, tid).catch((e) => console.error("save msg:", e));
-    thinking.set(false);
-    voiceState.set("idle");
-
-    // Loop guard: if this continuation itself queued a NEW approval, runActions
-    // just notifies + refreshes so the new card renders — we never auto-decide,
-    // so there is no way to recurse. decideAndContinue only runs on user click.
-    runActions(ar.actions);
-    refresh();
+    // Loop guard: if this continuation itself queues a NEW approval, continueTask's
+    // runActions just notifies + refreshes so the new card renders — we never
+    // auto-decide, so there is no recursion. decideAndContinue only runs on click.
+    await continueTask(command);
     return r;
   } finally {
     _deciding.delete(id);

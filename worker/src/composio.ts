@@ -3,7 +3,7 @@
 // tools → execute. Reads run free; actions pass the kernel DANGER gate.
 
 import type { Env } from "./env";
-import { registerTool } from "./kernel";
+import { registerTool, getConfig, setConfig } from "./kernel";
 
 const BASE = "https://backend.composio.dev/api/v3";
 
@@ -69,6 +69,26 @@ export async function listConnections(env: Env, userId: string): Promise<string[
       .filter((a) => a.status === "ACTIVE" && a.toolkit?.slug)
       .map((a) => String(a.toolkit!.slug).toLowerCase()))].sort();
   } catch { return []; }
+}
+
+// Active + broken (expired/failed) connections in one pass — the agent needs both:
+// active ones it can use, broken ones it should offer to reconnect instead of
+// treating as "not connected".
+export async function connectionStates(env: Env, userId: string):
+    Promise<{ active: string[]; broken: string[] }> {
+  try {
+    const res = await cf(env, `/connected_accounts?user_ids=${encodeURIComponent(userId)}&limit=100`) as
+      { items?: Array<{ status?: string; toolkit?: { slug?: string } }> };
+    const active = new Set<string>(), seen = new Set<string>();
+    for (const a of res.items || []) {
+      const slug = a.toolkit?.slug ? String(a.toolkit.slug).toLowerCase() : "";
+      if (!slug) continue;
+      seen.add(slug);
+      if (a.status === "ACTIVE") active.add(slug);
+    }
+    return { active: [...active].sort(),
+             broken: [...seen].filter((s) => !active.has(s)).sort() };
+  } catch { return { active: [], broken: [] }; }
 }
 
 export async function allToolkits(env: Env): Promise<string[]> {
@@ -143,11 +163,122 @@ export async function userTools(env: Env, userId: string): Promise<OpenAITool[]>
   return out;
 }
 
+// ---- LinkedIn override --------------------------------------------------------
+// Composio's hosted LinkedIn tool pins a sunset LinkedIn-Version header (20241101),
+// so LinkedIn answers 426 NONEXISTENT_VERSION on every post. Until they fix it we
+// run LinkedIn calls ourselves through Composio's authenticated proxy with a live
+// version header. The first version LinkedIn accepts is cached in kernel_config,
+// so the candidate walk happens at most once per LinkedIn sunset cycle.
+
+const LI_VERSION_KEY = "linkedin_api_version";
+const LI_VERSIONS = ["202506", "202505", "202504", "202503", "202502", "202501", "202412"];
+const LINKEDIN_OVERRIDES = new Set([
+  "LINKEDIN_CREATE_LINKED_IN_POST", "LINKEDIN_DELETE_LINKED_IN_POST", "LINKEDIN_GET_MY_INFO",
+]);
+
+async function activeAccountId(env: Env, userId: string, toolkit: string): Promise<string | null> {
+  try {
+    const res = await cf(env,
+      `/connected_accounts?user_ids=${encodeURIComponent(userId)}&toolkit_slugs=${toolkit}&limit=20`) as
+      { items?: Array<{ id?: string; status?: string }> };
+    return (res.items || []).find((a) => a.status === "ACTIVE")?.id || null;
+  } catch { return null; }
+}
+
+interface ProxyResult { data?: unknown; status?: number; headers?: Record<string, string> }
+
+async function proxyCall(env: Env, accountId: string, method: string, endpoint: string,
+                         body?: unknown, headers?: Record<string, string>): Promise<ProxyResult> {
+  const parameters = Object.entries(headers || {})
+    .map(([name, value]) => ({ name, value, type: "header" }));
+  return await cf(env, "/tools/execute/proxy", {
+    method: "POST",
+    body: JSON.stringify({ connected_account_id: accountId, endpoint, method,
+                           ...(body !== undefined ? { body } : {}), parameters }),
+  }) as ProxyResult;
+}
+
+async function executeLinkedIn(env: Env, userId: string, slug: string,
+                               args: Record<string, unknown>): Promise<unknown> {
+  const accountId = await activeAccountId(env, userId, "linkedin");
+  if (!accountId) {
+    throw new Error("Your LinkedIn connection is missing or has expired — reconnect LinkedIn and I'll pick this right back up.");
+  }
+
+  if (slug === "LINKEDIN_GET_MY_INFO") {
+    const r = await proxyCall(env, accountId, "GET", "https://api.linkedin.com/v2/userinfo");
+    const d = (r.data || {}) as Record<string, unknown>;
+    return { ...d, author_id: d.sub ? `urn:li:person:${d.sub}` : undefined };
+  }
+
+  let req: { method: string; endpoint: string; body?: unknown };
+  if (slug === "LINKEDIN_DELETE_LINKED_IN_POST") {
+    const urn = String(args.share_urn || args.post_urn || args.urn || args.id || "");
+    if (!urn) throw new Error("Which post should I delete? I need its URN (e.g. urn:li:share:…).");
+    req = { method: "DELETE",
+            endpoint: `https://api.linkedin.com/rest/posts/${encodeURIComponent(urn)}` };
+  } else {
+    const commentary = String(args.commentary ?? args.text ?? args.content ?? "");
+    if (!commentary.trim()) throw new Error("The post needs text (commentary).");
+    let author = String(args.author || "");
+    if (!author) {
+      const me = await proxyCall(env, accountId, "GET", "https://api.linkedin.com/v2/userinfo");
+      const sub = ((me.data || {}) as { sub?: string }).sub;
+      if (!sub) throw new Error("Couldn't read your LinkedIn profile to determine the post author.");
+      author = `urn:li:person:${sub}`;
+    }
+    req = { method: "POST", endpoint: "https://api.linkedin.com/rest/posts",
+            body: { author, commentary,
+                    visibility: String(args.visibility || "PUBLIC"),
+                    distribution: { feedDistribution: "MAIN_FEED", targetEntities: [],
+                                    thirdPartyDistributionChannels: [] },
+                    lifecycleState: String(args.lifecycle_state || "PUBLISHED"),
+                    isReshareDisabledByAuthor: Boolean(args.is_reshare_disabled_by_author ?? false) } };
+  }
+
+  const cached = await getConfig(env, LI_VERSION_KEY, "").catch(() => "");
+  const candidates = [...new Set([cached, ...LI_VERSIONS].filter(Boolean))];
+  let lastErr = "";
+  for (const v of candidates) {
+    let r: ProxyResult;
+    try {
+      r = await proxyCall(env, accountId, req.method, req.endpoint, req.body, {
+        "LinkedIn-Version": v, "X-Restli-Protocol-Version": "2.0.0",
+        "Content-Type": "application/json",
+      });
+    } catch (e) { lastErr = e instanceof Error ? e.message : String(e); continue; }
+    const status = Number(r.status ?? 0);
+    if (status === 426) { lastErr = `LinkedIn API version ${v} is no longer active.`; continue; }
+    if (status >= 200 && status < 300) {
+      if (v !== cached) await setConfig(env, LI_VERSION_KEY, v).catch(() => {});
+      const d = (r.data || {}) as Record<string, unknown>;
+      const urn = r.headers?.["x-restli-id"] || r.headers?.["X-Restli-Id"] || d.id || "";
+      return { successful: true, post_urn: urn || undefined, data: d };
+    }
+    throw new Error(`LinkedIn returned ${status}: ${JSON.stringify(r.data ?? {}).slice(0, 300)}`);
+  }
+  throw new Error(lastErr || "LinkedIn rejected every API version tried.");
+}
+
 export async function executeComposio(env: Env, userId: string, slug: string,
                                        args: Record<string, unknown>): Promise<unknown> {
-  const res = await cf(env, `/tools/execute/${slug}`, {
-    method: "POST", body: JSON.stringify({ user_id: userId, arguments: args || {} }),
-  }) as { successful?: boolean; error?: string; data?: unknown };
+  const upper = slug.toUpperCase();
+  if (LINKEDIN_OVERRIDES.has(upper)) return executeLinkedIn(env, userId, upper, args || {});
+  let res: { successful?: boolean; error?: string; data?: unknown };
+  try {
+    res = await cf(env, `/tools/execute/${slug}`, {
+      method: "POST", body: JSON.stringify({ user_id: userId, arguments: args || {} }),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // A dead connection must read as "reconnect me", never as a raw 4xx.
+    if (/not in an ACTIVE state|No connected account found/i.test(msg)) {
+      const tk = upper.split("_")[0].toLowerCase();
+      const label = TOOLKIT_LABELS[tk] || tk;
+      throw new Error(`Your ${label} connection is missing or has expired — reconnect it and I'll pick this right back up.`);
+    }
+    throw e;
+  }
   if (res.successful === false) throw new Error(res.error || "The connected app returned an error.");
   return res.data ?? res;
 }

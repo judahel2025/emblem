@@ -21,7 +21,7 @@
 
 <div class="page" data-tour="automations-root">
   <!-- Page header: display title left, live-status glass chip right -->
-  <header class="head">
+  <header class="head reveal-in">
     <div>
       <h1>Automations</h1>
       <p class="sub">Set something once and Emblem runs it on its own — quietly, on schedule.</p>

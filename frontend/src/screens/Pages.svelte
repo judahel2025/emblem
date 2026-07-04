@@ -166,7 +166,7 @@
       </div>
     </div>
   {:else}
-    <header class="head">
+    <header class="head reveal-in">
       <div>
         <h1>Pages</h1>
         <p class="sub">Notes and documents Emblem can read, write, and keep for you.</p>
@@ -218,15 +218,17 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
   .pcard {
     position: relative; overflow: hidden;
-    background: var(--bg);
+    background: var(--surface);
+    -webkit-backdrop-filter: var(--glass-blur) var(--glass-sat);
+    backdrop-filter: var(--glass-blur) var(--glass-sat);
     border: 1px solid var(--border);
     border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-sm), var(--glass-hi);
     transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
   }
   .pcard:hover {
     border-color: var(--border-strong);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md), var(--glass-hi);
     transform: translateY(-1px);
   }
   .cbar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
