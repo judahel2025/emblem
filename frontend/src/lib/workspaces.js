@@ -33,27 +33,38 @@ export const hasWorkspace = (slug) => Boolean(WORKSPACES[slug]);
  * with { approval_id, summary, resume() } so the workspace can show its card.
  * resume() approves and returns the executed result (or throws on decline/error).
  */
-export async function runConnected(slug, params, { act = false, onApproval } = {}) {
+export async function runConnected(slug, params, { act = false, onApproval, retries } = {}) {
   const gate = act ? "composio.act" : "composio.read";
-  const r = await api.execute(gate, { slug, params });
-  if (r.ok) return r.result;
-  if (r.approval_required) {
-    if (!onApproval) throw new Error("This needs your approval in chat.");
-    return new Promise((resolve, reject) => {
-      onApproval({
-        approval_id: r.approval_id,
-        summary: r.summary,
-        approve: async () => {
-          const d = await api.decide(r.approval_id, true);
-          if (d.ok) resolve(d.result);
-          else reject(new Error(d.error || "The action failed."));
-        },
-        decline: async () => {
-          await api.decide(r.approval_id, false).catch(() => {});
-          reject(new Error("Declined."));
-        },
+  // Reads auto-retry on transient/cold-connection failures (the "unable to fetch"
+  // flash when a workspace first opens) — 3 attempts with backoff. Actions NEVER
+  // auto-retry: re-firing a send/post could double-act, so they run exactly once.
+  const attempts = act ? 1 : (Number.isInteger(retries) ? retries + 1 : 3);
+  let lastErr = "The connected app returned an error.";
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if (attempt) await new Promise((res) => setTimeout(res, 500 * attempt));
+    let r;
+    try { r = await api.execute(gate, { slug, params }); }
+    catch (e) { lastErr = e?.message || lastErr; continue; }   // network blip → retry
+    if (r.ok) return r.result;
+    if (r.approval_required) {
+      if (!onApproval) throw new Error("This needs your approval in chat.");
+      return new Promise((resolve, reject) => {
+        onApproval({
+          approval_id: r.approval_id,
+          summary: r.summary,
+          approve: async () => {
+            const d = await api.decide(r.approval_id, true);
+            if (d.ok) resolve(d.result);
+            else reject(new Error(d.error || "The action failed."));
+          },
+          decline: async () => {
+            await api.decide(r.approval_id, false).catch(() => {});
+            reject(new Error("Declined."));
+          },
+        });
       });
-    });
+    }
+    lastErr = r.error || lastErr;   // app-level error → retry (reads only)
   }
-  throw new Error(r.error || "The connected app returned an error.");
+  throw new Error(lastErr);
 }
