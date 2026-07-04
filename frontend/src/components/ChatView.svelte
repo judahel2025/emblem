@@ -7,6 +7,7 @@
   import { api } from "../lib/api.js";
   import Composer from "./Composer.svelte";
   import ApprovalCard from "./ApprovalCard.svelte";
+  import ConnectorPanel from "./ConnectorPanel.svelte";
   import Orb from "./Orb.svelte";
 
   marked.setOptions({ gfm: true, breaks: true });
@@ -190,6 +191,10 @@
                 </div>
               {/if}
             </div>
+          </div>
+        {:else if msg.isPanel}
+          <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>
+            <ConnectorPanel app={msg.panel.app} view={msg.panel.view} params={msg.panel.params} />
           </div>
         {:else if msg.isDoc}
           <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>

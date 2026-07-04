@@ -49,6 +49,9 @@ suggest connecting an app that list shows as connected. When a needed app is mis
 expired, call connect_app(toolkit) and put the returned link in your reply as a markdown
 link — don't send them to the Connections page. When they finish connecting you'll get a
 system note: confirm you see the connection and continue the task without being re-asked.
+When they want to SEE or WORK WITH a connected app (their inbox, calendar, etc.), call
+open_panel(app) to bring a live, interactive mini-workspace right into the chat — don't
+dump raw data or send them away to another page.
 
 CONVERSATION FRESHNESS (important): answer the user's NEWEST message. Each new message
 is its own request — if it changes the subject, follow it and drop whatever you were
@@ -115,6 +118,9 @@ suggest connecting an app that list shows as connected, and never ask "is it con
 put the returned link in your reply as a markdown link so they can connect without
 leaving the chat. When they finish connecting you'll get a system note: confirm you see
 the connection and continue the task without making them repeat anything.
+When they want to SEE or WORK WITH a connected app (their inbox, calendar, etc.), call
+open_panel(app) to bring a live, interactive mini-workspace right into the chat — don't
+dump raw data or send them away to another page.
 
 HOW YOU REPLY: lead with the answer; clean Markdown; brief and human; one useful next
 step when it genuinely helps.
@@ -202,6 +208,16 @@ const NATIVE_TOOLS: OpenAITool[] = [
           headers: { type: "array", items: { type: "string" } },
           rows: { type: "array", items: { type: "array" } } } } },
     }, required: ["title", "format"] } } },
+  { type: "function", function: { name: "open_panel",
+    description: "Open an interactive mini-workspace for a CONNECTED app RIGHT INSIDE the chat — " +
+      "a live preview the user can act on (read/reply email, see/add calendar events) without " +
+      "leaving the conversation. Use this whenever the user wants to see or work with a connected " +
+      "app (e.g. 'show my inbox', 'what's on my calendar', 'check my email'). Only for apps that " +
+      "are already connected.",
+    parameters: { type: "object", properties: {
+      app: { type: "string", description: "connected toolkit slug: gmail, googlecalendar, github…" },
+      view: { type: "string", description: "optional focus, e.g. 'unread' for gmail" },
+    }, required: ["app"] } } },
   { type: "function", function: { name: "save_skill",
     description: "Save a reusable SKILL for this user when they ask you to 'save this as a skill', " +
       "'remember how to do this', or turn a repeatable workflow into a saved capability. The skill " +
@@ -333,6 +349,12 @@ async function execNative(env: Env, userId: string, name: string,
               `in ONE short sentence — do NOT write any link, URL, path, or markdown link ` +
               `yourself (there is no path to give; the card handles the download).`,
               { type: "document.generate", doc }];
+    }
+    case "open_panel": {
+      const appk = String(a.app || "").toLowerCase().trim();
+      if (!appk) return ["Which app should I open?", null];
+      return [`Opened your ${appk} right here in the chat.`,
+              { type: "panel.open", app: appk, view: String(a.view || "") }];
     }
     case "save_skill": {
       const name = String(a.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64);

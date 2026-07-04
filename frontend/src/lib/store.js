@@ -302,6 +302,10 @@ function runActions(actions) {
       if (a.url) window.open(a.url, "_blank", "noopener");
     } else if (a.type === "document.generate") {
       if (a.doc) generateDocument(a.doc);
+    } else if (a.type === "panel.open") {
+      // Spin up an in-chat connector mini-workspace instead of navigating away.
+      if (a.app) messages.update((m) => [...m, { role: "assistant", isPanel: true,
+        panel: { app: a.app, view: a.view || "", params: a.params || {} } }]);
     } else if (a.type === "connect.pending") {
       // Emblem handed the user a connect link in-chat. Open it, then watch the
       // connections list; the moment the toolkit turns ACTIVE, feed an internal
