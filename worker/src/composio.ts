@@ -281,9 +281,27 @@ async function executeLinkedIn(env: Env, userId: string, slug: string,
   throw new Error(lastErr || "LinkedIn rejected every API version tried.");
 }
 
+// Fake/placeholder image hosts that social platforms reject ("media couldn't be
+// fetched"). If a post's media URL points at one of these, fail EARLY with a clear
+// message instead of a cryptic platform error — the model must use a real image.
+const PLACEHOLDER_HOSTS = /(via\.placeholder\.com|placeholder\.com|placehold\.co|dummyimage\.com|example\.com|lorempixel|placekitten|placebear|fakeimg)/i;
+function assertRealMedia(slug: string, args: Record<string, unknown>) {
+  const s = slug.toUpperCase();
+  if (!/INSTAGRAM|FACEBOOK|TWITTER|LINKEDIN|YOUTUBE|PIN/.test(s)) return;
+  for (const [k, v] of Object.entries(args || {})) {
+    if (typeof v !== "string" || !/url|image|media|photo|video|thumbnail/i.test(k)) continue;
+    if (PLACEHOLDER_HOSTS.test(v)) {
+      throw new Error("That post used a placeholder/example image, which the platform " +
+        "rejects. Post with a REAL, publicly-viewable image — ask the user to attach a photo " +
+        "or give a public image URL. Never invent an image link.");
+    }
+  }
+}
+
 export async function executeComposio(env: Env, userId: string, slug: string,
                                        args: Record<string, unknown>): Promise<unknown> {
   const upper = slug.toUpperCase();
+  assertRealMedia(upper, args || {});
   if (LINKEDIN_OVERRIDES.has(upper)) return executeLinkedIn(env, userId, upper, args || {});
   let res: { successful?: boolean; error?: string; data?: unknown };
   try {

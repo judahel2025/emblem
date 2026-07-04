@@ -1,9 +1,11 @@
 <script>
-  // ChatGPT-style sidebar: new chat, conversation threads, workspace nav, footer.
-  import { createEventDispatcher } from "svelte";
-  import { slide } from "svelte/transition";
+  // Sidebar: fixed New-chat at top, ONE scroll region (nav + recent chats) in the
+  // middle so nothing can ever be pushed off-screen, and a PINNED profile at the
+  // bottom that never scrolls and opens Settings / Help / Sign out.
+  import { createEventDispatcher, onDestroy } from "svelte";
+  import { slide, fade } from "svelte/transition";
   import { threads, activeThread, appView, openThread, openLegacy, newChat,
-           renameThread, deleteThread, brainReady, connectedApps } from "../lib/store.js";
+           renameThread, deleteThread, brainReady, connectedApps, me } from "../lib/store.js";
   import { auth } from "../lib/supabase.js";
   import { WORKSPACES } from "../lib/workspaces.js";
   import ThemeToggle from "./ThemeToggle.svelte";
@@ -18,36 +20,36 @@
     { id: "pages",       label: "Pages",       icon: "ti-file-text" },
     { id: "calendar",    label: "Calendar",    icon: "ti-calendar" },
     { id: "automations", label: "Automations", icon: "ti-bolt" },
-    { id: "help",        label: "Help",        icon: "ti-help-circle" },
   ];
 
   let renamingId = null;
   let renameValue = "";
+  let profileMenu = false;
 
-  // Workspace nav items (one per connected app with a workspace).
+  // Workspace nav items (one per connected app that has a workspace screen).
   $: wsItems = $connectedApps.filter((s) => WORKSPACES[s]);
+  $: displayName = $me.display_name || auth.email() || "You";
+  $: initial = (displayName || "E").trim().slice(0, 1).toUpperCase();
 
-  // >3 workspaces collapse under a "Workspaces" toggle; state persists.
-  let wsOpen = false;
-  try { wsOpen = localStorage.getItem("emblem_ws_open") === "1"; } catch {}
-  function toggleWs() {
-    wsOpen = !wsOpen;
-    try { localStorage.setItem("emblem_ws_open", wsOpen ? "1" : "0"); } catch {}
-  }
-
-  function startRename(t) {
-    renamingId = t.id;
-    renameValue = t.title;
-  }
+  function startRename(t) { renamingId = t.id; renameValue = t.title; }
   function commitRename() {
     if (renamingId && renameValue.trim()) renameThread(renamingId, renameValue.trim());
     renamingId = null;
   }
+  function pick(fn) { profileMenu = false; fn(); }
+
+  // Close the profile menu on any outside click.
+  function onWinClick(e) {
+    if (profileMenu && !e.target.closest(".foot")) profileMenu = false;
+  }
+  if (typeof window !== "undefined") window.addEventListener("click", onWinClick, true);
+  onDestroy(() => { if (typeof window !== "undefined") window.removeEventListener("click", onWinClick, true); });
 </script>
 
 <aside class="sidebar" class:collapsed data-tour="sidebar">
+  <!-- ── Fixed top: brand + New chat ── -->
   <div class="top">
-    <button class="brand" on:click={() => { newChat(); }} title="Emblem">
+    <button class="brand" on:click={newChat} title="Emblem">
       <span class="mark"><Logo size={26} /></span>
       {#if !collapsed}<span class="name">Emblem</span>{/if}
     </button>
@@ -62,99 +64,91 @@
     {#if !collapsed}<span>New chat</span>{/if}
   </button>
 
-  {#if !collapsed}
-    <div class="threads" transition:slide={{ duration: 150 }}>
-      {#if $threads.items.length || $threads.legacy_count}
-        <p class="section-label">Chats</p>
-      {/if}
-      {#each $threads.items as t (t.id)}
-        <div class="thread-row" class:active={$activeThread === t.id}>
-          {#if renamingId === t.id}
-            <!-- svelte-ignore a11y-autofocus -->
-            <input class="rename" bind:value={renameValue} autofocus
-                   on:blur={commitRename}
-                   on:keydown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") renamingId = null; }} />
-          {:else}
-            <button class="thread-btn" on:click={() => openThread(t.id)} title={t.title}>
-              <span class="t-title">{t.title}</span>
-            </button>
-            <span class="row-actions">
-              <button class="mini" on:click={() => startRename(t)} aria-label="Rename chat"><i class="ti ti-pencil"></i></button>
-              <button class="mini danger" on:click={() => deleteThread(t.id)} aria-label="Delete chat"><i class="ti ti-trash"></i></button>
-            </span>
-          {/if}
-        </div>
+  <!-- ── The ONE scroll region: nav + recent chats. Nothing gets cut off; you
+          just scroll. ── -->
+  <div class="scroll">
+    <nav class="nav">
+      {#each NAV as n}
+        <button class="nav-item" class:active={$appView === n.id}
+                on:click={() => appView.set(n.id)} data-tour="nav-{n.id}" title={n.label}>
+          <i class="ti {n.icon}"></i>
+          {#if !collapsed}<span>{n.label}</span>{/if}
+        </button>
       {/each}
-      {#if $threads.legacy_count}
-        <div class="thread-row" class:active={$activeThread === "legacy"}>
-          <button class="thread-btn" on:click={openLegacy}>
-            <span class="t-title dim">Earlier</span>
-          </button>
-        </div>
-      {/if}
-    </div>
-  {:else}
-    <div class="threads"></div>
-  {/if}
-
-  <nav class="nav">
-    {#each NAV as n}
-      <button class="nav-item" class:active={$appView === n.id}
-              on:click={() => appView.set(n.id)} data-tour="nav-{n.id}"
-              title={n.label}>
-        <i class="ti {n.icon}"></i>
-        {#if !collapsed}<span>{n.label}</span>{/if}
-      </button>
-    {/each}
-    {#if wsItems.length > 3}
-      <button class="nav-item ws-toggle" on:click={toggleWs}
-              aria-expanded={wsOpen} title="Workspaces">
-        <i class="ti ti-apps"></i>
-        {#if !collapsed}
-          <span>Workspaces</span>
-          <i class="ti chev {wsOpen ? 'ti-chevron-up' : 'ti-chevron-down'}"></i>
-        {/if}
-      </button>
-      {#if wsOpen}
-        <div class="ws-list" transition:slide={{ duration: 150 }}>
-          {#each wsItems as s (s)}
-            <button class="nav-item" class:active={$appView === `workspace:${s}`}
-                    on:click={() => appView.set(`workspace:${s}`)}
-                    title={WORKSPACES[s].label}>
-              <i class="ti {WORKSPACES[s].icon}"></i>
-              {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
-            </button>
-          {/each}
-        </div>
-      {/if}
-    {:else}
       {#each wsItems as s (s)}
         <button class="nav-item" class:active={$appView === `workspace:${s}`}
-                on:click={() => appView.set(`workspace:${s}`)}
-                title={WORKSPACES[s].label}>
+                on:click={() => appView.set(`workspace:${s}`)} title={WORKSPACES[s].label}>
           <i class="ti {WORKSPACES[s].icon}"></i>
           {#if !collapsed}<span>{WORKSPACES[s].label}</span>{/if}
         </button>
       {/each}
-    {/if}
-  </nav>
+    </nav>
 
-  <div class="foot">
-    <button class="nav-item" on:click={() => dispatch("settings")} title="Settings">
-      <i class="ti ti-settings"></i>
-      {#if !collapsed}<span>Settings</span>{/if}
-    </button>
-    <button class="nav-item" on:click={() => dispatch("signout")} title="Sign out">
-      <i class="ti ti-logout"></i>
-      {#if !collapsed}<span>Sign out</span>{/if}
-    </button>
     {#if !collapsed}
-      <div class="foot-row">
-        <span class="status-dot" class:ready={$brainReady} title={$brainReady ? "Online" : "Connecting"}></span>
-        <span class="who">{auth.email() || ""}</span>
-        <ThemeToggle />
+      <div class="threads">
+        {#if $threads.items.length || $threads.legacy_count}
+          <p class="section-label">Recent</p>
+        {/if}
+        {#each $threads.items as t (t.id)}
+          <div class="thread-row" class:active={$activeThread === t.id}>
+            {#if renamingId === t.id}
+              <!-- svelte-ignore a11y-autofocus -->
+              <input class="rename" bind:value={renameValue} autofocus
+                     on:blur={commitRename}
+                     on:keydown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") renamingId = null; }} />
+            {:else}
+              <button class="thread-btn" on:click={() => openThread(t.id)} title={t.title}>
+                <span class="t-title">{t.title}</span>
+              </button>
+              <span class="row-actions">
+                <button class="mini" on:click={() => startRename(t)} aria-label="Rename chat"><i class="ti ti-pencil"></i></button>
+                <button class="mini danger" on:click={() => deleteThread(t.id)} aria-label="Delete chat"><i class="ti ti-trash"></i></button>
+              </span>
+            {/if}
+          </div>
+        {/each}
+        {#if $threads.legacy_count}
+          <div class="thread-row" class:active={$activeThread === "legacy"}>
+            <button class="thread-btn" on:click={openLegacy}>
+              <span class="t-title dim">Earlier</span>
+            </button>
+          </div>
+        {/if}
       </div>
     {/if}
+  </div>
+
+  <!-- ── Pinned profile: never scrolls; opens Settings / Help / Sign out ── -->
+  <div class="foot">
+    {#if profileMenu}
+      <div class="profile-menu glass gloss" transition:fade={{ duration: 120 }}>
+        <button class="pm-item" on:click={() => pick(() => dispatch("settings"))}>
+          <i class="ti ti-settings"></i> Settings
+        </button>
+        <button class="pm-item" on:click={() => pick(() => appView.set("help"))}>
+          <i class="ti ti-help-circle"></i> Help
+        </button>
+        <div class="pm-row">
+          <span><i class="ti ti-palette"></i> Theme</span>
+          <ThemeToggle />
+        </div>
+        <div class="pm-sep"></div>
+        <button class="pm-item danger" on:click={() => pick(() => dispatch("signout"))}>
+          <i class="ti ti-logout"></i> Sign out
+        </button>
+      </div>
+    {/if}
+    <button class="profile-btn" class:open={profileMenu} on:click={() => profileMenu = !profileMenu}
+            title={displayName} aria-haspopup="true" aria-expanded={profileMenu}>
+      <span class="avatar">{initial}<span class="status-dot" class:ready={$brainReady}></span></span>
+      {#if !collapsed}
+        <span class="pinfo">
+          <span class="pname">{displayName}</span>
+          <span class="psub">{$brainReady ? "Online" : "Connecting…"}</span>
+        </span>
+        <i class="ti ti-dots-vertical pchev"></i>
+      {/if}
+    </button>
   </div>
 </aside>
 
@@ -169,12 +163,9 @@
   }
   .sidebar.collapsed { width: 62px; }
 
-  .top { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; }
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; flex-shrink: 0; }
   .brand { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; }
-  .mark {
-    display: grid; place-items: center;
-    color: var(--accent-ink);
-  }
+  .mark { display: grid; place-items: center; color: var(--accent-ink); }
   .icon-btn {
     width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
     color: var(--text-3); font-size: 17px; cursor: pointer;
@@ -184,7 +175,7 @@
 
   .new-chat {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 10px 12px; margin: 0 2px 6px;
+    padding: 10px 12px; margin: 0 2px 8px; flex-shrink: 0;
     border-radius: var(--r-pill);
     background: var(--accent-grad); color: var(--accent-t);
     font-size: 14px; font-weight: 600; cursor: pointer;
@@ -194,15 +185,31 @@
   .new-chat:hover { filter: brightness(1.07); box-shadow: 0 4px 16px var(--accent-glow); }
   .new-chat i { font-size: 17px; }
 
-  /* Threads own the flexible space: guaranteed at least 40% of the column,
-     scrolls on their own so the nav below can never squeeze them out. */
-  .threads { flex: 1 1 auto; overflow-y: auto; min-height: 40%; padding: 4px 0;
-    scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+  /* THE scroll region — nav + chats together; the only thing that scrolls. */
+  .scroll {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 2px 0 4px;
+    scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
+  }
+  .scroll::-webkit-scrollbar { width: 8px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+  .nav { display: flex; flex-direction: column; gap: 1px; padding-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 9px 10px; border-radius: 10px;
+    font-size: 13.5px; font-weight: 500; color: var(--text-2);
+    cursor: pointer; transition: background var(--t-fast), color var(--t-fast);
+  }
+  .sidebar.collapsed .nav-item { justify-content: center; padding: 9px 0; }
+  .nav-item:hover { background: var(--s2); color: var(--text); }
+  .nav-item.active { background: var(--accent-bg); color: var(--text); }
+  .nav-item.active i { color: var(--accent-ink); }
+  .nav-item i { font-size: 18px; flex-shrink: 0; }
+
+  .threads { padding: 6px 0 0; border-top: 1px solid var(--divider); }
   .section-label {
-    position: sticky; top: 0; z-index: 1;
-    background: var(--s1);
     font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--text-3); margin: 0 0 4px; padding: 8px 8px 4px;
+    color: var(--text-3); margin: 0 0 4px; padding: 6px 8px 4px;
   }
   .thread-row {
     display: flex; align-items: center; border-radius: 10px; position: relative;
@@ -217,9 +224,7 @@
   .thread-row.active .thread-btn { color: var(--text); }
   .t-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .t-title.dim { color: var(--text-3); font-style: italic; }
-  .row-actions {
-    display: none; align-items: center; gap: 2px; padding-right: 6px;
-  }
+  .row-actions { display: none; align-items: center; gap: 2px; padding-right: 6px; }
   .thread-row:hover .row-actions { display: flex; }
   .mini {
     width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center;
@@ -234,30 +239,46 @@
     color: var(--text); outline: none;
   }
 
-  /* Nav never grows into the thread list; rows are compact. */
-  .nav { display: flex; flex-direction: column; gap: 1px; padding-top: 8px;
-    border-top: 1px solid var(--divider); flex-shrink: 0; }
-  .nav .nav-item { height: 32px; padding: 0 10px; font-size: 13px; }
-  .sidebar.collapsed .nav .nav-item { padding: 0; }
-  .ws-list { display: flex; flex-direction: column; gap: 1px; }
-  .ws-toggle .chev { margin-left: auto; font-size: 15px; color: var(--text-3); }
-  .nav-item {
+  /* Pinned profile — never scrolls, always at the bottom. */
+  .foot { flex-shrink: 0; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--divider); position: relative; }
+  .profile-btn {
     display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-    padding: 9px 10px; border-radius: 10px;
-    font-size: 13.5px; font-weight: 500; color: var(--text-2);
-    cursor: pointer;
-    transition: background var(--t-fast), color var(--t-fast);
+    padding: 8px; border-radius: 12px; cursor: pointer;
+    transition: background var(--t-fast);
   }
-  .sidebar.collapsed .nav-item { justify-content: center; padding: 9px 0; }
-  .nav-item:hover { background: var(--s2); color: var(--text); }
-  .nav-item.active { background: var(--accent-bg); color: var(--text); }
-  .nav-item.active i { color: var(--accent-ink); }
-  .nav-item i { font-size: 18px; flex-shrink: 0; }
+  .profile-btn:hover, .profile-btn.open { background: var(--s2); }
+  .sidebar.collapsed .profile-btn { justify-content: center; padding: 8px 0; }
+  .avatar {
+    position: relative; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent-grad); color: var(--accent-t);
+    display: grid; place-items: center; font-size: 15px; font-weight: 700;
+  }
+  .status-dot {
+    position: absolute; bottom: -1px; right: -1px;
+    width: 10px; height: 10px; border-radius: 50%; background: var(--danger);
+    border: 2px solid var(--s1); transition: background var(--t-normal);
+  }
+  .status-dot.ready { background: var(--safe); }
+  .pinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .pname { font-size: 13.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .psub { font-size: 11px; color: var(--text-3); }
+  .pchev { font-size: 17px; color: var(--text-3); flex-shrink: 0; }
 
-  .foot { display: flex; flex-direction: column; gap: 1px; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--divider); }
-  .foot-row { display: flex; align-items: center; gap: 8px; padding: 8px 8px 2px; }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); flex-shrink: 0;
-    transition: background var(--t-normal); }
-  .status-dot.ready { background: var(--safe); box-shadow: 0 0 6px var(--safe); }
-  .who { flex: 1; font-size: 11px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-menu {
+    position: absolute; bottom: calc(100% + 6px); left: 0; right: 0;
+    border-radius: var(--r-lg); padding: 6px; box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column; gap: 1px; z-index: 20;
+  }
+  .pm-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 9px 11px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
+    color: var(--text-2); cursor: pointer; transition: background var(--t-fast), color var(--t-fast);
+  }
+  .pm-item:hover { background: var(--s2); color: var(--text); }
+  .pm-item.danger:hover { color: var(--danger); }
+  .pm-item i { font-size: 17px; }
+  .pm-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 11px; font-size: 13.5px; color: var(--text-2); }
+  .pm-row span { display: inline-flex; align-items: center; gap: 10px; }
+  .pm-row i { font-size: 17px; }
+  .pm-sep { height: 1px; background: var(--divider); margin: 4px 6px; }
 </style>

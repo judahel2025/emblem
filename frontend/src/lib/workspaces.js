@@ -17,12 +17,10 @@ export const WORKSPACES = {
     blurb: "Read and send from your inbox",
     load: () => import("../screens/workspaces/GmailWorkspace.svelte"),
   },
-  googlecalendar: {
-    label: "Google Calendar",
-    icon: "ti-calendar",
-    blurb: "Your real calendar, inside Emblem",
-    load: () => import("../screens/workspaces/GcalWorkspace.svelte"),
-  },
+  // Google Calendar has NO workspace screen on purpose: Emblem's built-in
+  // Calendar is the single calendar surface. The connector stays available so
+  // Emblem can READ the user's real Google schedule (automations, proactive
+  // grounding) — it just doesn't add a second, duplicate calendar to the sidebar.
 };
 
 export const hasWorkspace = (slug) => Boolean(WORKSPACES[slug]);
