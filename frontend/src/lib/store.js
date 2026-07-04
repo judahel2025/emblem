@@ -338,6 +338,16 @@ function revealAssistant(fullText) {
   });
 }
 
+// Attach metadata (e.g. used_memories) to the assistant bubble just revealed.
+function attachToLastAssistant(meta) {
+  if (!meta || !Object.keys(meta).length) return;
+  messages.update((m) => {
+    const i = m.length - 1;
+    if (i >= 0 && m[i].role === "assistant") m[i] = { ...m[i], ...meta };
+    return m;
+  });
+}
+
 // The Stop button. Aborts a pending fetch (nothing shown yet) AND/OR freezes an
 // in-progress reveal, keeping whatever text is on screen.
 export function stopGeneration() {
@@ -371,6 +381,7 @@ export async function continueTask(command) {
   pendingTask = ar.pending || null;
   thinking.set(false);
   const shown = await revealAssistant(ar.reply || "(no reply)");
+  attachToLastAssistant({ usedMemories: ar.used_memories || [] });
   api.conversationAdd("assistant", shown, tid).catch((e) => console.error("save msg:", e));
   voiceState.set("idle");
   runActions(ar.actions);
@@ -459,6 +470,7 @@ export async function sendCommand(text) {
   pendingTask = r.pending || null;
   thinking.set(false);
   const shown = await revealAssistant(r.reply || "(no reply)");
+  attachToLastAssistant({ usedMemories: r.used_memories || [] });
   api.conversationAdd("assistant", shown, tid).catch((e) => console.error("save msg:", e));
   voiceState.set("idle");
   runActions(r.actions);

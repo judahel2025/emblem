@@ -334,14 +334,19 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
   // greets a known user like a stranger.
   try {
     const [prof, conn] = await Promise.all([
-      env.DB.prepare("SELECT display_name, role, tone, comm_style FROM profiles WHERE user_id = ?")
-        .bind(userId).first<{ display_name: string; role: string; tone: string; comm_style: string }>(),
+      env.DB.prepare("SELECT display_name, role, tone, comm_style, about_me FROM profiles WHERE user_id = ?")
+        .bind(userId).first<{ display_name: string; role: string; tone: string;
+                              comm_style: string; about_me: string }>(),
       configured(env) ? connectionStates(env, userId) : Promise.resolve({ active: [], broken: [] }),
     ]);
     const lines: string[] = [];
     if (prof?.display_name || prof?.role) {
       lines.push(`User: ${prof.display_name || "(name unknown)"}${prof.role ? ` — ${prof.role}` : ""}.`
         + (prof.tone ? ` Preferred tone: ${prof.tone}.` : ""));
+    }
+    // The master instruction — two fields, deterministic, ALWAYS honored.
+    if (prof?.about_me && prof.about_me.trim()) {
+      lines.push(`What the user wants you to know about them: ${prof.about_me.trim()}`);
     }
     if (prof?.comm_style && prof.comm_style.trim()) {
       lines.push(`The user's standing instruction for HOW you talk to them (follow this closely — ` +
@@ -379,12 +384,16 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
       "message): " + decl.map((a) => `“${a.summary}”`).join("; "));
     if (notes.length) messages.push({ role: "system", content: notes.join("\n") });
   } catch { /* approval context is best-effort */ }
+  let recalledMem: Array<{ id: number; content: string }> = [];
   try {
-    const mem = await recallMemory(env.DB, userId, command);
-    if (mem.length) {
+    recalledMem = await recallMemory(env.DB, userId, command);
+    if (recalledMem.length) {
       messages.push({ role: "system", content:
-        "Long-term memory — what you know about this user:\n" +
-        mem.map((m) => `- ${m.content}`).join("\n") });
+        "Long-term memory — what you know about this user (each line is [id] fact):\n" +
+        recalledMem.map((m) => `- [${m.id}] ${m.content}`).join("\n") +
+        "\nIf any of these facts actually shaped your answer, end your reply with a hidden " +
+        "marker on its own final line: <<mem:ID,ID>> listing only the ids you used. Omit the " +
+        "marker entirely if none applied. Never mention the marker or the ids in your prose." });
     }
   } catch { /* memory is best-effort */ }
   for (const h of history.slice(-12)) {
@@ -468,5 +477,19 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
     uiActions.push({ type: "navigate", view: "connect" });
   }
 
-  return { intent: "agent", reply: finalReply || "Done.", actions: uiActions };
+  // Pull the hidden <<mem:...>> marker out of the reply → which saved facts the model
+  // says it actually used. Powers the "Personalized from memory" chip. Never shown.
+  let usedMemoryIds: number[] = [];
+  const marker = finalReply.match(/\n?\s*<<\s*mem\s*:\s*([0-9,\s]+)>>\s*$/i);
+  if (marker) {
+    const valid = new Set(recalledMem.map((m) => m.id));
+    usedMemoryIds = marker[1].split(",").map((s) => parseInt(s.trim(), 10))
+      .filter((n) => Number.isInteger(n) && valid.has(n));
+    finalReply = finalReply.slice(0, marker.index).trimEnd();
+  }
+  const usedMemories = recalledMem.filter((m) => usedMemoryIds.includes(m.id))
+    .map((m) => ({ id: m.id, content: m.content }));
+
+  return { intent: "agent", reply: finalReply || "Done.", actions: uiActions,
+           used_memories: usedMemories };
 }

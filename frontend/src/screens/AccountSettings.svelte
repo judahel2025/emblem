@@ -8,23 +8,70 @@
   import { appView, connectedApps, notify, loadMe } from "../lib/store.js";
   import ThemeToggle from "../components/ThemeToggle.svelte";
 
-  let tab = "profile";   // profile | preferences
-  let profile = { display_name: "", role: "", tone: "", comm_style: "" };
+  let tab = "profile";   // profile | memory | preferences
+  let profile = { display_name: "", role: "", tone: "", comm_style: "", about_me: "" };
   let quiet = { quiet_start: "22:00", quiet_end: "07:00" };
   let email = "";
   let saving = false;
   let savedAt = 0;
 
+  // Tone trait chips — the fastest "make it mine" lever (delivery only). Stored
+  // comma-separated in profile.tone; free-text still works alongside.
+  const TONE_CHIPS = ["Direct", "Warm", "Concise", "Detailed", "Playful", "Formal",
+                      "Encouraging", "Candid", "Professional"];
+  $: toneSet = new Set((profile.tone || "").split(",").map((t) => t.trim()).filter(Boolean));
+  function toggleTone(chip) {
+    const s = new Set(toneSet);
+    s.has(chip) ? s.delete(chip) : s.add(chip);
+    profile.tone = [...s].join(", ");
+  }
+
   onMount(async () => {
     try {
       const p = await api.profile();
       profile = { display_name: p.display_name || "", role: p.role || "", tone: p.tone || "",
-                  comm_style: p.comm_style || "" };
+                  comm_style: p.comm_style || "", about_me: p.about_me || "" };
       if (p.quiet_start) quiet.quiet_start = p.quiet_start;
       if (p.quiet_end) quiet.quiet_end = p.quiet_end;
     } catch (e) { console.error("profile load failed:", e); }
     try { email = localStorage.getItem("emblem_email") || ""; } catch {}
+    loadMemories();
   });
+
+  // ── Memory panel — transparent + editable (the Claude model) ──
+  let memories = [];
+  let memLoading = true;
+  let newMem = "";
+  let editingId = null;
+  let editText = "";
+  async function loadMemories() {
+    memLoading = true;
+    try { memories = (await api.memory()).items || []; }
+    catch (e) { console.error("memory load failed:", e); }
+    memLoading = false;
+  }
+  async function addMemory() {
+    const content = newMem.trim();
+    if (!content) return;
+    newMem = "";
+    try { await api.memoryAdd(content); notify("Saved to memory", "safe"); loadMemories(); }
+    catch (e) { notify(`Couldn't save: ${e.message}`, "danger"); }
+  }
+  function startEdit(m) { editingId = m.id; editText = m.content; }
+  async function saveEdit() {
+    const content = editText.trim();
+    if (!content) return;
+    try { await api.memoryUpdate(editingId, { content }); editingId = null; loadMemories(); }
+    catch (e) { notify(`Couldn't update: ${e.message}`, "danger"); }
+  }
+  async function togglePin(m) {
+    try { await api.memoryUpdate(m.id, { pinned: !m.pinned }); loadMemories(); }
+    catch (e) { notify(`Couldn't update: ${e.message}`, "danger"); }
+  }
+  async function deleteMemory(m) {
+    try { await api.memoryDelete(m.id); loadMemories(); }
+    catch (e) { notify(`Couldn't delete: ${e.message}`, "danger"); }
+  }
 
   async function save() {
     saving = true;
@@ -50,6 +97,7 @@
 
   <div class="subtabs">
     <button class:active={tab === "profile"} on:click={() => tab = "profile"}>Profile</button>
+    <button class:active={tab === "memory"} on:click={() => tab = "memory"}>Memory</button>
     <button class:active={tab === "preferences"} on:click={() => tab = "preferences"}>Preferences</button>
   </div>
 
@@ -75,8 +123,13 @@
               <input bind:value={profile.role} placeholder="e.g. writer, founder, engineer" />
             </label>
             <label class="ufield wide">
-              <span>How Emblem should speak to you</span>
-              <input bind:value={profile.tone} placeholder="e.g. brief and direct" />
+              <span>Tone — how replies should feel</span>
+              <div class="chips">
+                {#each TONE_CHIPS as chip}
+                  <button type="button" class="tonechip" class:on={toneSet.has(chip)}
+                          on:click={() => toggleTone(chip)}>{chip}</button>
+                {/each}
+              </div>
             </label>
           </div>
           <div class="actions">
@@ -89,12 +142,17 @@
 
         <section class="panel glass gloss" in:fly={{ y: 10, duration: 200, delay: 40 }}>
           <h3><i class="ti ti-message-2-cog"></i> Master instructions</h3>
-          <p class="paneltext">A standing note for how you want Emblem to communicate with
-             you — tone, language, how you like to be addressed, anything to always keep in
-             mind. Emblem follows this in every conversation. You can change it anytime.</p>
+          <p class="paneltext">Two standing notes Emblem follows in every conversation —
+             change them anytime. The first is who you are; the second is exactly how you
+             want Emblem to talk to you.</p>
           <label class="ufield wide">
-            <span>How Emblem should talk to you</span>
-            <textarea bind:value={profile.comm_style} rows="4"
+            <span>What Emblem should know about you</span>
+            <textarea bind:value={profile.about_me} rows="3"
+              placeholder="e.g. I run a small design studio, mostly work in the evenings, and care about clear, no-fluff answers. My co-founder is Ada."></textarea>
+          </label>
+          <label class="ufield wide" style="margin-top:16px">
+            <span>How Emblem should respond</span>
+            <textarea bind:value={profile.comm_style} rows="3"
               placeholder="e.g. Keep it warm but professional. Call me Judah. Short, direct answers — skip the pep talk. Use British spelling. Be candid when you disagree."></textarea>
           </label>
           <div class="actions">
@@ -103,6 +161,51 @@
             </button>
             {#if savedAt}<span class="savednote">Saved.</span>{/if}
           </div>
+        </section>
+      {:else if tab === "memory"}
+        <section class="panel glass gloss" in:fly={{ y: 10, duration: 200 }}>
+          <h3><i class="ti ti-brain"></i> Memory</h3>
+          <p class="paneltext">Everything Emblem remembers about you — visible, and yours to
+             edit. Add facts or standing preferences, edit anything, pin what should never be
+             forgotten, delete what's wrong. Emblem shows a “Personalized from memory” note in
+             chat when it uses one of these.</p>
+
+          <div class="memadd">
+            <input bind:value={newMem} placeholder="Add something Emblem should remember…"
+                   on:keydown={(e) => e.key === 'Enter' && addMemory()} aria-label="New memory" />
+            <button class="btn primary" on:click={addMemory} disabled={!newMem.trim()}>
+              <i class="ti ti-plus"></i> Add
+            </button>
+          </div>
+
+          {#if memLoading}
+            <div class="memempty">Loading…</div>
+          {:else if memories.length === 0}
+            <div class="memempty">Nothing yet. As you chat, Emblem saves durable facts here —
+              or add your own above.</div>
+          {:else}
+            <ul class="memlist">
+              {#each memories as m (m.id)}
+                <li class="memrow" class:pinned={m.pinned} in:fly={{ y: 6, duration: 160 }}>
+                  {#if editingId === m.id}
+                    <textarea class="memedit" bind:value={editText} rows="2"
+                      on:keydown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveEdit(); }}></textarea>
+                    <div class="memacts">
+                      <button class="mem-icon" title="Save" on:click={saveEdit}><i class="ti ti-check"></i></button>
+                      <button class="mem-icon" title="Cancel" on:click={() => editingId = null}><i class="ti ti-x"></i></button>
+                    </div>
+                  {:else}
+                    <span class="memtext">{m.content}</span>
+                    <div class="memacts">
+                      <button class="mem-icon" class:active={m.pinned} title={m.pinned ? "Unpin" : "Pin — never forget"} on:click={() => togglePin(m)}><i class="ti ti-pin"></i></button>
+                      <button class="mem-icon" title="Edit" on:click={() => startEdit(m)}><i class="ti ti-pencil"></i></button>
+                      <button class="mem-icon danger" title="Delete" on:click={() => deleteMemory(m)}><i class="ti ti-trash"></i></button>
+                    </div>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          {/if}
         </section>
       {:else}
         <section class="panel glass gloss" in:fly={{ y: 10, duration: 200 }}>
@@ -225,6 +328,52 @@
   }
   .ufield textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
   .paneltext { font-size: 13px; color: var(--text-2); line-height: 1.55; margin: 0 0 16px; }
+
+  /* Tone trait chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tonechip {
+    padding: 6px 13px; border-radius: var(--r-pill);
+    border: 1px solid var(--border-strong); background: transparent;
+    font-size: 13px; color: var(--text-2); cursor: pointer;
+    transition: all var(--t-fast);
+  }
+  .tonechip:hover { color: var(--text); border-color: var(--text-3); }
+  .tonechip.on {
+    background: var(--accent-grad); color: var(--accent-t); border-color: transparent;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  /* Memory panel */
+  .memadd { display: flex; gap: 10px; margin-bottom: 18px; }
+  .memadd input {
+    flex: 1; background: var(--s1); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 10px 14px; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .memadd input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .memempty { color: var(--text-3); font-size: 13px; padding: 28px 8px; text-align: center; }
+  .memlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .memrow {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px; background: var(--s1);
+    border: 1px solid var(--border); border-radius: var(--r-md);
+  }
+  .memrow.pinned { border-color: var(--border-strong); background: var(--accent-bg); }
+  .memtext { flex: 1; font-size: 13.5px; line-height: 1.5; color: var(--text); overflow-wrap: anywhere; }
+  .memedit {
+    flex: 1; background: var(--bg); border: 1px solid var(--accent); border-radius: var(--r-sm);
+    padding: 8px 10px; font-size: 13.5px; line-height: 1.5; color: var(--text);
+    font-family: inherit; resize: vertical; outline: none;
+  }
+  .memacts { display: flex; gap: 2px; flex-shrink: 0; }
+  .mem-icon {
+    width: 30px; height: 30px; border-radius: var(--r-sm); display: grid; place-items: center;
+    color: var(--text-3); font-size: 15px; cursor: pointer;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .mem-icon:hover { color: var(--text); background: var(--s3); }
+  .mem-icon.active { color: var(--accent-ink); }
+  .mem-icon.danger:hover { color: var(--danger); background: var(--danger-bg); }
 
   .actions { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
   .savednote { font-size: 12.5px; color: var(--safe); }

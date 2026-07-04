@@ -39,12 +39,12 @@ apiRoutes.get("/me", async (c) => {
 apiRoutes.get("/me/profile", async (c) => {
   const uid = c.get("userId");
   const p = await c.env.DB.prepare(
-    "SELECT display_name, role, tone, comm_style, onboarded FROM profiles WHERE user_id = ?").bind(uid)
+    "SELECT display_name, role, tone, comm_style, about_me, onboarded FROM profiles WHERE user_id = ?").bind(uid)
     .first<{ display_name: string | null; role: string | null; tone: string | null;
-             comm_style: string | null; onboarded: number | null }>();
+             comm_style: string | null; about_me: string | null; onboarded: number | null }>();
   return c.json({
     display_name: p?.display_name || "", role: p?.role || "", tone: p?.tone || "",
-    comm_style: p?.comm_style || "",
+    comm_style: p?.comm_style || "", about_me: p?.about_me || "",
     onboarded: Boolean(p?.onboarded),
   });
 });
@@ -55,20 +55,22 @@ apiRoutes.put("/me/profile", async (c) => {
   await c.env.DB.prepare(
     // NOT NULL columns: the INSERT arm needs real values even when a field is
     // omitted; the UPDATE arm keeps whatever is already there.
-    `INSERT INTO profiles (user_id, display_name, role, tone, comm_style, onboarded, toured)
+    `INSERT INTO profiles (user_id, display_name, role, tone, comm_style, about_me, onboarded, toured)
      VALUES (?1, COALESCE(?2, ''), COALESCE(?3, ''),
-             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?7, ''), COALESCE(?5, 0), COALESCE(?6, 0))
+             COALESCE(?4, 'warm, concise, decisive'), COALESCE(?7, ''), COALESCE(?8, ''),
+             COALESCE(?5, 0), COALESCE(?6, 0))
      ON CONFLICT(user_id) DO UPDATE SET
        display_name = COALESCE(?2, display_name),
        role = COALESCE(?3, role),
        tone = COALESCE(?4, tone),
        comm_style = COALESCE(?7, comm_style),
+       about_me = COALESCE(?8, about_me),
        onboarded = COALESCE(?5, onboarded),
        toured = COALESCE(?6, toured)`)
     .bind(uid, b.display_name ?? null, b.role ?? null, b.tone ?? null,
           b.onboarded === undefined ? null : (b.onboarded ? 1 : 0),
           b.toured === undefined ? null : (b.toured ? 1 : 0),
-          b.comm_style ?? null).run();
+          b.comm_style ?? null, b.about_me ?? null).run();
   return c.json({ ok: true });
 });
 
@@ -249,10 +251,28 @@ apiRoutes.delete("/notes/:id", async (c) => {
 
 apiRoutes.get("/memory", async (c) => {
   const rows = await c.env.DB.prepare(
-    "SELECT id, kind, content, source, created_at FROM memory " +
-    "WHERE user_id = ? AND deleted = 0 ORDER BY id DESC LIMIT 200")
+    "SELECT id, kind, content, source, pinned, created_at FROM memory " +
+    "WHERE user_id = ? AND deleted = 0 ORDER BY pinned DESC, id DESC LIMIT 200")
     .bind(c.get("userId")).all();
   return c.json({ items: rows.results || [] });
+});
+
+apiRoutes.put("/memory/:id", async (c) => {
+  const b = await c.req.json().catch(() => ({}));
+  const sets: string[] = [];
+  const binds: unknown[] = [];
+  if (typeof b.content === "string") {
+    const content = b.content.trim();
+    if (!content) return c.json({ ok: false, error: "Content is required." }, 400);
+    sets.push("content = ?"); binds.push(content);
+  }
+  if (b.pinned !== undefined) { sets.push("pinned = ?"); binds.push(b.pinned ? 1 : 0); }
+  if (!sets.length) return c.json({ ok: false, error: "Nothing to update." }, 400);
+  binds.push(c.req.param("id"), c.get("userId"));
+  await c.env.DB.prepare(
+    `UPDATE memory SET ${sets.join(", ")} WHERE id = ? AND user_id = ? AND deleted = 0`)
+    .bind(...binds).run();
+  return c.json({ ok: true });
 });
 
 apiRoutes.post("/memory", async (c) => {
@@ -271,15 +291,27 @@ apiRoutes.delete("/memory/:id", async (c) => {
   return c.json({ ok: true });
 });
 
-/** Keyword recall — same fallback strategy the Python store used without embeddings. */
+/** Keyword recall + always-on pinned facts. Pinned memories are never dropped
+ *  (the user locked them); the rest are keyword-matched to the current message. */
 export async function recallMemory(db: D1Database, userId: string, query: string, k = 6) {
   const rows = await db.prepare(
-    "SELECT id, kind, content FROM memory WHERE user_id = ? AND deleted = 0 ORDER BY id DESC LIMIT 400")
-    .bind(userId).all<{ id: number; kind: string; content: string }>();
+    "SELECT id, kind, content, pinned FROM memory WHERE user_id = ? AND deleted = 0 " +
+    "ORDER BY id DESC LIMIT 400")
+    .bind(userId).all<{ id: number; kind: string; content: string; pinned: number }>();
+  const all = rows.results || [];
   const words = query.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
-  const hits = (rows.results || []).filter((r) =>
-    words.some((w) => r.content.toLowerCase().includes(w)));
-  return hits.slice(0, k);
+  const pinned = all.filter((r) => r.pinned);
+  const matched = all.filter((r) => !r.pinned && words.some((w) => r.content.toLowerCase().includes(w)));
+  // Pinned first, then keyword hits, de-duped, capped.
+  const out: Array<{ id: number; kind: string; content: string }> = [];
+  const seen = new Set<number>();
+  for (const r of [...pinned, ...matched]) {
+    if (seen.has(r.id)) continue;
+    seen.add(r.id);
+    out.push({ id: r.id, kind: r.kind, content: r.content });
+    if (out.length >= k) break;
+  }
+  return out;
 }
 
 // ---- pages -------------------------------------------------------------------

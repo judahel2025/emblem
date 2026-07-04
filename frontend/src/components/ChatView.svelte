@@ -49,6 +49,7 @@
 
   // ── Copy ───────────────────────────────────────────────────────
   let copiedIdx = null;
+  let memOpen = null;   // which message's "used memory" list is expanded
   async function copy(t, i) {
     try { await navigator.clipboard.writeText(t); } catch {
       const el = document.createElement("textarea");
@@ -177,6 +178,20 @@
           <div class="row assistant" in:fly={{ y: 8, duration: 200 }}>
             <div class="msg-col">
               <div class="md-body" class:writing={$writing && i === $messages.length - 1}>{@html render(msg.text)}</div>
+              {#if msg.usedMemories && msg.usedMemories.length}
+                <button class="mem-chip" class:open={memOpen === i}
+                        on:click={() => memOpen = memOpen === i ? null : i}
+                        title="This reply used what Emblem remembers about you">
+                  <i class="ti ti-brain"></i>
+                  <span>Personalized from memory</span>
+                  <i class="ti {memOpen === i ? 'ti-chevron-up' : 'ti-chevron-down'} chev"></i>
+                </button>
+                {#if memOpen === i}
+                  <ul class="mem-used" transition:fly={{ y: -4, duration: 150 }}>
+                    {#each msg.usedMemories as um}<li>{um.content}</li>{/each}
+                  </ul>
+                {/if}
+              {/if}
               {#if !($writing && i === $messages.length - 1)}
                 <div class="msg-actions">
                   <button class="act" on:click={() => copy(msg.text, i)} title="Copy">
@@ -328,6 +343,25 @@
   .act:hover { color: var(--text); background: var(--s2); }
   .act i { font-size: 14px; }
   @media (hover: none) { .msg-actions { opacity: 1; } }
+
+  /* "Personalized from memory" transparency chip (Claude-style) */
+  .mem-chip {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;
+    padding: 4px 10px; border-radius: var(--r-pill);
+    background: var(--accent-bg); border: 1px solid var(--border);
+    font-size: 11.5px; font-weight: 500; color: var(--text-2); cursor: pointer;
+    transition: color var(--t-fast), border-color var(--t-fast);
+  }
+  .mem-chip:hover, .mem-chip.open { color: var(--text); border-color: var(--border-strong); }
+  .mem-chip i { font-size: 13px; }
+  .mem-chip .chev { font-size: 12px; opacity: 0.7; }
+  .mem-used {
+    list-style: none; margin: 6px 0 0; padding: 10px 12px;
+    background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-md);
+    display: flex; flex-direction: column; gap: 6px; max-width: 520px;
+  }
+  .mem-used li { font-size: 12.5px; line-height: 1.45; color: var(--text-2); padding-left: 16px; position: relative; }
+  .mem-used li::before { content: "🧠"; position: absolute; left: 0; font-size: 11px; }
 
   .attach-img { max-width: 220px; border-radius: 12px; display: block; margin-bottom: 6px; }
   .attach-label { font-size: 13px; color: var(--text-2); }

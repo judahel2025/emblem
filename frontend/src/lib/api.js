@@ -97,6 +97,8 @@ export const api = {
 
   memory: () => get("/api/memory"),
   memoryAdd: (content, kind = "fact") => post("/api/memory", { content, kind }),
+  memoryUpdate: (id, patch) => req(`/api/memory/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  memoryDelete: (id) => del(`/api/memory/${id}`),
   alerts: () => get("/api/alerts"),
   alertSeen: (id) => post(`/api/alerts/${id}/seen`, {}),
   improvements: () => get("/api/improvements"),
