@@ -4,6 +4,7 @@
   import { api } from "../lib/api.js";
   import { appView, loadConnections, notify } from "../lib/store.js";
   import { hasWorkspace } from "../lib/workspaces.js";
+  import { brandLogo, MONO_LOGOS } from "../lib/logos.js";
   import { tilt } from "../lib/tilt.js";
 
   let loading = true, configured = false, connected = [], featured = [], all = [], query = "", error = "";
@@ -153,7 +154,9 @@
             {@const m = meta(k)}
             <div class="acard glass gloss" use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
               <div class="atop">
-                <span class="appicon"><i class="ti {m.icon}"></i></span>
+                <span class="appicon" class:mono={MONO_LOGOS.has(k)}>
+                  {#if brandLogo(k)}{@html brandLogo(k)}{:else}<i class="ti {m.icon}"></i>{/if}
+                </span>
                 <span class="badge safe">Connected</span>
               </div>
               <div class="name">{m.label}</div>
@@ -193,7 +196,9 @@
         {#each available as k, i (k)}
           {@const m = meta(k)}
           <div class="tile glass gloss" use:tilt in:fly={{ y: 8, duration: 200, delay: Math.min(i * 20, 200) }}>
-            <span class="bigicon"><i class="ti {m.icon}"></i></span>
+            <span class="bigicon" class:mono={MONO_LOGOS.has(k)}>
+              {#if brandLogo(k)}{@html brandLogo(k)}{:else}<i class="ti {m.icon}"></i>{/if}
+            </span>
             <div class="name center">{m.label}</div>
             <div class="desc center">{m.desc}</div>
             <button class="btn primary cbtn" on:click={() => connect(k)}
@@ -277,6 +282,8 @@
     box-shadow: var(--shadow-sm);
   }
   .appicon i { font-size: 26px; color: var(--accent-ink); }
+  .appicon :global(svg) { width: 26px; height: 26px; display: block; }
+  .appicon.mono :global(svg) { color: var(--text); }
   .afoot {
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--divider);
     display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -318,6 +325,9 @@
   }
   .bigicon i { font-size: 28px; color: var(--text-2); }
   .tile:hover .bigicon i { color: var(--accent-ink); }
+  .bigicon :global(svg) { width: 30px; height: 30px; display: block; }
+  .bigicon.mono :global(svg) { color: var(--text-2); }
+  .tile:hover .bigicon.mono :global(svg) { color: var(--text); }
 
   .name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
   .desc { font-size: 13px; color: var(--text-2); margin-top: 2px; margin-bottom: 12px; }
