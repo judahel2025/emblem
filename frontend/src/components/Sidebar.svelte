@@ -26,7 +26,7 @@
   const NAV = [
     { id: "notifications", label: "Notifications", icon: "ti-bell" },
     { id: "connect",     label: "Connections", icon: "ti-plug-connected" },
-    { id: "pages",       label: "Pages",       icon: "ti-file-text" },
+    { id: "pages",       label: "Notes",       icon: "ti-file-text" },
     { id: "calendar",    label: "Calendar",    icon: "ti-calendar" },
     { id: "automations", label: "Automations", icon: "ti-bolt" },
   ];

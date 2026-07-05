@@ -81,7 +81,7 @@
       await tick();
       editor?.setHTML(html);
       if (focusTitle) titleEl?.focus();
-    } catch (e) { notify("Couldn't open that page.", "danger"); }
+    } catch (e) { notify("Couldn't open that note.", "danger"); }
   }
 
   async function save(showFlash = false) {
@@ -133,8 +133,8 @@
   {#if open}
     <div class="editor" in:fade={{ duration: 180 }} style={`--note-tint: ${colorOf(color).tint};`}>
       <div class="ebar">
-        <button class="btn ghost back" on:click={closeEditor} aria-label="Back to all pages">
-          <i class="ti ti-arrow-left"></i> All pages
+        <button class="btn ghost back" on:click={closeEditor} aria-label="Back to all notes">
+          <i class="ti ti-arrow-left"></i> All notes
         </button>
         <div class="ebar-right">
           {#if savedFlash}<span class="saved" in:fade={{ duration: 120 }}><i class="ti ti-check"></i> Saved</span>
@@ -168,7 +168,7 @@
   {:else}
     <header class="head reveal-in">
       <div>
-        <h1>Pages</h1>
+        <h1>Notes</h1>
         <p class="sub">Notes and documents Emblem can read, write, and keep for you.</p>
       </div>
       <button class="btn primary" on:click={create}><i class="ti ti-plus"></i> New note</button>
@@ -179,11 +179,11 @@
     {:else if items.length === 0}
       <div class="empty blank" in:fade={{ duration: 200 }}>
         <i class="ti ti-file-text"></i>
-        <p>Nothing here yet. Pages are where drafts, notes, and plans live.</p>
+        <p>Nothing here yet. Notes are where drafts, ideas, and plans live.</p>
         <button class="btn primary" on:click={create}><i class="ti ti-plus"></i> Create your first note</button>
       </div>
     {:else}
-      <div class="grid">
+      <div class="grid stagger">
         {#each items as p, i (p.id)}
           {@const c = colorOf(p.icon)}
           <div class="pcard" in:fly={{ y: 8, duration: 200, delay: Math.min(i * 25, 200) }}>

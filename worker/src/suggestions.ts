@@ -12,7 +12,7 @@ const SUGGESTER =
   "You design personalized workflow suggestions for a member of Emblem — an AI " +
   "workspace that can: chat and answer anything; send email from THEIR connected Gmail; " +
   "manage their Google Calendar; browse/edit/push code in their GitHub; post to their " +
-  "LinkedIn/X/Instagram/Facebook; use their Notion and Slack; keep Pages (living " +
+  "LinkedIn/X/Instagram/Facebook; use their Notion and Slack; keep Notes (living " +
   "documents); set plain-language Automations that run on a schedule (e.g. every " +
   "morning); and remember durable facts.\n\n" +
   "Given the member's profile facts and which apps they have connected, reply with ONLY " +

@@ -10,7 +10,7 @@ import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
          listConnections, connectionStates, initiateConnection, disconnect } from "./composio";
 import { synthesize } from "./tts";
-import { onboardingReply, extractAndSaveProfile } from "./onboarding";
+import { onboardingReply, extractAndSaveProfile, extractProfileFields, saveProfileFields } from "./onboarding";
 import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
 import { proactiveBriefing } from "./briefing";
 import { pollNotifications, listNotifications } from "./notifications";
@@ -95,6 +95,29 @@ apiRoutes.post("/onboarding/chat", async (c) => {
     return c.json({ ok: true, reply: r.reply, done: true, saved: Boolean(saved) });
   }
   return c.json({ ok: true, reply: r.reply, done: false });
+});
+
+// Switching AI → form mid-conversation: pull whatever the chat already learned
+// so the form pre-fills and the member never repeats themselves. No save.
+apiRoutes.post("/onboarding/extract", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { history?: Array<{ role: string; text: string }> }));
+  const history = (Array.isArray(b.history) ? b.history : [])
+    .filter((t: { role?: string; text?: unknown }) =>
+      (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
+    .map((t: { role: string; text: string }) =>
+      ({ role: t.role as "user" | "assistant", text: t.text.slice(0, 2000) }));
+  const fields = await extractProfileFields(c.env, history).catch(() => ({} as Record<string, unknown>));
+  return c.json({ ok: true, fields });
+});
+
+// Classic-form onboarding completion: saves profile + memories directly from
+// the typed fields (extractor-shaped) — no LLM in the loop.
+apiRoutes.post("/onboarding/form", async (c) => {
+  const b = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const fields = (b && typeof b.fields === "object" && b.fields) ? b.fields as Record<string, unknown> : {};
+  const saved = await saveProfileFields(c.env, c.get("userId"), fields)
+    .catch((e) => { console.error("onboarding form save failed:", e); return null; });
+  return c.json({ ok: Boolean(saved), saved: Boolean(saved) });
 });
 
 // ---- proactive grounding (one real-signal line, surfaced on app open) ----------

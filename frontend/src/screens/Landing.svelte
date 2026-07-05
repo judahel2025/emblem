@@ -10,6 +10,8 @@
   import { tilt } from "../lib/tilt.js";
   const dispatch = createEventDispatcher();
   const enter = () => dispatch("enter");
+  let menuOpen = false;
+  const closeMenu = () => (menuOpen = false);
 
   /** Scroll-reveal action: fades/slides content in the first time it enters view. */
   function reveal(node) {
@@ -43,7 +45,7 @@
     { i: "ti-plug-connected", t: "20,000+ tools", d: "Gmail, Calendar, GitHub, your socials and more — each account stays rooted to you." },
     { i: "ti-brain", t: "Memory that grows", d: "It learns your people, preferences and projects, and every session builds on the last." },
     { i: "ti-bolt", t: "Works while you rest", d: "Plant an automation once — a morning brief, an inbox sweep — and it keeps running on its own." },
-    { i: "ti-file-text", t: "Pages & calendar", d: "Turn a conversation into a page or an event with one line. Your workspace, grown as you talk." },
+    { i: "ti-file-text", t: "Notes & calendar", d: "Turn a conversation into a note or an event with one line. Your workspace, grown as you talk." },
   ];
 
   const year = new Date().getFullYear();
@@ -57,11 +59,26 @@
       <a href="#features">Product</a>
       <a href="#connect">Connections</a>
       <a href="#voice">Voice</a>
+      <a href="#principles">Principles</a>
     </nav>
     <div class="nav-cta">
       <button class="ghost" on:click={enter}>Sign in</button>
       <button class="primary" on:click={enter}>Open workspace</button>
+      <button class="burger" on:click={() => (menuOpen = !menuOpen)} aria-label="Menu"
+              aria-expanded={menuOpen}>
+        <i class="ti {menuOpen ? 'ti-x' : 'ti-menu-2'}"></i>
+      </button>
     </div>
+    {#if menuOpen}
+      <nav class="mobile-menu glass night" on:click={closeMenu}>
+        <a href="#features">Product</a>
+        <a href="#connect">Connections</a>
+        <a href="#voice">Voice</a>
+        <a href="#principles">Principles</a>
+        <button class="ghost" on:click={enter}>Sign in</button>
+        <button class="primary" on:click={enter}>Open workspace</button>
+      </nav>
+    {/if}
   </header>
 
   <!-- Hero — liquid shader field + the 3D orb. ALWAYS black, both themes. -->
@@ -85,7 +102,7 @@
   <!-- Connections trust row -->
   <section id="connect" class="trust" use:reveal>
     <div class="trust-label">Rooted in everything you work in — 20,000+ tools</div>
-    <div class="tiles">
+    <div class="tiles stagger">
       {#each tools as t}
         <div class="tile gloss" use:tilt><i class="ti {t.i}"></i><span>{t.n}</span></div>
       {/each}
@@ -96,7 +113,7 @@
   <!-- Features bento -->
   <section id="features" class="features" use:reveal>
     <h2>A workspace that grows back.</h2>
-    <div class="bento">
+    <div class="bento stagger">
       {#each features as f, idx}
         <div class="fcard glass gloss" class:wide={idx === 0} use:tilt use:reveal>
           <div class="ficon"><i class="ti {f.i}"></i></div>
@@ -139,7 +156,7 @@
         <a href="#features">Chat & voice</a>
         <a href="#connect">Connections</a>
         <a href="#features">Automations</a>
-        <a href="#features">Pages & calendar</a>
+        <a href="#features">Notes & calendar</a>
       </div>
       <div class="foot-col">
         <h5>Resources</h5>
@@ -147,7 +164,7 @@
         <button class="flink" on:click={enter}>Open workspace</button>
         <button class="flink" on:click={enter}>Sign in</button>
       </div>
-      <div class="foot-col">
+      <div class="foot-col" id="principles">
         <h5>Principles</h5>
         <span class="fnote">Your accounts stay yours.</span>
         <span class="fnote">Consequential actions always ask first.</span>
@@ -162,7 +179,7 @@
 </div>
 
 <style>
-  .lp { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  .lp { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; scroll-behavior: smooth; }
 
   /* The cinematic scope: hero + nav are warm ink in BOTH themes, with the
      Verdant moss carrying the light. Re-declaring the tokens locally keeps
@@ -202,6 +219,18 @@
   .links a { color: var(--text-2); font-size: 14px; font-weight: 500; text-decoration: none; transition: color var(--t-fast); }
   .links a:hover { color: var(--accent-ink); }
   .nav-cta { display: flex; gap: 10px; align-items: center; }
+  .burger { display: none; width: 38px; height: 38px; border-radius: 10px;
+    place-items: center; color: var(--text); font-size: 21px; cursor: pointer; }
+  .mobile-menu {
+    position: absolute; top: 100%; left: 0; right: 0;
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 14px 20px 18px; border-top: none;
+    animation: fade-up 0.22s var(--spring) both;
+  }
+  .mobile-menu a { color: var(--text-2); font-size: 15px; font-weight: 600; text-decoration: none;
+    padding: 10px 4px; border-bottom: 1px solid var(--divider); }
+  .mobile-menu a:hover { color: var(--text); }
+  .mobile-menu .ghost, .mobile-menu .primary { margin-top: 10px; justify-content: center; display: flex; }
 
   .ghost { background: transparent; border: 1px solid transparent; color: var(--text-2); padding: 9px 14px;
     border-radius: var(--r-sm); font-size: 14px; font-weight: 600; cursor: pointer;
@@ -266,7 +295,8 @@
     display: flex; flex-direction: column; align-items: center; gap: 18px; }
   .voice h2 { font-size: clamp(26px, 4vw, 36px); }
   .voice .sub { max-width: 520px; margin: 0; color: var(--text-2); font-size: 15.5px; line-height: 1.65; }
-  .v-orb { position: relative; width: 110px; height: 110px; display: grid; place-items: center; }
+  .v-orb { position: relative; width: 110px; height: 110px; display: grid; place-items: center;
+    animation: float-y 4.5s ease-in-out infinite; }
   .v-orb .core { width: 72px; height: 72px; border-radius: 50%;
     background: var(--accent); color: var(--accent-t);
     display: grid; place-items: center; font-size: 27px;
@@ -304,5 +334,7 @@
   @media (max-width: 760px) {
     .links { display: none; }
     .nav { padding: 12px 20px; }
+    .nav-cta .ghost, .nav-cta .primary { display: none; }
+    .burger { display: grid; }
   }
 </style>

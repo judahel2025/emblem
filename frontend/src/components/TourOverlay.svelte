@@ -35,8 +35,12 @@
     </svg>
 
     <div class="card glass gloss" in:fly={{ y: 16, duration: 250 }}>
-      <p class="title">{step.title}</p>
-      <p class="script">{step.script}</p>
+      {#key s.idx}
+        <div class="cap" in:fly={{ x: 18, duration: 260 }}>
+          <p class="title">{step.title} <span class="count">{s.idx + 1}/{s.steps.length}</span></p>
+          <p class="script">{step.script}</p>
+        </div>
+      {/key}
       <div class="row">
         <div class="dots" role="progressbar"
              aria-valuenow={s.idx + 1} aria-valuemin="1" aria-valuemax={s.steps.length}
@@ -62,8 +66,13 @@
 <style>
   .tour { position: fixed; inset: 0; z-index: 90; }
   .veil { position: absolute; inset: 0; pointer-events: auto; }
-  .cutout, .ring { transition: x 0.35s ease, y 0.35s ease, width 0.35s ease, height 0.35s ease; }
-  .ring { filter: drop-shadow(0 0 10px var(--accent-glow)); }
+  .cutout, .ring { transition: x 0.35s var(--spring), y 0.35s var(--spring),
+    width 0.35s var(--spring), height 0.35s var(--spring); }
+  .ring { filter: drop-shadow(0 0 10px var(--accent-glow)); animation: ring-breathe 2.2s ease-in-out infinite; }
+  @keyframes ring-breathe {
+    0%, 100% { stroke-opacity: 1; }
+    50%      { stroke-opacity: 0.55; }
+  }
 
   .card {
     position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%);
@@ -72,6 +81,7 @@
     box-shadow: var(--shadow-lg);
   }
   .title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--text); }
+  .count { font-size: 11.5px; font-weight: 600; color: var(--text-3); margin-left: 6px; letter-spacing: 0.06em; }
   .script { margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; color: var(--text-2); }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .dots { display: flex; gap: 5px; }

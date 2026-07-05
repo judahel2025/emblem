@@ -1,17 +1,45 @@
 <script>
-  // The Emblem mark — Judah's Verdant infinity ribbon (raster, used exactly as
-  // exported): the left loop reads as a lowercase "e", the crossover is the ∞,
-  // the right loop holds the molecule/node network. 3D glossy moss — reads on
-  // both the milk and warm-ink grounds, so one asset serves both themes.
-  // `size` is the rendered HEIGHT; width follows the mark's native ratio.
+  // The Emblem mark — the moss orb: the same luminous sphere that floats on the
+  // landing hero (Judah's pick, 2026-07-05). A shaded Verdant globe with a fine
+  // wireframe shell, drawn as vector so it's crisp at any size and identical in
+  // both themes. `size` is the rendered diameter.
   export let size = 28;
   export let glow = false;
+  // Unique gradient ids per instance — several logos render on one page, and
+  // duplicate SVG ids break if the first instance is hidden.
+  const uid = Math.random().toString(36).slice(2, 8);
 </script>
 
-<img
-  src="/verdant-logo.png"
-  alt=""
-  aria-hidden="true"
-  height={size}
-  style="height:{size}px; width:auto; display:block; {glow ? 'filter: drop-shadow(0 0 7px var(--accent-glow));' : ''}"
-/>
+<svg width={size} height={size} viewBox="0 0 100 100" fill="none"
+     xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+     style={glow ? "filter: drop-shadow(0 0 8px var(--accent-glow));" : ""}>
+  <defs>
+    <radialGradient id="orb-shade-{uid}" cx="36%" cy="30%" r="75%">
+      <stop offset="0%"  stop-color="#d3dfa9"/>
+      <stop offset="45%" stop-color="#93a566"/>
+      <stop offset="80%" stop-color="#5b6b39"/>
+      <stop offset="100%" stop-color="#39432a"/>
+    </radialGradient>
+    <radialGradient id="orb-sheen-{uid}" cx="32%" cy="24%" r="40%">
+      <stop offset="0%" stop-color="#f2f6df" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#f2f6df" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="orb-clip-{uid}"><circle cx="50" cy="50" r="46"/></clipPath>
+  </defs>
+
+  <circle cx="50" cy="50" r="46" fill="url(#orb-shade-{uid})"/>
+
+  <!-- wireframe shell — longitude + latitude, clipped to the globe -->
+  <g clip-path="url(#orb-clip-{uid})" stroke="#e8f0ce" stroke-opacity="0.28" stroke-width="1.1" fill="none">
+    <ellipse cx="50" cy="50" rx="46" ry="46"/>
+    <ellipse cx="50" cy="50" rx="30" ry="46"/>
+    <ellipse cx="50" cy="50" rx="12" ry="46"/>
+    <ellipse cx="50" cy="50" rx="46" ry="30"/>
+    <ellipse cx="50" cy="50" rx="46" ry="12"/>
+  </g>
+
+  <!-- top-left light -->
+  <circle cx="50" cy="50" r="46" fill="url(#orb-sheen-{uid})"/>
+  <!-- rim -->
+  <circle cx="50" cy="50" r="45.5" stroke="#39432a" stroke-opacity="0.55" stroke-width="1"/>
+</svg>

@@ -25,6 +25,9 @@
 </script>
 
 <div class="wrap">
+  <button class="home" on:click={() => dispatch("back")} in:fly={{ y: -6, duration: 250 }}>
+    <i class="ti ti-arrow-left"></i> Back to home
+  </button>
   <div class="card glass gloss" class:shake in:fly={{ y: 14, duration: 300 }}>
     <div class="brand"><span class="mark"><Logo size={26} /></span> Emblem</div>
     <h1>{mode === "signup" ? "Create your workspace" : "Welcome back"}</h1>
@@ -65,7 +68,16 @@
     background:
       radial-gradient(1200px 600px at 50% -10%, var(--accent-bg), transparent 60%),
       var(--bg);
+    position: relative;
   }
+  .home {
+    position: absolute; top: 20px; left: 22px;
+    display: inline-flex; align-items: center; gap: 7px;
+    color: var(--text-3); font-size: 13.5px; font-weight: 600; cursor: pointer;
+    padding: 8px 12px; border-radius: var(--r-pill);
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .home:hover { color: var(--text); background: var(--accent-bg); }
   .card {
     width: 100%; max-width: 400px;
     border-radius: var(--r-xl); padding: 34px 30px;

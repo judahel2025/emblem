@@ -221,6 +221,8 @@ export const api = {
 
   // AI onboarding (text engine) + personalized suggestions
   onboardingChat: (history) => post("/api/onboarding/chat", { history }),
+  onboardingExtract: (history) => post("/api/onboarding/extract", { history }),
+  onboardingForm: (fields) => post("/api/onboarding/form", { fields }),
   suggestions: (refresh = false) => get(`/api/suggestions${refresh ? "?refresh=1" : ""}`),
   async speechUrl(text) {
     const res = await fetch(API_BASE + "/api/voice/tts", {

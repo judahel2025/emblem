@@ -51,6 +51,7 @@
   let identityReady = !loggedIn;   // logged-in users wait for /api/me before routing
 
   function enterApp() { entered = true; try { localStorage.setItem("emblem_entered", "1"); } catch {} }
+  function backToLanding() { entered = false; try { localStorage.setItem("emblem_entered", "0"); } catch {} }
   async function onLogin() {
     loggedIn = true;
     identityReady = false;
@@ -119,7 +120,7 @@
 {#if !entered}
   <Landing on:enter={enterApp} />
 {:else if !loggedIn}
-  <Login on:done={onLogin} />
+  <Login on:done={onLogin} on:back={backToLanding} />
 {:else if !identityReady}
   <div class="splash">
     <div class="splash-v pulse"><Logo size={44} /></div>

@@ -23,8 +23,8 @@ export const TOUR_STEPS = [
   {
     view: "pages",
     target: "pages-root",
-    title: "Pages",
-    script: "Pages are living documents. Ask me to start one in chat, and we'll grow it together.",
+    title: "Notes",
+    script: "Notes are living documents. Ask me to start one in chat, and we'll grow it together.",
   },
   {
     view: "calendar",
