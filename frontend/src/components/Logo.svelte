@@ -1,8 +1,8 @@
 <script>
-  // The Emblem mark — the moss orb: the same luminous sphere that floats on the
-  // landing hero (Judah's pick, 2026-07-05). A shaded Verdant globe with a fine
-  // wireframe shell, drawn as vector so it's crisp at any size and identical in
-  // both themes. `size` is the rendered diameter.
+  // The Emblem mark — the AURORA orb (Judah's reference, 2026-07-05): a glossy
+  // near-black sphere with a crimson bloom, a thin electric-blue rim, and a
+  // white four-point sparkle riding the upper right. Vector — crisp anywhere,
+  // identical in both themes. `size` is the rendered diameter.
   export let size = 28;
   export let glow = false;
   // Unique gradient ids per instance — several logos render on one page, and
@@ -14,32 +14,25 @@
      xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
      style={glow ? "filter: drop-shadow(0 0 8px var(--accent-glow));" : ""}>
   <defs>
-    <radialGradient id="orb-shade-{uid}" cx="36%" cy="30%" r="75%">
-      <stop offset="0%"  stop-color="#e8d7ae"/>
-      <stop offset="45%" stop-color="#c09a5e"/>
-      <stop offset="80%" stop-color="#8b6530"/>
-      <stop offset="100%" stop-color="#4a3619"/>
+    <radialGradient id="orb-shade-{uid}" cx="38%" cy="32%" r="78%">
+      <stop offset="0%"  stop-color="#ffeef2"/>
+      <stop offset="18%" stop-color="#f27b7e"/>
+      <stop offset="45%" stop-color="#a92d44"/>
+      <stop offset="74%" stop-color="#3a1030"/>
+      <stop offset="100%" stop-color="#12081c"/>
     </radialGradient>
-    <radialGradient id="orb-sheen-{uid}" cx="32%" cy="24%" r="40%">
-      <stop offset="0%" stop-color="#f6efe0" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#f6efe0" stop-opacity="0"/>
+    <radialGradient id="orb-sheen-{uid}" cx="34%" cy="26%" r="38%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
-    <clipPath id="orb-clip-{uid}"><circle cx="50" cy="50" r="46"/></clipPath>
   </defs>
 
-  <circle cx="50" cy="50" r="46" fill="url(#orb-shade-{uid})"/>
-
-  <!-- wireframe shell — longitude + latitude, clipped to the globe -->
-  <g clip-path="url(#orb-clip-{uid})" stroke="#f0e6cd" stroke-opacity="0.28" stroke-width="1.1" fill="none">
-    <ellipse cx="50" cy="50" rx="46" ry="46"/>
-    <ellipse cx="50" cy="50" rx="30" ry="46"/>
-    <ellipse cx="50" cy="50" rx="12" ry="46"/>
-    <ellipse cx="50" cy="50" rx="46" ry="30"/>
-    <ellipse cx="50" cy="50" rx="46" ry="12"/>
-  </g>
-
-  <!-- top-left light -->
-  <circle cx="50" cy="50" r="46" fill="url(#orb-sheen-{uid})"/>
-  <!-- rim -->
-  <circle cx="50" cy="50" r="45.5" stroke="#4a3619" stroke-opacity="0.55" stroke-width="1"/>
+  <circle cx="50" cy="50" r="45" fill="url(#orb-shade-{uid})"/>
+  <!-- top-left specular -->
+  <circle cx="50" cy="50" r="45" fill="url(#orb-sheen-{uid})"/>
+  <!-- electric-blue rim -->
+  <circle cx="50" cy="50" r="44.5" stroke="#5a7cf0" stroke-opacity="0.55" stroke-width="1.4"/>
+  <!-- the four-point sparkle -->
+  <path d="M72 12 C 74 24, 78 28, 90 30 C 78 32, 74 36, 72 48 C 70 36, 66 32, 54 30 C 66 28, 70 24, 72 12 Z"
+        fill="#ffffff" fill-opacity="0.96"/>
 </svg>

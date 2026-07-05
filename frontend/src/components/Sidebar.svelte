@@ -244,17 +244,17 @@
   .nav-item.active i { color: var(--accent-t); }
   .nav-item i { font-size: 18px; flex-shrink: 0; }
   .ni-ic { position: relative; display: grid; place-items: center; }
-  /* Unread = ochre: waiting on the user. */
+  /* Unread = crimson. */
   .ni-count {
     margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--r-pill);
-    background: var(--caution); color: var(--bg); font-size: 11px; font-weight: 500;
+    background: var(--accent); color: #fff; font-size: 11px; font-weight: 500;
     display: grid; place-items: center;
   }
   .nav-item.active .ni-count { background: var(--accent-t); color: var(--accent); }
   /* collapsed: a small dot on the bell */
   .ni-badge.dot {
     position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; padding: 0;
-    border-radius: 50%; background: var(--caution); border: 2px solid var(--s1);
+    border-radius: 50%; background: var(--accent); border: 2px solid var(--s1);
   }
   .ni-badge:not(.dot) { display: none; }
 
@@ -279,7 +279,7 @@
   .thread-row.active .mini { color: var(--accent-t); opacity: 0.8; }
   .thread-row.active .mini:hover { background: rgba(128,128,128,0.25); color: var(--accent-t); opacity: 1; }
   .t-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .t-title.dim { color: var(--text-3); font-style: italic; }
+  .t-title.dim { color: var(--text-3); }
   .row-actions { display: none; align-items: center; gap: 2px; padding-right: 6px; }
   .thread-row:hover .row-actions { display: flex; }
   .mini {

@@ -36,14 +36,17 @@
         vec2 uv = v_texCoord;
         vec2 mouse = u_mouse / u_resolution;
         float dist = distance(uv, mouse);
-        // The Signet: vellum <-> ink grounds, brass-warm cursor influence.
-        vec3 base1 = mix(vec3(0.965, 0.945, 0.905), vec3(0.078, 0.082, 0.106), u_dark);
-        vec3 base2 = mix(vec3(0.985, 0.972, 0.945), vec3(0.055, 0.058, 0.078), u_dark);
-        vec3 accent = mix(vec3(0.545, 0.396, 0.188), vec3(0.752, 0.604, 0.369), u_dark);
+        // AURORA: lavender <-> navy grounds; the cursor bloom lerps from
+        // electric blue (left) to crimson (right) across the screen.
+        vec3 base1 = mix(vec3(0.933, 0.922, 0.969), vec3(0.043, 0.063, 0.125), u_dark);
+        vec3 base2 = mix(vec3(0.957, 0.945, 0.980), vec3(0.031, 0.045, 0.090), u_dark);
+        vec3 blueA = vec3(0.243, 0.388, 0.867);
+        vec3 redA  = vec3(0.898, 0.282, 0.302);
+        vec3 accent = mix(blueA, redA, uv.x);
         float noise = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.1;
         float influence = smoothstep(0.4, 0.0, dist + noise);
         vec3 finalColor = mix(base1, base2, uv.y);
-        finalColor = mix(finalColor, accent, influence * (0.04 + 0.05 * u_dark));
+        finalColor = mix(finalColor, accent, influence * (0.10 + 0.10 * u_dark));
         gl_FragColor = vec4(finalColor, 1.0);
       }`;
     const cs = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };

@@ -23,6 +23,12 @@
   <span class="halo"></span>
   <span class="rim"></span>
   <span class="core"></span>
+  <span class="spark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2 C 13 9, 15 11, 22 12 C 15 13, 13 15, 12 22 C 11 15, 9 13, 2 12 C 9 11, 11 9, 12 2 Z"
+            fill="#ffffff" fill-opacity="0.95"/>
+    </svg>
+  </span>
   {#if state === "speaking"}
     <span class="ripple r1"></span>
     <span class="ripple r2"></span>
@@ -60,18 +66,30 @@
     animation: throb var(--speed) ease-in-out infinite;
     animation-delay: calc(var(--speed) / -3);
   }
-  /* the point of light itself — white-hot in BOTH themes; the soft silver
-     shading + neutral keel keep it visible on a pure-white canvas */
+  /* the glossy dark sphere itself — pink-white specular, crimson body,
+     near-black keel; the red bloom + blue rim come from halo/rim tokens */
   .core {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(circle at 42% 38%, #f7f2e4 0%, var(--glow-core) 45%, #cdb98f 100%);
-    box-shadow: inset 0 calc(var(--d) * -0.06) calc(var(--d) * 0.14) rgba(0, 0, 0, 0.08),
-                0 0 calc(var(--d) * 0.3) var(--glow-soft);
+    background: radial-gradient(circle at 38% 32%,
+      #ffeef2 0%, #f27b7e 18%, #a92d44 45%, #3a1030 74%, #12081c 100%);
+    box-shadow: inset 0 calc(var(--d) * -0.06) calc(var(--d) * 0.14) rgba(0, 0, 0, 0.35),
+                0 0 calc(var(--d) * 0.35) var(--glow-soft);
     animation: throb var(--speed) ease-in-out infinite;
   }
-  .orb.off .halo, .orb.off .rim, .orb.off .core { animation: none; opacity: 0.4; }
+  /* the reference's four-point sparkle, riding the upper-right of the core */
+  .spark {
+    position: absolute;
+    top: calc(var(--d) * 0.10);
+    right: calc(var(--d) * 0.10);
+    width: calc(var(--d) * 0.34);
+    height: calc(var(--d) * 0.34);
+    filter: drop-shadow(0 0 calc(var(--d) * 0.08) rgba(255, 220, 228, 0.9));
+    animation: throb var(--speed) ease-in-out infinite;
+  }
+  .spark svg { width: 100%; height: 100%; display: block; }
+  .orb.off .halo, .orb.off .rim, .orb.off .core, .orb.off .spark { animation: none; opacity: 0.4; }
   .orb.thinking .halo { opacity: 0.45; }
 
   /* speaking: slow rings leaving the core */

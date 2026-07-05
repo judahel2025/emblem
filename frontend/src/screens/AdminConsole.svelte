@@ -362,7 +362,7 @@
   .rcard.unread { border-color: var(--accent); }
   .rhead { width: 100%; display: flex; align-items: center; gap: 10px; padding: 13px 16px;
     cursor: pointer; font-size: 14px; color: var(--text); text-align: left; }
-  .newdot { width: 8px; height: 8px; border-radius: 50%; background: var(--caution); box-shadow: 0 0 8px var(--caution-bg); }
+  .newdot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
   .rwho { font-weight: 500; }
   .rkind { font-size: 12px; color: var(--text-3); }
   .rdate { margin-left: auto; font-size: 12px; color: var(--text-3); }
@@ -383,6 +383,7 @@
   .nlgrid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px; }
   @media (max-width: 900px) { .nlgrid { grid-template-columns: 1fr; } }
   .nlchat, .nlpreview { display: flex; flex-direction: column; gap: 10px; min-height: 420px; }
+  .nlpreview { box-shadow: var(--edge-blue), var(--shadow-sm); }
   .nlhead { font-size: 12px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase;
     color: var(--text-3); display: flex; align-items: center; justify-content: space-between; }
   .htoggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3);
@@ -393,7 +394,7 @@
     max-height: 420px; scroll-behavior: smooth; }
   .hint { color: var(--text-3); font-size: 13.5px; line-height: 1.6; margin: 0; }
   .line { margin: 0; font-size: 14px; line-height: 1.55; animation: fade-up 0.25s ease; }
-  .line.assistant { color: var(--text); font-family: var(--font-voice); font-style: italic; font-size: 15px; }
+  .line.assistant { color: var(--text); }
   .line.user { color: var(--text-3); text-align: right; }
   .line.dots { display: flex; gap: 4px; }
   .line.dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3);
@@ -440,7 +441,7 @@
   .veil { position: fixed; inset: 0; z-index: 130; background: rgba(0,0,0,0.5);
     display: grid; place-items: center; padding: 20px;
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-  .confirm { width: min(440px, 100%); border-radius: var(--r-seal); padding: 22px;
+  .confirm { width: min(440px, 100%); border-radius: var(--r-lg); padding: 22px;
     display: flex; flex-direction: column; gap: 12px; }
   .confirm h3 { margin: 0; font-size: 17px; color: var(--text); }
   .confirm p { margin: 0; font-size: 14px; color: var(--text-2); line-height: 1.6; }

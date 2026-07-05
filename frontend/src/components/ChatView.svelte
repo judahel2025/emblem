@@ -140,6 +140,7 @@
   <div class="thread" bind:this={threadEl} on:scroll={onThreadScroll}>
     {#if $messages.length === 0 && !$thinking}
       <div class="empty-state" in:fly={{ y: 10, duration: 300 }}>
+        <span class="dotfield ef" aria-hidden="true"></span>
         <Orb size={58} state="idle" />
         <p class="empty-title">{$me.display_name ? `What are we doing today, ${$me.display_name}?` : "What are you working on?"}</p>
         <!-- One clean, consistent look for everyone: personalized suggestion pills
@@ -327,10 +328,10 @@
   .empty-state {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     flex: 1; gap: 24px; padding: 60px 20px; text-align: center;
-    min-height: 55vh;
+    min-height: 55vh; position: relative;
   }
-  .empty-title { font-size: 28px; font-weight: 400; letter-spacing: -0.01em; color: var(--text); margin: 0;
-    font-family: var(--font-voice); font-style: italic; }
+  .empty-state .ef { top: 0; left: 50%; transform: translateX(-50%); width: 480px; height: 340px; }
+  .empty-title { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); margin: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 480px; }
   .chip {
     display: inline-flex; align-items: center; gap: 7px;
@@ -376,11 +377,8 @@
     border-radius: 20px 20px 6px 20px;
     border: 1px solid var(--border);
   }
-  /* Emblem's own words — the voice font, italic, always. Structure inside
-     the reply (code, tables, headings) stays upright in its proper face. */
   .row.assistant .md-body {
-    color: var(--text); font-size: 16px; line-height: 1.7;
-    font-family: var(--font-voice); font-style: italic;
+    color: var(--text); font-size: 15px; line-height: 1.7;
     max-width: 100%; position: relative;
   }
 

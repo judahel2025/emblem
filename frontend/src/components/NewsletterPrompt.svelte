@@ -38,7 +38,7 @@
   .veil { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.45);
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
     display: grid; place-items: center; padding: 20px; }
-  .card { width: min(400px, 100%); border-radius: var(--r-seal); padding: 26px 26px 20px;
+  .card { width: min(400px, 100%); border-radius: var(--r-lg); padding: 26px 26px 20px;
     display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
     box-shadow: var(--shadow-lg); }
   .ic { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;

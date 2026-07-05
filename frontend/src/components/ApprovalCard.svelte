@@ -119,8 +119,8 @@
 
 <style>
   .ap-card {
-    border-radius: var(--r-seal);   /* the pressed seal — this moment matters */
-    box-shadow: var(--shadow-md);
+    border-radius: var(--r-lg);
+    box-shadow: var(--edge-red), var(--shadow-md);
     display: flex; flex-direction: column; gap: 10px;
     transition: opacity var(--t-fast);
   }
@@ -141,9 +141,9 @@
   .ap-chip {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 3px 10px; border-radius: var(--r-pill);
-    background: var(--caution-bg); border: 1px solid var(--caution);
+    background: var(--blue-bg); border: 1px solid var(--blue);
     font-size: 11.5px; font-weight: 500; letter-spacing: 0.01em;
-    color: var(--caution);   /* ochre — waiting on the user */
+    color: var(--blue-h);   /* blue — waiting on the user */
   }
   .ap-chip i { font-size: 13px; }
   /* The stamp: weight applied, then settling — no bounce, no overshoot. */
@@ -155,8 +155,7 @@
   }
 
   .ap-summary {
-    margin: 0; font-size: 16px; font-weight: 400; line-height: 1.5;
-    font-family: var(--font-voice); font-style: italic;
+    margin: 0; font-size: 15px; font-weight: 500; line-height: 1.45;
     color: var(--text); overflow-wrap: break-word;
   }
 

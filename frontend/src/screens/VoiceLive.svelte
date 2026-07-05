@@ -149,7 +149,7 @@
   .caps { width: 100%; max-width: 560px; flex: 1; overflow-y: auto;
     display: flex; flex-direction: column; gap: 12px; }
   .line { margin: 0; font-size: 16px; line-height: 1.55; animation: reveal .3s ease; }
-  .line.assistant { color: var(--text); font-family: var(--font-voice); font-style: italic; font-size: 17px; }
+  .line.assistant { color: var(--text); }
   .line.user { color: var(--text-3); text-align: right; }
   .composer { display: flex; gap: 8px; width: 100%; max-width: 480px;
     border-radius: var(--r-pill);

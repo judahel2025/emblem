@@ -82,8 +82,7 @@
   }
   .title { margin: 0 0 4px; font-size: 15px; font-weight: 500; color: var(--text); }
   .count { font-size: 11.5px; font-weight: 500; color: var(--text-3); margin-left: 6px; letter-spacing: 0.06em; }
-  .script { margin: 0 0 14px; font-size: 15.5px; line-height: 1.6; color: var(--text-2);
-    font-family: var(--font-voice); font-style: italic; }
+  .script { margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; color: var(--text-2); }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .dots { display: flex; gap: 5px; }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong);

@@ -463,7 +463,7 @@
   }
   .progress .fill {
     height: 100%;
-    background: var(--accent-grad);
+    background: var(--duo-grad);
     box-shadow: 0 0 12px var(--accent-glow);
     border-radius: 0 99px 99px 0;
     transition: width 0.5s var(--spring);
@@ -498,7 +498,7 @@
   }
   .pre { color: var(--text-3); font-size: 15px; text-align: center; animation: fade-up .5s ease; }
   .line { margin: 0; font-size: 17px; line-height: 1.55; animation: reveal .35s ease; }
-  .line.assistant { color: var(--text); font-family: var(--font-voice); font-style: italic; font-size: 18px; }
+  .line.assistant { color: var(--text); }
   .line.user { color: var(--text-3); text-align: right; }
   .status { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
   .status.bad { color: var(--danger); }

@@ -78,7 +78,7 @@
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
   h1 { font-size: 32px; font-weight: 500; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); display: inline-flex; align-items: center; gap: 12px; }
   .hcount { font-size: 14px; font-weight: 500; min-width: 26px; height: 26px; padding: 0 8px; border-radius: var(--r-pill);
-    background: var(--caution); color: var(--bg); display: inline-grid; place-items: center; }
+    background: var(--accent); color: #fff; display: inline-grid; place-items: center; }
   .sub { color: var(--text-2); font-size: 13px; margin: 0; max-width: 520px; }
   .headacts { display: flex; gap: 10px; }
 
