@@ -472,13 +472,13 @@
   .orbwrap { padding: 24px 0 6px; }
 
   .intro { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; max-width: 460px; }
-  .intro h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+  .intro h1 { margin: 0; font-size: 30px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); }
   .intro p { margin: 0 0 10px; font-size: 15.5px; color: var(--text-2); line-height: 1.6; }
   .meet {
     display: inline-flex; align-items: center; gap: 9px;
     padding: 14px 30px; border-radius: var(--r-pill);
     background: var(--accent-grad); color: var(--accent-t);
-    font-size: 16px; font-weight: 700; cursor: pointer;
+    font-size: 16px; font-weight: 500; cursor: pointer;
     box-shadow: 0 0 24px var(--accent-glow);
     transition: filter var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
   }
@@ -498,7 +498,7 @@
   }
   .pre { color: var(--text-3); font-size: 15px; text-align: center; animation: fade-up .5s ease; }
   .line { margin: 0; font-size: 17px; line-height: 1.55; animation: reveal .35s ease; }
-  .line.assistant { color: var(--text); }
+  .line.assistant { color: var(--text); font-family: var(--font-voice); font-style: italic; font-size: 18px; }
   .line.user { color: var(--text-3); text-align: right; }
   .status { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
   .status.bad { color: var(--danger); }
@@ -525,7 +525,7 @@
   }
   .fcount { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); text-align: center; }
   .fstep { display: flex; flex-direction: column; gap: 10px; }
-  .flabel { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+  .flabel { font-size: 19px; font-weight: 500; letter-spacing: -0.01em; color: var(--text); }
   .fstep input, .fstep textarea {
     background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-md);
     padding: 13px 16px; color: var(--text); font-size: 15px; resize: none;
@@ -540,7 +540,7 @@
   .fback:hover:not(:disabled) { color: var(--text); }
   .fback:disabled { opacity: 0.3; cursor: default; }
   .alldone { display: flex; align-items: center; gap: 8px; justify-content: center;
-    color: var(--safe); font-size: 15px; font-weight: 600; }
+    color: var(--safe); font-size: 15px; font-weight: 500; }
 
   .switchlink {
     display: inline-flex; align-items: center; gap: 7px; align-self: center;

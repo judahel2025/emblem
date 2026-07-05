@@ -211,7 +211,7 @@
   .page { max-width: 960px; margin: 0 auto; padding: 28px 24px 60px; }
 
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
-  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: var(--text); }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 4px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 13px; margin: 0; }
 
   /* ── Card grid ── */
@@ -242,7 +242,7 @@
     display: grid; place-items: center; font-size: 18px;
   }
   .name {
-    font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.01em;
+    font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -0.01em;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .date { font-size: 12px; color: var(--text-3); }
@@ -279,7 +279,7 @@
   }
 
   .ttl {
-    width: 100%; font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
+    width: 100%; font-size: 26px; font-weight: 500; letter-spacing: -0.02em;
     border: none; outline: none; background: none; color: var(--text);
     padding: 0; margin-bottom: 12px;
   }

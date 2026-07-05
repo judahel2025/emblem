@@ -143,13 +143,13 @@
   }
   .panel {
     width: min(520px, 100%);
-    border-radius: var(--r-lg); padding: 20px 22px;
+    border-radius: var(--r-seal); padding: 20px 22px;
     box-shadow: var(--shadow-lg);
     display: flex; flex-direction: column; gap: 14px;
     max-height: min(640px, 90vh);
   }
   .head { display: flex; align-items: center; justify-content: space-between; }
-  .head h3 { margin: 0; font-size: 17px; font-weight: 700; color: var(--text);
+  .head h3 { margin: 0; font-size: 17px; font-weight: 500; color: var(--text);
     display: inline-flex; align-items: center; gap: 8px; }
   .x { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
     color: var(--text-3); font-size: 17px; cursor: pointer; }
@@ -172,7 +172,7 @@
     display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
   .pre { color: var(--text-3); font-size: 14px; }
   .line { margin: 0; font-size: 15px; line-height: 1.55; animation: fade-up 0.3s ease; }
-  .line.assistant { color: var(--text); }
+  .line.assistant { color: var(--text); font-family: var(--font-voice); font-style: italic; font-size: 16px; }
   .line.user { color: var(--text-3); text-align: right; }
   .line.dots { display: flex; gap: 4px; }
   .line.dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3);
@@ -198,7 +198,7 @@
     font-size: 14px; cursor: pointer; }
   .ghostb:hover { color: var(--text); }
   .primaryb { padding: 10px 22px; border-radius: var(--r-pill); background: var(--accent-grad);
-    color: var(--accent-t); font-size: 14px; font-weight: 700; cursor: pointer;
+    color: var(--accent-t); font-size: 14px; font-weight: 500; cursor: pointer;
     box-shadow: 0 0 14px var(--accent-glow); }
   .primaryb:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
 

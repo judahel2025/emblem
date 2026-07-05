@@ -1,5 +1,6 @@
-// Theme: light | dark | system. The inline script in index.html sets the initial
-// data-theme before paint; this store keeps it live afterwards (toggle + OS changes).
+// Theme: light | dark | system — INK (dark) is the default; vellum (light) is
+// the equally finished alternative. The inline script in index.html sets the
+// initial data-theme before paint; this store keeps it live afterwards.
 import { writable, derived } from "svelte/store";
 
 const KEY = "emblem_theme";
@@ -9,8 +10,8 @@ const media = typeof matchMedia !== "undefined"
 function stored() {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "light" || v === "dark" ? v : "system";
-  } catch { return "system"; }
+    return v === "light" || v === "dark" || v === "system" ? v : "dark";
+  } catch { return "dark"; }
 }
 
 export const theme = writable(stored());                 // the user's preference
@@ -25,13 +26,10 @@ resolvedTheme.subscribe((mode) => {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.theme = mode;
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.content = mode === "dark" ? "#000000" : "#ebe9dd";
+  if (m) m.content = mode === "dark" ? "#14151b" : "#f6f1e7";
 });
 
 export function setTheme(pref) {
   theme.set(pref);
-  try {
-    if (pref === "system") localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, pref);
-  } catch { /* private mode */ }
+  try { localStorage.setItem(KEY, pref); } catch { /* private mode */ }
 }

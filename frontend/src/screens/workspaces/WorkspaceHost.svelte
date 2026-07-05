@@ -84,7 +84,7 @@
     background: var(--s2); color: var(--accent-ink);
     display: grid; place-items: center; font-size: 19px;
   }
-  .ws-titles h1 { margin: 0; font-size: 16px; font-weight: 700; color: var(--text); }
+  .ws-titles h1 { margin: 0; font-size: 16px; font-weight: 500; color: var(--text); }
   .ws-titles p { margin: 0; font-size: 12px; color: var(--text-3); }
   .ws-loading {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;

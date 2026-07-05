@@ -217,7 +217,7 @@
       color: var(--text-2); font-size: 21px; cursor: pointer;
     }
     .mb-btn:active { background: var(--s2); }
-    .mb-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--text); }
+    .mb-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; color: var(--text); }
     .mb-brand :global(svg) { color: var(--accent-ink); }
     .main { padding-top: 52px; }
     .backdrop {
@@ -240,7 +240,7 @@
     display: grid; place-items: center;
     margin-bottom: 4px;
   }
-  .splash-v.pulse { animation: breathe-glow 1.8s ease-in-out infinite; border-radius: 999px; }
+  .splash-v.pulse { animation: breathe-glow 1.8s ease-in-out infinite; border-radius: var(--r-pill); }
   .splash h1 { margin: 0; font-size: 18px; color: var(--text); }
   .splash-sub { margin: 0; color: var(--text-3); font-size: 13px; }
   .splash-by { margin-top: 18px; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }

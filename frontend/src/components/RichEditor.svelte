@@ -136,8 +136,8 @@
     color: var(--text-3);
     pointer-events: none;
   }
-  .surface :global(h1) { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 18px 0 8px; }
-  .surface :global(h2) { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; margin: 16px 0 6px; }
+  .surface :global(h1) { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; margin: 18px 0 8px; }
+  .surface :global(h2) { font-size: 19px; font-weight: 500; letter-spacing: -0.01em; margin: 16px 0 6px; }
   .surface :global(p) { margin: 0 0 10px; }
   .surface :global(blockquote) {
     margin: 10px 0; padding: 4px 14px;

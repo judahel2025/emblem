@@ -36,9 +36,10 @@
         vec2 uv = v_texCoord;
         vec2 mouse = u_mouse / u_resolution;
         float dist = distance(uv, mouse);
-        vec3 base1 = mix(vec3(0.985, 0.985, 0.985), vec3(0.02, 0.02, 0.02), u_dark);
-        vec3 base2 = mix(vec3(1.0, 1.0, 1.0),       vec3(0.0, 0.0, 0.0),    u_dark);
-        vec3 accent = mix(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), u_dark);
+        // The Signet: vellum <-> ink grounds, brass-warm cursor influence.
+        vec3 base1 = mix(vec3(0.965, 0.945, 0.905), vec3(0.078, 0.082, 0.106), u_dark);
+        vec3 base2 = mix(vec3(0.985, 0.972, 0.945), vec3(0.055, 0.058, 0.078), u_dark);
+        vec3 accent = mix(vec3(0.545, 0.396, 0.188), vec3(0.752, 0.604, 0.369), u_dark);
         float noise = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.1;
         float influence = smoothstep(0.4, 0.0, dist + noise);
         vec3 finalColor = mix(base1, base2, uv.y);

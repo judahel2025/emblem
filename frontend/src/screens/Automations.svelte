@@ -119,12 +119,12 @@
 
   /* ── Header ── */
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
-  h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); }
+  h1 { font-size: 32px; font-weight: 500; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 13px; margin: 0; max-width: 480px; }
 
   .livechip {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 14px; border-radius: 999px;
+    padding: 8px 14px; border-radius: var(--r-pill);
     font-size: 13px; font-weight: 500; color: var(--text-2);
     box-shadow: var(--shadow-sm);
   }
@@ -138,7 +138,7 @@
   /* ── Bento columns ── */
   .cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; }
   .secthead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .secthead h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0; color: var(--text); }
+  .secthead h2 { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; margin: 0; color: var(--text); }
 
   /* ── Node list with vertical connector rail ── */
   .nodes { position: relative; display: flex; flex-direction: column; gap: 16px; }
@@ -169,9 +169,9 @@
 
   .info { flex: 1; min-width: 0; }
   .trow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .atitle { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+  .atitle { font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
   .state {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     padding: 3px 8px; border-radius: var(--r-sm);
     background: var(--s2); color: var(--text-2);
   }
@@ -208,7 +208,7 @@
   }
   .ptitle { display: flex; align-items: center; gap: 8px; }
   .ptitle i { font-size: 17px; color: var(--accent-ink); }
-  .ptitle h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; color: var(--text); }
+  .ptitle h2 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; margin: 0; color: var(--text); }
   .panel textarea { resize: vertical; min-height: 64px; }
   .panel select { cursor: pointer; }
   .createbtn { width: 100%; cursor: pointer; }
@@ -225,7 +225,7 @@
     position: absolute; right: -18px; top: -18px;
     font-size: 110px; opacity: 0.14; pointer-events: none;
   }
-  .feature h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .feature h3 { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 8px; }
   .feature p { font-size: 13px; line-height: 1.55; margin: 0; opacity: 0.85; }
 
   /* ── Empty state ── */

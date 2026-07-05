@@ -327,7 +327,7 @@
     flex-shrink: 0;
   }
 
-  .panel-header h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text); }
+  .panel-header h2 { margin: 0; font-size: 15px; font-weight: 500; color: var(--text); }
 
   .close-btn {
     width: 30px; height: 30px;
@@ -365,7 +365,7 @@
   }
 
   .section { display: flex; flex-direction: column; gap: 14px; }
-  .section h3 { margin: 0; font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+  .section h3 { margin: 0; font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
 
   .hint { margin: 0; font-size: 12px; color: var(--text-3); line-height: 1.5; }
 
@@ -411,7 +411,7 @@
     background: var(--s2);
     border-radius: var(--r-md);
   }
-  .secret-name { font-size: 12px; color: var(--accent-t); flex: 1; font-family: ui-monospace, monospace; }
+  .secret-name { font-size: 12px; color: var(--accent-t); flex: 1; font-family: var(--font-mono); }
   .secret-val { font-size: 12px; color: var(--text-3); flex: 1; }
 
   .add-secret { display: flex; gap: 8px; margin-top: 4px; }

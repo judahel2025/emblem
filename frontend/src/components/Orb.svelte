@@ -66,7 +66,7 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(circle at 42% 38%, #ffffff 0%, var(--glow-core) 45%, #c9c9c9 100%);
+    background: radial-gradient(circle at 42% 38%, #f7f2e4 0%, var(--glow-core) 45%, #cdb98f 100%);
     box-shadow: inset 0 calc(var(--d) * -0.06) calc(var(--d) * 0.14) rgba(0, 0, 0, 0.08),
                 0 0 calc(var(--d) * 0.3) var(--glow-soft);
     animation: throb var(--speed) ease-in-out infinite;

@@ -80,9 +80,10 @@
     border-radius: var(--r-lg); padding: 18px 20px 14px;
     box-shadow: var(--shadow-lg);
   }
-  .title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--text); }
-  .count { font-size: 11.5px; font-weight: 600; color: var(--text-3); margin-left: 6px; letter-spacing: 0.06em; }
-  .script { margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; color: var(--text-2); }
+  .title { margin: 0 0 4px; font-size: 15px; font-weight: 500; color: var(--text); }
+  .count { font-size: 11.5px; font-weight: 500; color: var(--text-3); margin-left: 6px; letter-spacing: 0.06em; }
+  .script { margin: 0 0 14px; font-size: 15.5px; line-height: 1.6; color: var(--text-2);
+    font-family: var(--font-voice); font-style: italic; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .dots { display: flex; gap: 5px; }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong);
@@ -92,7 +93,7 @@
   .ghost { padding: 7px 12px; border-radius: var(--r-pill); font-size: 13px; color: var(--text-3);
     cursor: pointer; transition: color var(--t-fast); }
   .ghost:hover { color: var(--text); }
-  .go { padding: 8px 18px; border-radius: var(--r-pill); font-size: 13.5px; font-weight: 600;
+  .go { padding: 8px 18px; border-radius: var(--r-pill); font-size: 13.5px; font-weight: 500;
     background: var(--accent-grad); color: var(--accent-t); cursor: pointer;
     box-shadow: 0 2px 10px var(--accent-glow); transition: filter var(--t-fast); }
   .go:hover { filter: brightness(1.07); }

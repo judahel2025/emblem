@@ -91,7 +91,7 @@
   .page { max-width: 860px; margin: 0 auto; padding: 40px 24px 60px; }
 
   .hero { text-align: center; margin-bottom: 36px; }
-  h1 { font-size: 38px; font-weight: 600; letter-spacing: -0.04em; color: var(--text); margin: 0 0 22px; }
+  h1 { font-size: 38px; font-weight: 500; letter-spacing: -0.04em; color: var(--text); margin: 0 0 22px; }
   .search {
     display: flex; align-items: center; gap: 10px;
     max-width: 560px; margin: 0 auto;
@@ -114,15 +114,15 @@
     background: var(--accent-bg); color: var(--accent-ink);
     display: grid; place-items: center; font-size: 21px; margin-bottom: 14px;
   }
-  .cat h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; color: var(--text); }
+  .cat h3 { margin: 0 0 6px; font-size: 17px; font-weight: 500; color: var(--text); }
   .cat p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-2); }
 
-  .faq h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0 0 18px; }
+  .faq h2 { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); margin: 0 0 18px; }
   .qa { border-bottom: 1px solid var(--border); }
   .q {
     width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 14px;
     text-align: left; padding: 16px 2px; cursor: pointer;
-    font-size: 15px; font-weight: 600; color: var(--text);
+    font-size: 15px; font-weight: 500; color: var(--text);
     transition: color var(--t-fast);
   }
   .q:hover { color: var(--accent-ink); }

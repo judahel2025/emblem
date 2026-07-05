@@ -37,24 +37,33 @@
       });
   }
 
+  // The moment of sealing: timestamped in mono, kept in the done state — the
+  // one permanent visual trace a completed action leaves.
+  let sealedAt = "";
+  const stampTime = () => new Date().toLocaleTimeString([], { hour12: false });
+
   function approve() {
     if (state !== "idle") return;
     choice = "approve";
+    sealedAt = stampTime();
     if (onApprove) onApprove();
     dispatch("approve", { id: approval.id, summary: approval.summary });
   }
   function decline() {
     if (state !== "idle") return;
     choice = "decline";
+    sealedAt = stampTime();
     if (onDecline) onDecline();
     dispatch("decline", { id: approval.id, summary: approval.summary });
   }
 </script>
 
 <div class="ap-card glass gloss {variant}" class:settled={state !== "idle"}>
-  <!-- Header chip — Claude AskUserQuestion style: a small tag, then the question -->
+  <!-- Header chip — ochre: waiting on the user. The shield is the signet; it
+       plays the press when the seal is applied. -->
   <div class="ap-head">
-    <span class="ap-chip"><i class="ti ti-shield-half-filled"></i> Approval needed</span>
+    <span class="ap-chip" class:stamping={state === "running" && choice === "approve"}>
+      <i class="ti ti-shield-half-filled"></i> Approval needed</span>
   </div>
   <p class="ap-summary">{approval.summary}</p>
 
@@ -96,7 +105,11 @@
       {choice === "decline" ? "Declining…" : "Approved — running…"}
     </div>
   {:else if state === "done"}
-    <div class="ap-status done"><i class="ti ti-check"></i> Done</div>
+    {#if choice === "decline"}
+      <div class="ap-status"><i class="ti ti-x"></i> Declined <span class="ap-stamp">· {sealedAt}</span></div>
+    {:else}
+      <div class="ap-status sealed"><i class="ti ti-check"></i> Sealed <span class="ap-stamp">· {sealedAt}</span></div>
+    {/if}
   {:else if state === "error"}
     <div class="ap-status error">
       <i class="ti ti-alert-triangle"></i> {error || "The action failed."}
@@ -106,7 +119,7 @@
 
 <style>
   .ap-card {
-    border-radius: var(--r-lg);
+    border-radius: var(--r-seal);   /* the pressed seal — this moment matters */
     box-shadow: var(--shadow-md);
     display: flex; flex-direction: column; gap: 10px;
     transition: opacity var(--t-fast);
@@ -128,14 +141,22 @@
   .ap-chip {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 3px 10px; border-radius: var(--r-pill);
-    background: var(--accent-bg); border: 1px solid var(--border);
-    font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em;
-    color: var(--text-2);
+    background: var(--caution-bg); border: 1px solid var(--caution);
+    font-size: 11.5px; font-weight: 500; letter-spacing: 0.01em;
+    color: var(--caution);   /* ochre — waiting on the user */
   }
   .ap-chip i { font-size: 13px; }
+  /* The stamp: weight applied, then settling — no bounce, no overshoot. */
+  .ap-chip.stamping i { animation: stamp-press 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+  @keyframes stamp-press {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(0.92); }
+    100% { transform: scale(1); }
+  }
 
   .ap-summary {
-    margin: 0; font-size: 15px; font-weight: 600; line-height: 1.45;
+    margin: 0; font-size: 16px; font-weight: 400; line-height: 1.5;
+    font-family: var(--font-voice); font-style: italic;
     color: var(--text); overflow-wrap: break-word;
   }
 
@@ -158,7 +179,7 @@
   .ap-kv { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
   .ap-kv dt {
     flex-shrink: 0; max-width: 38%;
-    font-size: 11.5px; font-weight: 600; color: var(--text-3);
+    font-size: 11.5px; font-weight: 500; color: var(--text-3);
     text-transform: lowercase; letter-spacing: 0.01em;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
@@ -183,7 +204,7 @@
     background: var(--s3); color: var(--text-2);
     transition: background var(--t-fast), color var(--t-fast);
   }
-  .ap-opt-label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ap-opt-label { font-size: 14px; font-weight: 500; color: var(--text); }
   .ap-opt-hint { margin-left: auto; font-size: 12px; color: var(--text-3); }
 
   .ap-option.approve:hover {
@@ -204,8 +225,9 @@
     font-size: 13px; font-weight: 500; color: var(--text-2);
     min-height: 32px;
   }
-  .ap-status.done { color: var(--safe); font-weight: 600; }
-  .ap-status.done i { font-size: 16px; }
+  .ap-status.sealed { color: var(--accent-ink); font-weight: 500; }  /* brass — Emblem sealed it */
+  .ap-status.sealed i { font-size: 16px; }
+  .ap-stamp { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
   .ap-status.error { color: var(--danger); }
   .ap-status.error i { font-size: 15px; flex-shrink: 0; }
 

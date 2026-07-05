@@ -405,8 +405,8 @@
     font-size: 13.5px; font-weight: 400; color: var(--text); margin-top: 2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .row.unread .subj { font-weight: 600; }
-  .row.unread .from { font-weight: 600; color: var(--text); }
+  .row.unread .subj { font-weight: 500; }
+  .row.unread .from { font-weight: 500; color: var(--text); }
   .snip {
     font-size: 12px; color: var(--text-3); margin-top: 2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

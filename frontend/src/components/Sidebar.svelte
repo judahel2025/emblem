@@ -199,7 +199,8 @@
   .top { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; flex-shrink: 0; }
   /* Railed: only the toggle remains, centered — never clipped. */
   .sidebar.collapsed .top { justify-content: center; }
-  .brand { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 500; color: var(--text); cursor: pointer;
+    font-family: var(--font-display); }
   .mark { display: grid; place-items: center; color: var(--accent-ink); }
   .icon-btn {
     width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
@@ -213,7 +214,7 @@
     padding: 10px 12px; margin: 0 2px 8px; flex-shrink: 0;
     border-radius: var(--r-pill);
     background: var(--accent-grad); color: var(--accent-t);
-    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-size: 14px; font-weight: 500; cursor: pointer;
     box-shadow: 0 2px 12px var(--accent-glow);
     transition: filter var(--t-fast), box-shadow var(--t-fast);
   }
@@ -238,27 +239,28 @@
   .sidebar.collapsed .nav-item { justify-content: center; padding: 9px 0; }
   .nav-item:hover { background: var(--s2); color: var(--text); }
   /* Selected = filled accent (black in light, milk in dark), and it STAYS. */
-  .nav-item.active { background: var(--accent); color: var(--accent-t); font-weight: 600; }
+  .nav-item.active { background: var(--accent); color: var(--accent-t); font-weight: 500; }
   .nav-item.active:hover { background: var(--accent); color: var(--accent-t); filter: brightness(1.05); }
   .nav-item.active i { color: var(--accent-t); }
   .nav-item i { font-size: 18px; flex-shrink: 0; }
   .ni-ic { position: relative; display: grid; place-items: center; }
+  /* Unread = ochre: waiting on the user. */
   .ni-count {
     margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--r-pill);
-    background: var(--accent-grad); color: var(--accent-t); font-size: 11px; font-weight: 700;
+    background: var(--caution); color: var(--bg); font-size: 11px; font-weight: 500;
     display: grid; place-items: center;
   }
   .nav-item.active .ni-count { background: var(--accent-t); color: var(--accent); }
   /* collapsed: a small dot on the bell */
   .ni-badge.dot {
     position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; padding: 0;
-    border-radius: 50%; background: var(--danger); border: 2px solid var(--s1);
+    border-radius: 50%; background: var(--caution); border: 2px solid var(--s1);
   }
   .ni-badge:not(.dot) { display: none; }
 
   .threads { padding: 6px 0 0; border-top: 1px solid var(--divider); }
   .section-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--text-3); margin: 0 0 4px; padding: 6px 8px 4px;
   }
   .thread-row {
@@ -267,7 +269,7 @@
   }
   .thread-row:hover { background: var(--s2); }
   /* Selected chat = filled accent, stays highlighted while it's the open thread. */
-  .thread-row.active { background: var(--accent); font-weight: 600; }
+  .thread-row.active { background: var(--accent); font-weight: 500; }
   .thread-btn {
     flex: 1; min-width: 0; text-align: left; padding: 6px 10px;
     font-size: 13.5px; line-height: 1.5; color: var(--text-2); cursor: pointer;
@@ -305,7 +307,7 @@
   .avatar {
     position: relative; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
     background: var(--accent-grad); color: var(--accent-t);
-    display: grid; place-items: center; font-size: 15px; font-weight: 700;
+    display: grid; place-items: center; font-size: 15px; font-weight: 500;
   }
   .status-dot {
     position: absolute; bottom: -1px; right: -1px;
@@ -314,7 +316,7 @@
   }
   .status-dot.ready { background: var(--safe); }
   .pinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .pname { font-size: 13.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pname { font-size: 13.5px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .psub { font-size: 11px; color: var(--text-3); }
   .pchev { font-size: 17px; color: var(--text-3); flex-shrink: 0; }
 

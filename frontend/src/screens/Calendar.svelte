@@ -228,9 +228,9 @@
   .gcal-page { display: flex; flex-direction: column; height: 100%; min-height: 0; }
   .gcal-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
     padding: 24px 24px 16px; flex-wrap: wrap; }
-  .gcal-head h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text);
+  .gcal-head h1 { font-size: 30px; font-weight: 500; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text);
     display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .synced { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  .synced { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
     padding: 4px 10px; border-radius: var(--r-pill); background: var(--accent-bg); color: var(--text-2);
     border: 1px solid var(--border); }
   .synced i { font-size: 14px; }
@@ -241,23 +241,23 @@
 
   /* ── Header ── */
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
-  h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); }
+  h1 { font-size: 32px; font-weight: 500; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 13px; margin: 0; }
 
   .pillgroup {
     display: flex; align-items: center; gap: 4px;
     background: var(--s1); border: 1px solid var(--border);
-    border-radius: 999px; padding: 4px;
+    border-radius: var(--r-pill); padding: 4px;
   }
   .pillbtn {
     display: inline-flex; align-items: center; justify-content: center;
-    padding: 7px 14px; border-radius: 999px;
+    padding: 7px 14px; border-radius: var(--r-pill);
     font-size: 13px; font-weight: 500; color: var(--text-2);
     cursor: pointer;
     transition: background var(--t-fast), color var(--t-fast);
   }
   .pillbtn:hover { background: var(--s3); color: var(--text); }
-  .pillbtn.today { background: var(--bg-2); color: var(--accent-ink); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .pillbtn.today { background: var(--bg-2); color: var(--accent-ink); font-weight: 500; box-shadow: var(--shadow-sm); }
   .pillbtn i { font-size: 16px; }
 
   /* ── Layout: calendar sheet + side rail ── */
@@ -272,7 +272,7 @@
     background: var(--s1);
   }
   .wkday {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--text-3); text-align: center; padding: 12px 0;
   }
 
@@ -292,14 +292,14 @@
   .day:not(.blank):not(.today):hover { background: var(--s1); }
   .day.blank { background: var(--s1); opacity: 0.5; }
   .day.today { background: var(--accent-bg); }
-  .day.today .num { color: var(--accent-ink); font-weight: 700; }
+  .day.today .num { color: var(--accent-ink); font-weight: 500; }
   .dot { position: absolute; top: 10px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
   .num { font-size: 12px; font-weight: 500; color: var(--text-2); line-height: 1; padding: 2px 0; }
 
   /* Event chips: left accent bar (mockup anatomy) */
   .chip {
     display: block; width: 100%;
-    font-size: 11px; font-weight: 600; text-align: left;
+    font-size: 11px; font-weight: 500; text-align: left;
     padding: 4px 7px;
     border-radius: var(--r-sm);
     background: var(--accent-bg); color: var(--accent-ink);
@@ -323,11 +323,11 @@
   .accentbar { position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--accent); opacity: 0.5; }
   .ptitle { display: flex; align-items: center; gap: 8px; }
   .ptitle i { font-size: 17px; color: var(--accent-ink); }
-  .ptitle h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; color: var(--text); }
+  .ptitle h3 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; margin: 0; color: var(--text); }
   .pnote { font-size: 13px; color: var(--text-2); line-height: 1.55; }
 
   /* Event detail */
-  .dtitle { font-size: 15px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+  .dtitle { font-size: 15px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
   .dwhen { font-size: 13px; color: var(--text-2); margin-top: -6px; }
   .dactions { display: flex; gap: 8px; }
   .dactions .btn { flex: 1; font-size: 13px; padding: 8px 12px; cursor: pointer; }
@@ -349,10 +349,10 @@
   .uprow:hover { border-color: var(--accent-glow); }
   .uprow.active { border-color: var(--accent); background: var(--accent-bg); }
   .uptitle {
-    font-size: 13px; font-weight: 600; color: var(--text);
+    font-size: 13px; font-weight: 500; color: var(--text);
     max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .upwhen { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-3); }
+  .upwhen { font-size: 11px; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-3); }
 
   @media (max-width: 920px) {
     .layout { flex-direction: column; }

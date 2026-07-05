@@ -328,7 +328,7 @@
   .inner { max-width: 960px; margin: 0 auto; padding: 20px 24px 60px; }
 
   .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
-  .month { font-size: 17px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+  .month { font-size: 17px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
   .nav { display: flex; gap: 8px; align-items: center; }
   .navbtn { padding: 9px 12px; cursor: pointer; }
 
@@ -357,7 +357,7 @@
   }
   .day.blank { border-color: transparent; background: transparent; }
   .day.today { box-shadow: 0 0 0 2px var(--accent); border-color: transparent; }
-  .day.today .num { color: var(--accent-ink); font-weight: 600; }
+  .day.today .num { color: var(--accent-ink); font-weight: 500; }
   .num { font-size: 12px; color: var(--text-2); line-height: 1; padding: 2px; }
 
   .chip {
@@ -384,7 +384,7 @@
     flex-wrap: wrap;
   }
   .dinfo { flex: 1; min-width: 200px; }
-  .dtitle { font-size: 15px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dtitle { font-size: 15px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .dwhen { font-size: 13px; color: var(--text-2); margin-top: 2px; }
   .dmeta { font-size: 12.5px; color: var(--text-3); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
   .derr { font-size: 12.5px; color: var(--danger); margin-top: 4px; }

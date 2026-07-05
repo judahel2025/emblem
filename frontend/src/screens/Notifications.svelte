@@ -76,9 +76,9 @@
 <style>
   .page { max-width: 780px; margin: 0 auto; padding: 32px 24px 60px; }
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
-  h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); display: inline-flex; align-items: center; gap: 12px; }
-  .hcount { font-size: 14px; font-weight: 700; min-width: 26px; height: 26px; padding: 0 8px; border-radius: var(--r-pill);
-    background: var(--accent-grad); color: var(--accent-t); display: inline-grid; place-items: center; }
+  h1 { font-size: 32px; font-weight: 500; letter-spacing: -0.03em; margin: 0 0 6px; color: var(--text); display: inline-flex; align-items: center; gap: 12px; }
+  .hcount { font-size: 14px; font-weight: 500; min-width: 26px; height: 26px; padding: 0 8px; border-radius: var(--r-pill);
+    background: var(--caution); color: var(--bg); display: inline-grid; place-items: center; }
   .sub { color: var(--text-2); font-size: 13px; margin: 0; max-width: 520px; }
   .headacts { display: flex; gap: 10px; }
 
@@ -103,7 +103,7 @@
   .nic .nimg { width: 24px; height: 24px; object-fit: contain; }
   .nic.mono :global(svg) { color: var(--text); }
   .nbody { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
-  .ntitle { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ntitle { font-size: 14px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ndesc { font-size: 12.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nmeta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
   .ndot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }

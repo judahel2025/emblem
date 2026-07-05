@@ -38,7 +38,7 @@
   .veil { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.45);
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
     display: grid; place-items: center; padding: 20px; }
-  .card { width: min(400px, 100%); border-radius: var(--r-lg); padding: 26px 26px 20px;
+  .card { width: min(400px, 100%); border-radius: var(--r-seal); padding: 26px 26px 20px;
     display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
     box-shadow: var(--shadow-lg); }
   .ic { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
@@ -46,7 +46,7 @@
   h3 { margin: 2px 0 0; font-size: 18px; color: var(--text); }
   p { margin: 0 0 8px; font-size: 14px; color: var(--text-2); line-height: 1.6; }
   .primaryb { width: 100%; padding: 12px; border-radius: var(--r-pill); background: var(--accent-grad);
-    color: var(--accent-t); font-size: 14.5px; font-weight: 700; cursor: pointer;
+    color: var(--accent-t); font-size: 14.5px; font-weight: 500; cursor: pointer;
     box-shadow: 0 0 16px var(--accent-glow); }
   .row { display: flex; gap: 18px; }
   .quiet { color: var(--text-3); font-size: 12.5px; cursor: pointer; }

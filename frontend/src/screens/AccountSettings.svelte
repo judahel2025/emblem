@@ -402,12 +402,12 @@
 <style>
   .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; }
   .head { margin-bottom: 24px; }
-  h1 { font-size: 36px; font-weight: 600; letter-spacing: -0.04em; margin: 0 0 6px; color: var(--text); }
+  h1 { font-size: 36px; font-weight: 500; letter-spacing: -0.04em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 15px; margin: 0; }
 
   .subtabs { display: flex; gap: 28px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
   .subtabs button {
-    padding: 0 0 13px; font-size: 13.5px; font-weight: 600; color: var(--text-2);
+    padding: 0 0 13px; font-size: 13.5px; font-weight: 500; color: var(--text-2);
     border-bottom: 2px solid transparent; cursor: pointer;
     transition: color var(--t-fast), border-color var(--t-fast);
   }
@@ -421,11 +421,11 @@
   .panel { border-radius: var(--r-lg); padding: 24px; box-shadow: var(--shadow-sm); }
   .panel h3 {
     display: flex; align-items: center; gap: 8px; margin: 0 0 20px;
-    font-size: 18px; font-weight: 600; color: var(--text);
+    font-size: 18px; font-weight: 500; color: var(--text);
   }
   .panel h3 i { color: var(--accent-ink); font-size: 20px; }
   .panel h4 {
-    margin: 0 0 8px; font-size: 12px; font-weight: 600;
+    margin: 0 0 8px; font-size: 12px; font-weight: 500;
     letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3);
   }
 
@@ -433,15 +433,15 @@
     border-bottom: 1px solid var(--border); }
   .avatar { width: 56px; height: 56px; border-radius: 50%;
     background: var(--accent); color: var(--accent-t);
-    display: grid; place-items: center; font-size: 22px; font-weight: 700; }
-  .idname { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+    display: grid; place-items: center; font-size: 22px; font-weight: 500; }
+  .idname { margin: 0; font-size: 15px; font-weight: 500; color: var(--text); }
   .idsub { margin: 2px 0 0; font-size: 12.5px; color: var(--text-3); }
 
   .formgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 640px) { .formgrid { grid-template-columns: 1fr; } }
   .ufield { display: flex; flex-direction: column; gap: 6px; }
   .ufield.wide { grid-column: 1 / -1; }
-  .ufield span { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+  .ufield span { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
   .ufield input {
     background: transparent; border: none; border-bottom: 2px solid var(--border-strong);
     padding: 8px 0; font-size: 15px; color: var(--text); outline: none;
@@ -514,10 +514,10 @@
   .skill-row.off { opacity: 0.55; }
   .skill-row.builtin { background: transparent; border-style: dashed; }
   .skill-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .skill-name { font-size: 13.5px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 8px; }
+  .skill-name { font-size: 13.5px; font-weight: 500; color: var(--text); display: inline-flex; align-items: center; gap: 8px; }
   .skill-desc { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
   .skill-builtin-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--text-3); margin: 18px 0 8px;
   }
 
@@ -530,7 +530,7 @@
     padding: 14px 16px; background: var(--s1);
     border: 1px solid var(--border); border-radius: var(--r-md);
   }
-  .pname { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+  .pname { margin: 0; font-size: 14px; font-weight: 500; color: var(--text); }
   .psub { margin: 2px 0 0; font-size: 12.5px; color: var(--text-3); }
   .quiet { display: flex; align-items: center; gap: 6px; color: var(--text-3); }
   .quiet input {
@@ -544,7 +544,7 @@
   .railtext { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--text-2); }
   .link {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 13px; font-weight: 600; color: var(--accent-ink); cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--accent-ink); cursor: pointer;
     transition: opacity var(--t-fast);
   }
   .link:hover { opacity: 0.8; }

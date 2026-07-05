@@ -15,14 +15,14 @@
      style={glow ? "filter: drop-shadow(0 0 8px var(--accent-glow));" : ""}>
   <defs>
     <radialGradient id="orb-shade-{uid}" cx="36%" cy="30%" r="75%">
-      <stop offset="0%"  stop-color="#d3dfa9"/>
-      <stop offset="45%" stop-color="#93a566"/>
-      <stop offset="80%" stop-color="#5b6b39"/>
-      <stop offset="100%" stop-color="#39432a"/>
+      <stop offset="0%"  stop-color="#e8d7ae"/>
+      <stop offset="45%" stop-color="#c09a5e"/>
+      <stop offset="80%" stop-color="#8b6530"/>
+      <stop offset="100%" stop-color="#4a3619"/>
     </radialGradient>
     <radialGradient id="orb-sheen-{uid}" cx="32%" cy="24%" r="40%">
-      <stop offset="0%" stop-color="#f2f6df" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#f2f6df" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#f6efe0" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#f6efe0" stop-opacity="0"/>
     </radialGradient>
     <clipPath id="orb-clip-{uid}"><circle cx="50" cy="50" r="46"/></clipPath>
   </defs>
@@ -30,7 +30,7 @@
   <circle cx="50" cy="50" r="46" fill="url(#orb-shade-{uid})"/>
 
   <!-- wireframe shell — longitude + latitude, clipped to the globe -->
-  <g clip-path="url(#orb-clip-{uid})" stroke="#e8f0ce" stroke-opacity="0.28" stroke-width="1.1" fill="none">
+  <g clip-path="url(#orb-clip-{uid})" stroke="#f0e6cd" stroke-opacity="0.28" stroke-width="1.1" fill="none">
     <ellipse cx="50" cy="50" rx="46" ry="46"/>
     <ellipse cx="50" cy="50" rx="30" ry="46"/>
     <ellipse cx="50" cy="50" rx="12" ry="46"/>
@@ -41,5 +41,5 @@
   <!-- top-left light -->
   <circle cx="50" cy="50" r="46" fill="url(#orb-sheen-{uid})"/>
   <!-- rim -->
-  <circle cx="50" cy="50" r="45.5" stroke="#39432a" stroke-opacity="0.55" stroke-width="1"/>
+  <circle cx="50" cy="50" r="45.5" stroke="#4a3619" stroke-opacity="0.55" stroke-width="1"/>
 </svg>

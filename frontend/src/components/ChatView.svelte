@@ -329,7 +329,8 @@
     flex: 1; gap: 24px; padding: 60px 20px; text-align: center;
     min-height: 55vh;
   }
-  .empty-title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0; }
+  .empty-title { font-size: 28px; font-weight: 400; letter-spacing: -0.01em; color: var(--text); margin: 0;
+    font-family: var(--font-voice); font-style: italic; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 480px; }
   .chip {
     display: inline-flex; align-items: center; gap: 7px;
@@ -375,8 +376,11 @@
     border-radius: 20px 20px 6px 20px;
     border: 1px solid var(--border);
   }
+  /* Emblem's own words — the voice font, italic, always. Structure inside
+     the reply (code, tables, headings) stays upright in its proper face. */
   .row.assistant .md-body {
-    color: var(--text); font-size: 15px; line-height: 1.7;
+    color: var(--text); font-size: 16px; line-height: 1.7;
+    font-family: var(--font-voice); font-style: italic;
     max-width: 100%; position: relative;
   }
 
@@ -429,14 +433,14 @@
   .doc-docx { color: #2b7cd3; } .doc-pdf { color: #d3402b; }
   .doc-pptx { color: #d35b2b; } .doc-xlsx { color: #1f9d55; }
   .doc-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .doc-title { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .doc-title { font-size: 14px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .doc-sub { font-size: 12px; color: var(--text-3); display: inline-flex; align-items: center; gap: 6px; }
   .doc-sub.err { color: var(--danger); }
   .doc-spin { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--text-2); animation: spin 0.7s linear infinite; display: inline-block; }
   .doc-dl {
     flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 14px; border-radius: var(--r-sm); text-decoration: none;
-    background: var(--accent-grad); color: var(--accent-t); font-size: 13px; font-weight: 600;
+    background: var(--accent-grad); color: var(--accent-t); font-size: 13px; font-weight: 500;
     box-shadow: 0 2px 10px var(--accent-glow); transition: filter var(--t-fast);
   }
   .doc-dl:hover { filter: brightness(1.08); }
@@ -458,31 +462,35 @@
   .doc-preview .pv-doc :global(ul) { margin: 4px 0; padding-left: 18px; color: var(--text-2); }
   .pv-slide { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--divider); }
   .pv-slide:last-child { border-bottom: none; }
-  .pv-slide-n { flex-shrink: 0; width: 22px; height: 22px; border-radius: 5px; background: var(--s2); color: var(--text-3); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+  .pv-slide-n { flex-shrink: 0; width: 22px; height: 22px; border-radius: 5px; background: var(--s2); color: var(--text-3); display: grid; place-items: center; font-size: 11px; font-weight: 500; }
   .pv-slide ul { margin: 4px 0 0; padding-left: 16px; color: var(--text-2); }
-  .pv-sheet { font-size: 12px; font-weight: 600; color: var(--text-3); margin: 8px 0 4px; }
+  .pv-sheet { font-size: 12px; font-weight: 500; color: var(--text-3); margin: 8px 0 4px; }
   .pv-tablewrap { overflow-x: auto; }
   .pv-table { border-collapse: collapse; font-size: 12px; }
   .pv-table th, .pv-table td { border: 1px solid var(--border); padding: 4px 9px; text-align: left; color: var(--text-2); }
-  .pv-table th { background: var(--s1); font-weight: 600; color: var(--text); }
+  .pv-table th { background: var(--s1); font-weight: 500; color: var(--text); }
 
   .attach-img { max-width: 220px; border-radius: 12px; display: block; margin-bottom: 6px; }
   .attach-label { font-size: 13px; color: var(--text-2); }
 
   .md-body :global(p) { margin: 0 0 10px; }
   .md-body :global(p:last-child) { margin: 0; }
-  .md-body :global(code) { background: var(--s2); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
-  .md-body :global(pre) { background: var(--s1); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px; overflow-x: auto; }
+  .md-body :global(code) { background: var(--s2); padding: 1px 6px; border-radius: 5px; font-size: 13px;
+    font-family: var(--font-mono); font-style: normal; }
+  .md-body :global(pre) { background: var(--s1); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px; overflow-x: auto;
+    font-family: var(--font-mono); font-style: normal; }
   .md-body :global(pre code) { background: none; padding: 0; }
   .md-body :global(ul), .md-body :global(ol) { padding-left: 20px; margin: 6px 0; }
   .md-body :global(li) { margin: 3px 0; }
-  .md-body :global(h1), .md-body :global(h2), .md-body :global(h3) { margin: 12px 0 6px; font-weight: 600; color: var(--text); }
-  .md-body :global(strong) { font-weight: 600; color: var(--text); }
+  .md-body :global(h1), .md-body :global(h2), .md-body :global(h3) { margin: 12px 0 6px; font-weight: 500; color: var(--text);
+    font-family: var(--font-ui); font-style: normal; }
+  .md-body :global(strong) { font-weight: 500; color: var(--text); }
   .md-body :global(a) { color: var(--accent-ink); text-decoration: underline; }
   .md-body :global(blockquote) { margin: 10px 0; padding: 4px 14px; border-left: 3px solid var(--accent); color: var(--text-2); }
-  .md-body :global(table) { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  .md-body :global(table) { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px;
+    font-family: var(--font-ui); font-style: normal; }
   .md-body :global(th), .md-body :global(td) { border: 1px solid var(--border); padding: 7px 11px; text-align: left; }
-  .md-body :global(th) { background: var(--s1); font-weight: 600; }
+  .md-body :global(th) { background: var(--s1); font-weight: 500; }
 
   .approvals-bar { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
   .approval-slot { max-width: 720px; margin: 0 auto; width: 100%; }

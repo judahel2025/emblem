@@ -1,57 +1,55 @@
-/* Emblem — VERDANT design system (Judah's pick, 2026-07):
-   Moss #5B6B39 primary + Clay #C67B45 secondary on the milk #EBE9DD light
-   ground / warm-ink dark ground. Dark mode lifts moss to #93A566 so it stays
-   luminous on ink. The glow is mossy light: primary actions, focus halo and
-   the Orb all carry the Verdant green. Hanken Grotesk (self-hosted, variable),
-   engineered radii (4/8/12), thin borders, glass depth. */
+/* Emblem — THE SIGNET, Emblem cut (Judah's system, 2026-07-05):
+   Ink #14151B / vellum #F6F1E7 grounds — never pure black or white. Brass
+   #B08A4E is the mark: what Emblem has sealed or asks to seal. Verdigris =
+   alive, ochre = waiting on the user, oxblood = the kill switch and nothing
+   else. Four faces: Fraunces (wordmark/H1), Newsreader italic (everything
+   Emblem SAYS), Instrument Sans (all chrome), Spline Sans Mono (logs/time).
+   Emblem-cut deviations, kept deliberately: glass, glow, pills, and the orb
+   survive from the previous system — retinted into ink/brass. */
 
-/* ── Hanken Grotesk — self-hosted variable font (wght 100–900) ── */
+/* ── The four faces — self-hosted, latin ── */
 @font-face {
-  font-family: 'Hanken Grotesk';
+  font-family: 'Fraunces';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 500;
   font-display: swap;
-  src: url('/fonts/hanken-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  src: url('/fonts/fraunces-500.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Hanken Grotesk';
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/newsreader-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Instrument Sans';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 400 500;
   font-display: swap;
-  src: url('/fonts/hanken-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url('/fonts/instrument-sans.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Hanken Grotesk';
-  font-style: italic;
-  font-weight: 100 900;
+  font-family: 'Spline Sans Mono';
+  font-style: normal;
+  font-weight: 400 500;
   font-display: swap;
-  src: url('/fonts/hanken-italic-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Hanken Grotesk';
-  font-style: italic;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('/fonts/hanken-italic-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url('/fonts/spline-mono.woff2') format('woff2');
 }
 
 :root, [data-theme="light"] {
   color-scheme: light;
 
-  /* ── Surfaces — MILK (#EBE9DD), warm off-white; text/buttons stay black ── */
-  --bg:    #ebe9dd;   /* milk */
-  --bg-2:  #e7e4d6;
-  --s1:    #e2dfcf;   /* sidebar/panels */
-  --s2:    #dbd7c5;   /* inputs/tiles */
-  --s3:    #d2ceb9;   /* hover */
-  --s4:    #0a0a0a;   /* high-contrast fill */
+  /* ── Surfaces — VELLUM (#F6F1E7): warm paper, never pure white ── */
+  --bg:    #f6f1e7;   /* vellum */
+  --bg-2:  #f1ebde;
+  --s1:    #eee7d8;   /* sidebar/panels */
+  --s2:    #e4dac5;   /* inputs/tiles */
+  --s3:    #dcd1b8;   /* hover */
+  --s4:    #221f19;   /* high-contrast fill */
 
-  /* glass — translucent milk, top-lit like real glass */
-  --surface:    rgba(235, 233, 221, 0.62);
+  /* glass — translucent vellum, top-lit (Emblem-cut: glass survives, retinted) */
+  --surface:    rgba(246, 241, 231, 0.62);
   --glass-blur: blur(24px);
   --glass-sat:  saturate(1.4);
   --gloss:      linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 42%);
@@ -59,27 +57,29 @@
   --glass-sheen: radial-gradient(120% 80% at 15% -10%, rgba(255,255,255,.4), rgba(255,255,255,0) 55%);
 
   /* ── Borders ────────────────────────────────────────────────── */
-  --border:        rgba(0, 0, 0, 0.10);
-  --border-strong: rgba(0, 0, 0, 0.20);
-  --divider:       rgba(0, 0, 0, 0.10);
+  --border:        rgba(34, 31, 25, 0.12);
+  --border-strong: rgba(34, 31, 25, 0.22);
+  --divider:       rgba(34, 31, 25, 0.10);
 
-  /* ── Text — black on milk ───────────────────────────────────── */
-  --text:   #0a0a0a;
-  --text-2: #4d4a40;
-  --text-3: #807c6d;
-  --text-on-accent: #ebe9dd;
+  /* ── Text — ink on vellum ───────────────────────────────────── */
+  --text:   #221f19;
+  --text-2: #6e6a5c;
+  --text-3: #96917f;
+  --text-on-accent: #f6f1e7;
 
-  /* ── Accent — VERDANT moss actions; text on them is milk. ───── */
-  --accent:      #5b6b39;   /* moss */
-  --accent-h:    #6a7c44;
-  --accent-ink:  #4f5d31;   /* interactive text = deep moss (AA on milk) */
-  --accent-t:    #f4f3e9;   /* text/icon ON moss fills = milk-white */
-  --accent-bg:   rgba(91, 107, 57, 0.10);
-  --accent-glow: rgba(91, 107, 57, 0.28);
-  --accent-grad: linear-gradient(180deg, #68793f, #52612f);
-  --accent-2:    #c67b45;   /* clay — the secondary */
-  --clay:        #c67b45;
-  --clay-bg:     rgba(198, 123, 69, 0.12);
+  /* ── Accent — BRASS: what Emblem seals, asks to seal, or marks. ── */
+  --accent:      #8b6530;   /* brass, vellum depth */
+  --accent-h:    #9c7238;
+  --accent-ink:  #7a5729;   /* interactive text = deep brass (AA on vellum) */
+  --accent-t:    #f6f1e7;   /* text/icon ON brass fills = vellum */
+  --accent-bg:   rgba(139, 101, 48, 0.10);
+  --accent-glow: rgba(139, 101, 48, 0.28);
+  --accent-grad: linear-gradient(180deg, #9c7238, #7d5a2a);
+  --accent-2:    #3d6a5e;   /* verdigris — the living secondary */
+
+  /* ── The two colours with one meaning each ──────────────────── */
+  --oxblood:    #8a2e22;    /* the kill switch. NOTHING else. */
+  --oxblood-bg: rgba(138, 46, 34, 0.10);
 
   /* ── Legacy aliases (older components) ──────────────────────── */
   --bg-1:   var(--s1);
@@ -87,20 +87,20 @@
   --line:   var(--border);
   --line-2: var(--border-strong);
 
-  /* ── Status (the ONLY color in the system, kept muted) ──────── */
-  --safe:       #15803d;
-  --safe-bg:    rgba(21, 128, 61, 0.09);
-  --caution:    #a16207;
-  --caution-bg: rgba(161, 98, 7, 0.09);
-  --danger:     #b91c1c;
-  --danger-bg:  rgba(185, 28, 28, 0.08);
+  /* ── Status — verdigris is alive, ochre is waiting on the user ── */
+  --safe:       #3d6a5e;    /* verdigris */
+  --safe-bg:    rgba(61, 106, 94, 0.10);
+  --caution:    #9c6e24;    /* ochre — pending / unread */
+  --caution-bg: rgba(156, 110, 36, 0.10);
+  --danger:     #a8503f;    /* generic errors — softened; oxblood is reserved */
+  --danger-bg:  rgba(168, 80, 63, 0.09);
   --info:       var(--text-2);
 
-  /* ── Glow (Orb, focus moments) — mossy light: a white-hot core with a
-        Verdant halo; a moss rim keeps it visible on milk. ── */
-  --glow-core: rgba(248, 250, 238, 0.95);
-  --glow-soft: rgba(147, 165, 102, 0.55);
-  --glow-rim:  rgba(91, 107, 57, 0.25);
+  /* ── Glow (Orb, focus moments) — parchment-hot core, brass halo.
+        Emblem-cut: the glow survives the no-glow rule, in brass. ── */
+  --glow-core: rgba(247, 242, 228, 0.95);
+  --glow-soft: rgba(139, 101, 48, 0.45);
+  --glow-rim:  rgba(139, 101, 48, 0.25);
 
   /* ── Shadows — soft ambient only ────────────────────────────── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -113,6 +113,7 @@
   --r-lg:   12px;   /* modals, large sheets */
   --r-xl:   16px;
   --r-pill: 999px;  /* the Orb + floating primary actions only */
+  --r-seal: 20px 26px 20px 28px;  /* the pressed seal — approvals + modals ONLY */
   --r-ghost: 4px;
   --radius:    var(--r-md);
   --radius-sm: var(--r-sm);
@@ -124,60 +125,67 @@
   --t-slow:   0.4s;
   --spring:   cubic-bezier(0.34, 1.3, 0.64, 1);
 
-  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* ── The four faces ─────────────────────────────────────────── */
+  --font-display: 'Fraunces', Georgia, serif;              /* wordmark + H1 only */
+  --font-voice:   'Newsreader', Georgia, serif;            /* italic — Emblem's own words */
+  --font-ui:      'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'Spline Sans Mono', ui-monospace, monospace;
+
+  font-family: var(--font-ui);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* ── Surfaces — warm ink: near-black with an earthen undertone ── */
-  --bg:    #0d0c09;
-  --bg-2:  #12110c;
-  --s1:    #181711;
-  --s2:    #1e1d16;
-  --s3:    #26241b;
-  --s4:    #ebe9dd;
+  /* ── Surfaces — INK (#14151B): deep blue-black, never pure black ── */
+  --bg:    #14151b;   /* ink */
+  --bg-2:  #181a21;
+  --s1:    #1c1e26;   /* cards, panels */
+  --s2:    #242631;   /* inputs, nested */
+  --s3:    #2c2e3a;   /* hover */
+  --s4:    #edeae0;
 
-  --surface:    rgba(18, 18, 18, 0.55);
+  --surface:    rgba(28, 30, 38, 0.55);
   --glass-blur: blur(24px);
   --glass-sat:  saturate(1.4);
   --gloss:      linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%);
   --glass-hi:   inset 0 1px 0 rgba(255,255,255,0.1), inset 0 0 0 1px rgba(255,255,255,0.04);
   --glass-sheen: radial-gradient(120% 80% at 15% -10%, rgba(255,255,255,.08), rgba(255,255,255,0) 55%);
 
-  --border:        rgba(235, 233, 221, 0.10);
-  --border-strong: rgba(235, 233, 221, 0.20);
-  --divider:       rgba(235, 233, 221, 0.10);
+  --border:        rgba(237, 234, 224, 0.10);
+  --border-strong: rgba(237, 234, 224, 0.20);
+  --divider:       rgba(237, 234, 224, 0.10);
 
-  /* ── Foreground is MILK (#EBE9DD) — text + buttons ──────────── */
-  --text:   #ebe9dd;
-  --text-2: #9d998b;
-  --text-3: #6b6860;
-  --text-on-accent: #0a0a0a;
+  /* ── Foreground is warm parchment (#EDEAE0) ─────────────────── */
+  --text:   #edeae0;
+  --text-2: #9b9a93;
+  --text-3: #6e6d66;
+  --text-on-accent: #14151b;
 
-  /* ── Accent — luminous moss actions + halo. ─────────────────── */
-  --accent:      #93a566;   /* moss, lifted for dark */
-  --accent-h:    #a3b478;
-  --accent-ink:  #93a566;
-  --accent-t:    #12150a;   /* ink text ON moss fills */
-  --accent-bg:   rgba(147, 165, 102, 0.10);
-  --accent-glow: rgba(147, 165, 102, 0.30);
-  --accent-grad: linear-gradient(180deg, #a3b478, #8a9c5d);
-  --accent-2:    #d08f5c;   /* clay, lifted for dark */
-  --clay:        #d08f5c;
-  --clay-bg:     rgba(208, 143, 92, 0.12);
+  /* ── Accent — BRASS, luminous on ink. ───────────────────────── */
+  --accent:      #b08a4e;   /* the signet */
+  --accent-h:    #c09a5e;
+  --accent-ink:  #c4a06a;   /* interactive text = lifted brass (AA on ink) */
+  --accent-t:    #14151b;   /* ink text ON brass fills */
+  --accent-bg:   rgba(176, 138, 78, 0.12);
+  --accent-glow: rgba(176, 138, 78, 0.30);
+  --accent-grad: linear-gradient(180deg, #c09a5e, #a37f45);
+  --accent-2:    #4f8577;   /* verdigris */
 
-  --safe:       #4ade80;
-  --safe-bg:    rgba(74, 222, 128, 0.10);
-  --caution:    #fbbf24;
-  --caution-bg: rgba(251, 191, 36, 0.10);
-  --danger:     #ff8f8a;
-  --danger-bg:  rgba(255, 143, 138, 0.10);
+  --oxblood:    #c24b3b;
+  --oxblood-bg: rgba(194, 75, 59, 0.12);
+
+  --safe:       #4f8577;    /* verdigris */
+  --safe-bg:    rgba(79, 133, 119, 0.12);
+  --caution:    #c08a34;    /* ochre */
+  --caution-bg: rgba(192, 138, 52, 0.12);
+  --danger:     #cf6a5c;    /* generic errors — softened; oxblood is reserved */
+  --danger-bg:  rgba(207, 106, 92, 0.10);
   --info:       var(--text-2);
 
-  --glow-core: rgba(232, 240, 206, 0.92);
-  --glow-soft: rgba(147, 165, 102, 0.32);
-  --glow-rim:  rgba(147, 165, 102, 0.20);
+  --glow-core: rgba(240, 232, 214, 0.92);
+  --glow-soft: rgba(176, 138, 78, 0.34);
+  --glow-rim:  rgba(176, 138, 78, 0.22);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.5);
@@ -196,7 +204,10 @@ body {
   text-rendering: optimizeLegibility;
   transition: background var(--t-normal), color var(--t-normal);
 }
-h1, h2, h3, h4 { font-weight: 600; letter-spacing: -0.02em; }
+/* Two weights only across the system: 400 and 500. Never bold. */
+h1, h2, h3, h4 { font-weight: 500; letter-spacing: -0.02em; }
+h1 { font-family: var(--font-display); letter-spacing: -0.01em; }
+b, strong { font-weight: 500; }
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
 input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--accent-ink); }
@@ -267,7 +278,7 @@ a { color: var(--accent-ink); }
   background: var(--accent-grad);
   border-color: transparent;
   color: var(--accent-t);
-  font-weight: 600;
+  font-weight: 500;
   box-shadow: 0 0 18px var(--accent-glow);
 }
 .btn.primary:hover { filter: brightness(1.04); box-shadow: 0 0 26px var(--accent-glow); transform: scale(1.02); }
@@ -302,7 +313,7 @@ a { color: var(--accent-ink); }
   box-shadow: var(--glass-hi);
 }
 .tile small { display: block; font-size: 11px; color: var(--text-3); margin-bottom: 5px; }
-.tile b { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
+.tile b { font-size: 22px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); }
 
 .rule { border: none; border-top: 1px solid var(--divider); margin: 18px 0; }
 
@@ -334,9 +345,10 @@ a { color: var(--accent-ink); }
   background: var(--text-3); transition: transform var(--t-fast), background var(--t-fast);
 }
 .toggle.on { background: var(--accent-grad); border-color: transparent; }
-.toggle.on .knob { transform: translateX(18px); background: #fff; }
-.toggle.danger.on { background: var(--danger); }
-.toggle.danger.on .knob { background: #fff; }
+.toggle.on .knob { transform: translateX(18px); background: #f6f1e7; }
+/* Oxblood appears in exactly one place: the kill switch. */
+.toggle.danger.on { background: var(--oxblood); }
+.toggle.danger.on .knob { background: #f6f1e7; }
 
 .empty { color: var(--text-3); font-size: 13px; padding: 40px; text-align: center; }
 

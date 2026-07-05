@@ -195,7 +195,7 @@
   .p-ic { width: 28px; height: 28px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--s2); flex-shrink: 0; }
   .p-ic :global(svg) { width: 18px; height: 18px; } .p-ic .p-img { width: 18px; height: 18px; object-fit: contain; }
   .p-ic.mono :global(svg) { color: var(--text); }
-  .p-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .p-title { font-size: 13.5px; font-weight: 500; color: var(--text); }
   .grow { flex: 1; }
   .p-ib { width: 28px; height: 28px; border-radius: var(--r-sm); display: grid; place-items: center; color: var(--text-3); font-size: 15px;
     transition: color var(--t-fast), background var(--t-fast); }
@@ -208,11 +208,11 @@
     transition: background var(--t-fast); }
   .row:not(.static):hover { background: var(--s2); }
   .row.static { cursor: default; }
-  .r-from { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-from { font-size: 13px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .r-subj { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mail-open { padding: 6px 8px; display: flex; flex-direction: column; gap: 8px; }
   .back { align-self: flex-start; }
-  .mo-from { margin: 0; font-size: 13px; color: var(--text); } .mo-subj { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .mo-from { margin: 0; font-size: 13px; color: var(--text); } .mo-subj { margin: 0; font-size: 13.5px; font-weight: 500; color: var(--text); }
   .mo-body { margin: 4px 0; font-size: 12.5px; line-height: 1.55; color: var(--text-2); white-space: pre-wrap; max-height: 130px; overflow-y: auto; }
   .reply, .compose input { width: 100%; background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-sm);
     padding: 8px 10px; font-size: 13px; color: var(--text); font-family: inherit; outline: none; }
@@ -221,7 +221,7 @@
   .c-btns { display: flex; gap: 8px; }
   .btn.sm { padding: 7px 14px; font-size: 13px; }
   .addbtn { margin: 8px 2px 2px; }
-  .link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent-ink); cursor: pointer; }
+  .link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; color: var(--accent-ink); cursor: pointer; }
   .p-approval { padding: 10px; border-top: 1px solid var(--border); }
   .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--text-2); animation: spin 0.7s linear infinite; display: inline-block; }
 </style>

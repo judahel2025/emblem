@@ -141,7 +141,7 @@
     display: inline-flex; align-items: center; gap: 8px;
     padding: 10px 22px; border-radius: var(--r-pill);
     background: var(--accent-grad); color: var(--accent-t);
-    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-size: 14px; font-weight: 500; cursor: pointer;
     box-shadow: 0 2px 12px var(--accent-glow);
     transition: filter var(--t-fast);
   }
@@ -149,7 +149,7 @@
   .caps { width: 100%; max-width: 560px; flex: 1; overflow-y: auto;
     display: flex; flex-direction: column; gap: 12px; }
   .line { margin: 0; font-size: 16px; line-height: 1.55; animation: reveal .3s ease; }
-  .line.assistant { color: var(--text); }
+  .line.assistant { color: var(--text); font-family: var(--font-voice); font-style: italic; font-size: 17px; }
   .line.user { color: var(--text-3); text-align: right; }
   .composer { display: flex; gap: 8px; width: 100%; max-width: 480px;
     border-radius: var(--r-pill);

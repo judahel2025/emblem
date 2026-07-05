@@ -73,7 +73,7 @@
   .home {
     position: absolute; top: 20px; left: 22px;
     display: inline-flex; align-items: center; gap: 7px;
-    color: var(--text-3); font-size: 13.5px; font-weight: 600; cursor: pointer;
+    color: var(--text-3); font-size: 13.5px; font-weight: 500; cursor: pointer;
     padding: 8px 12px; border-radius: var(--r-pill);
     transition: color var(--t-fast), background var(--t-fast);
   }
@@ -90,25 +90,26 @@
     50% { transform: translateX(5px); }
     75% { transform: translateX(-3px); }
   }
-  .brand { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 700; margin-bottom: 22px; color: var(--text); }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 500; margin-bottom: 22px; color: var(--text);
+    font-family: var(--font-display); }
   .mark { display: grid; place-items: center; color: var(--accent-ink); }
-  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--text); }
+  h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--text); }
   .sub { color: var(--text-2); font-size: 14px; margin: 0 0 24px; }
   form { display: flex; flex-direction: column; gap: 14px; }
-  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text-2); }
   input { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px;
     font-size: 15px; color: var(--text); outline: none;
     transition: border-color var(--t-fast), box-shadow var(--t-fast); }
   input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
   .primary { background: var(--accent-grad); color: var(--accent-t); border: none; padding: 13px;
-    border-radius: var(--r-pill); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px;
+    border-radius: var(--r-pill); font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 4px;
     box-shadow: 0 2px 12px var(--accent-glow);
     transition: filter var(--t-fast), box-shadow var(--t-fast); }
   .primary:hover:not(:disabled) { filter: brightness(1.07); box-shadow: 0 4px 18px var(--accent-glow); }
   .primary:disabled { opacity: .6; cursor: default; }
   .google { width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px;
     background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--r-pill); padding: 12px;
-    font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer;
+    font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;
     transition: background var(--t-fast), border-color var(--t-fast); }
   .google:hover { background: var(--s1); border-color: var(--accent); }
   .google i { font-size: 18px; }
@@ -116,5 +117,5 @@
   .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
   .err { background: var(--danger-bg); color: var(--danger); font-size: 13px; padding: 9px 12px; border-radius: var(--r-md); }
   .alt { margin-top: 20px; font-size: 13px; color: var(--text-2); text-align: center; }
-  .link { background: none; border: none; color: var(--accent-ink); font-weight: 700; cursor: pointer; font-size: 13px; }
+  .link { background: none; border: none; color: var(--accent-ink); font-weight: 500; cursor: pointer; font-size: 13px; }
 </style>

@@ -32,19 +32,19 @@
     renderer.setSize(width, height);
     host.appendChild(renderer.domElement);
 
-    // Verdant: a luminous moss sphere on the warm-ink hero.
+    // The Signet: a luminous brass sphere on the ink hero.
     const orb = new THREE.Mesh(
       new THREE.SphereGeometry(1.5, 64, 64),
       new THREE.MeshPhongMaterial({
-        color: 0xc9d6a3, transparent: true, opacity: 0.85,
-        shininess: 120, emissive: 0x2b331a,
+        color: 0xdcc79a, transparent: true, opacity: 0.85,
+        shininess: 120, emissive: 0x3a2c14,
       }));
     scene.add(orb);
 
     const shell = new THREE.Mesh(
       new THREE.SphereGeometry(1.55, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x93a566, wireframe: true, transparent: true, opacity: 0.1,
+        color: 0xb08a4e, wireframe: true, transparent: true, opacity: 0.1,
       }));
     scene.add(shell);
 

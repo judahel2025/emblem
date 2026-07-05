@@ -814,7 +814,7 @@
   .run-out.fullscreen .run-logs { flex: 1; }
   .run-out-bar {
     display: flex; align-items: center; gap: 8px; padding: 8px 14px;
-    font-size: 12px; font-weight: 600; color: var(--text-2);
+    font-size: 12px; font-weight: 500; color: var(--text-2);
     border-bottom: 1px solid var(--divider);
   }
   .run-out-bar i { font-size: 15px; }
