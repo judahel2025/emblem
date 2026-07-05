@@ -10,6 +10,7 @@
   import { fly, fade } from "svelte/transition";
   import { api } from "../lib/api.js";
   import { LiveClient } from "../lib/live.js";
+  import { VoiceTurnClient } from "../lib/voiceturn.js";
   import Orb from "../components/Orb.svelte";
   const dispatch = createEventDispatcher();
 
@@ -93,7 +94,9 @@
   async function refocus() { await tick(); try { inputEl?.focus(); } catch {} }
   function focusNow(node) { try { node.focus(); } catch {} }
 
-  // ── Engine 1: realtime voice ─────────────────────────────────────
+  // ── Engine 1: hands-free voice (turn-based: STT → interviewer brain → TTS).
+  //    localStorage emblem_voice_engine = "live" forces the old realtime relay. ──
+  let voiceDone = false;   // interview complete — finish once the reply is spoken
   async function startLive(mic) {
     withMic = mic;
     mode = "convo";
@@ -101,11 +104,12 @@
     state = "connecting";
     errorMsg = "";
     try { client?.stop(); } catch {}
-    client = new LiveClient({
-      mode: "onboarding",
+    const events = {
       onState: (s) => {
         if (engine !== "live" || done) return;
         if (s === "onboarded") { state = s; finish(); return; }
+        // The wrap-up reply has been spoken — the conversation is over.
+        if (voiceDone && s === "listening") { state = "onboarded"; finish(); return; }
         // Any terminal live state mid-conversation → carry on via the chat brain.
         if (s === "unavailable" || s === "error" || s === "ended") { fallThrough(); return; }
         state = s;
@@ -113,7 +117,40 @@
       onCaption: ({ who, text }) => pushLine(who, text),
       onLevel: (l) => (level = l),
       onError: (m) => (errorMsg = m),
-    });
+    };
+    if (typeof localStorage !== "undefined" && localStorage.getItem("emblem_voice_engine") === "live") {
+      client = new LiveClient({ mode: "onboarding", ...events });
+    } else {
+      client = new VoiceTurnClient({
+        mode: "onboarding",
+        onTranscript: async (text) => {
+          const history = lines.map((l) => ({ role: l.who, text: l.text }));
+          history.push({ role: "user", text });
+          const r = await api.onboardingChat(history);
+          if (!r?.ok) return null;
+          if (r.done) voiceDone = true;
+          return r.reply || null;
+        },
+        ...events,
+      });
+      // The turn client has no server greeting — open with the interviewer's
+      // first question from the text brain, spoken by the client's own TTS.
+      client.start({ mic }).then(async (ok) => {
+        needsAudioTap = client.audioSuspended();
+        if (!ok && engine === "live" && !done) { fallThrough(); return; }
+        if (!lines.some((l) => l.who === "assistant")) {
+          try {
+            const r = await api.onboardingChat([]);
+            if (r?.ok && r.reply) {
+              pushLine("assistant", r.reply);
+              await client._speak(r.reply);
+              if (engine === "live" && !done) client._startListening();
+            }
+          } catch { /* they can just talk — the first turn will answer */ }
+        }
+      });
+      return;
+    }
     const ok = await client.start({ mic });
     needsAudioTap = client.audioSuspended();
     if (!ok && engine === "live" && !done) fallThrough();

@@ -1,11 +1,14 @@
 <script>
-  // Emblem's voice mode — full-screen conversation with the breathing mark.
-  // Opened from a click (the composer mic), so audio starts inside a user gesture;
-  // if the browser still suspends the AudioContext we show a tap-to-enable step
-  // instead of playing silence.
+  // Emblem's voice mode — full-screen HANDS-FREE conversation with the breathing
+  // mark. Turn-based pipeline: your words → transcription → the REAL agent loop
+  // (tools, approvals, thread persistence — sendCommand) → the reply spoken back
+  // → listening again, until you close it. Opened from a click (the composer
+  // mic), so audio starts inside a user gesture.
   import { createEventDispatcher, onMount, onDestroy } from "svelte";
   import { fly } from "svelte/transition";
+  import { VoiceTurnClient } from "../lib/voiceturn.js";
   import { LiveClient } from "../lib/live.js";
+  import { sendCommand } from "../lib/store.js";
   import Orb from "../components/Orb.svelte";
   const dispatch = createEventDispatcher();
 
@@ -16,6 +19,7 @@
   let linesEl;
   let errorMsg = "";
   let needsAudioTap = false;
+  let muted = false;
 
   function pushLine(who, text) {
     const last = lines[lines.length - 1];
@@ -25,13 +29,26 @@
     queueMicrotask(() => { if (linesEl) linesEl.scrollTop = linesEl.scrollHeight; });
   }
 
-  const client = new LiveClient({
-    mode: "chat",
+  const events = {
     onState: (s) => (state = s),
     onCaption: ({ who, text }) => pushLine(who, text),
     onLevel: (l) => (level = l),
     onError: (m) => (errorMsg = m),
-  });
+  };
+  // Debug escape hatch back to the realtime relay: localStorage emblem_voice_engine = "live".
+  const useLegacy = typeof localStorage !== "undefined" && localStorage.getItem("emblem_voice_engine") === "live";
+  const client = useLegacy
+    ? new LiveClient({ mode: "chat", ...events })
+    : new VoiceTurnClient({
+        mode: "chat",
+        // The brain IS the normal agent loop — messages land in the thread,
+        // tools run, approval cards render in the chat behind this overlay.
+        onTranscript: async (text) => {
+          const r = await sendCommand(text);
+          return r?.reply || null;
+        },
+        ...events,
+      });
 
   async function begin() {
     errorMsg = "";
@@ -45,6 +62,11 @@
     needsAudioTap = client.audioSuspended();
   }
 
+  function toggleMute() {
+    muted = !muted;
+    client.setMuted?.(muted);
+  }
+
   function sendDraft() {
     const t = draft.trim(); if (!t) return;
     draft = ""; pushLine("user", t); client.sendText(t);
@@ -54,7 +76,7 @@
   onMount(begin);
   onDestroy(() => client.stop());
 
-  $: label = {
+  $: label = muted ? "muted — tap the mic to resume" : ({
     connecting: "waking up…",
     listening: "listening — just talk",
     thinking: "thinking…",
@@ -62,10 +84,14 @@
     unavailable: errorMsg || "voice isn't available right now",
     error: errorMsg || "couldn't connect",
     ended: "session ended",
-  }[state] ?? "";
+  }[state] ?? "");
 </script>
 
 <div class="veil" role="dialog" aria-label="Voice">
+  <button class="x mute" class:muted on:click={toggleMute}
+          aria-label={muted ? "Unmute" : "Mute"} title={muted ? "Unmute" : "Mute"}>
+    <i class="ti {muted ? 'ti-microphone-off' : 'ti-microphone'}"></i>
+  </button>
   <button class="x" on:click={stop} aria-label="Close"><i class="ti ti-x"></i></button>
 
   <div class="center">
@@ -106,6 +132,8 @@
   .x { position: absolute; top: 18px; right: 20px; color: var(--text-3); font-size: 20px; cursor: pointer;
     transition: color var(--t-fast); }
   .x:hover { color: var(--text); }
+  .x.mute { right: 58px; }
+  .x.mute.muted { color: var(--danger); }
   .center { display: flex; flex-direction: column; align-items: center; gap: 20px; padding-top: 4vh; }
   .label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
   .label.bad { color: var(--danger); }

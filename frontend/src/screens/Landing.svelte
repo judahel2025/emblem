@@ -8,10 +8,23 @@
   import LandingShader from "../components/LandingShader.svelte";
   import LandingOrb3D from "../components/LandingOrb3D.svelte";
   import { tilt } from "../lib/tilt.js";
+  import { api } from "../lib/api.js";
   const dispatch = createEventDispatcher();
   const enter = () => dispatch("enter");
   let menuOpen = false;
   const closeMenu = () => (menuOpen = false);
+
+  // Newsletter signup (public endpoint — works logged-out).
+  let nlEmail = "", nlBusy = false, nlDone = false, nlErr = false;
+  async function subscribe() {
+    if (nlBusy || nlDone) return;
+    nlBusy = true; nlErr = false;
+    try {
+      await api.newsletterSubscribe(nlEmail.trim());
+      nlDone = true;
+    } catch { nlErr = true; }
+    nlBusy = false;
+  }
 
   /** Scroll-reveal action: fades/slides content in the first time it enters view. */
   function reveal(node) {
@@ -150,6 +163,20 @@
         <div class="brand"><span class="mark"><Logo size={26} /></span> <span class="word">EMBLEM</span> <span class="byline">by Quaniac</span></div>
         <p class="tagline">The workspace you talk to. It connects to your tools, remembers what
           matters, and quietly gets things done — growing into the way you work.</p>
+        <div class="nl">
+          <h5>Newsletter</h5>
+          <p class="fnote">Product news, occasionally. One click to leave.</p>
+          {#if nlDone}
+            <div class="nl-done"><i class="ti ti-circle-check"></i> You're subscribed.</div>
+          {:else}
+            <form class="nl-form" on:submit|preventDefault={subscribe}>
+              <input type="email" bind:value={nlEmail} placeholder="you@work.com" required
+                     aria-label="Email for the newsletter" />
+              <button class="nl-btn" disabled={nlBusy}>{nlBusy ? "…" : "Sign up"}</button>
+            </form>
+            {#if nlErr}<span class="nl-err">Couldn't subscribe — try again.</span>{/if}
+          {/if}
+        </div>
       </div>
       <div class="foot-col">
         <h5>Product</h5>
@@ -319,6 +346,20 @@
   @media (max-width: 860px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr; } }
   .foot-brand .tagline { margin: 14px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--text-2); max-width: 300px; }
+  .nl { margin-top: 20px; display: flex; flex-direction: column; gap: 7px; max-width: 300px; }
+  .nl h5 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+  .nl-form { display: flex; gap: 7px; }
+  .nl-form input { flex: 1; min-width: 0; background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 9px 12px; font-size: 13px; color: var(--text); outline: none;
+    transition: border-color var(--t-fast); }
+  .nl-form input:focus { border-color: var(--accent); }
+  .nl-btn { padding: 9px 16px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-t);
+    font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    transition: filter var(--t-fast); }
+  .nl-btn:hover:not(:disabled) { filter: brightness(1.06); }
+  .nl-btn:disabled { opacity: 0.6; cursor: default; }
+  .nl-done { display: inline-flex; align-items: center; gap: 7px; color: var(--safe); font-size: 13.5px; font-weight: 600; }
+  .nl-err { color: var(--danger); font-size: 12px; }
   .foot-col { display: flex; flex-direction: column; gap: 10px; }
   .foot-col h5 { margin: 0 0 4px; font-size: 11px; font-weight: 600;
     letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }

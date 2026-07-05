@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, showOperator, me,
-           startNotifPolling, askNotifPermission, loadNotifications, activeThread, newChat } from "./lib/store.js";
+           startNotifPolling, askNotifPermission, loadNotifications, activeThread, newChat,
+           showReviewModal } from "./lib/store.js";
   import { fade } from "svelte/transition";
   import { api } from "./lib/api.js";
   import Logo from "./components/Logo.svelte";
@@ -25,6 +26,9 @@
   import TourOverlay from "./components/TourOverlay.svelte";
   import { startTour } from "./lib/tour.js";
   import WorkspaceHost from "./screens/workspaces/WorkspaceHost.svelte";
+  import AdminConsole from "./screens/AdminConsole.svelte";
+  import ReviewModal from "./components/ReviewModal.svelte";
+  import NewsletterPrompt from "./components/NewsletterPrompt.svelte";
 
   let engineUp = false;
   let engineFailed = false;
@@ -89,6 +93,18 @@
     engineFailed = true;
   }
 
+  // Weekly newsletter nudge — only for members who never decided, once a week,
+  // and never racing the tour/briefing (short delay + onboarded check).
+  let showNewsPrompt = false;
+  async function maybeNewsPrompt() {
+    try {
+      const s = await api.newsletterState();
+      if (s?.prompt && onboarded) {
+        setTimeout(() => { showNewsPrompt = true; }, 2200);
+      }
+    } catch {}
+  }
+
   async function boot() {
     if (!loggedIn || timer) return;   // workspace boot only, once
     await waitForEngine();
@@ -100,6 +116,7 @@
     loadNotifications();
     startNotifPolling();
     askNotifPermission();
+    maybeNewsPrompt();
     timer = setInterval(refresh, 6000);
   }
 
@@ -162,6 +179,8 @@
       {:else if $appView === "help"}<Help />
       {:else if $appView === "notifications"}<Notifications />
       {:else if $appView === "account"}<AccountSettings />
+      {:else if $appView === "admin"}
+        {#if $me?.is_admin}<AdminConsole />{:else}<ChatView />{/if}
       {:else if $appView.startsWith("workspace:")}
         <WorkspaceHost slug={$appView.slice(10)} />{/if}
     </main>
@@ -170,6 +189,8 @@
     {#if $showOperator}
       <SettingsPanel on:close={() => showOperator.set(false)} />
     {/if}
+    {#if $showReviewModal}<ReviewModal on:close={() => showReviewModal.set(false)} />{/if}
+    {#if showNewsPrompt}<NewsletterPrompt on:close={() => (showNewsPrompt = false)} />{/if}
     <TourOverlay />
   </div>
 {/if}

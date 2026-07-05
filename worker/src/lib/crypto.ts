@@ -16,14 +16,14 @@ function fromHex(hex: string): Uint8Array {
   return out;
 }
 
-function b64url(data: ArrayBuffer | string): string {
+export function b64url(data: ArrayBuffer | string): string {
   const bytes = typeof data === "string" ? enc.encode(data) : new Uint8Array(data);
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function b64urlDecode(s: string): Uint8Array {
+export function b64urlDecode(s: string): Uint8Array {
   const pad = "=".repeat((4 - (s.length % 4)) % 4);
   const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/") + pad);
   const out = new Uint8Array(bin.length);

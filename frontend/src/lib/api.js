@@ -172,12 +172,36 @@ export const api = {
     if (!res.ok) throw new Error("tts failed");
     return URL.createObjectURL(await res.blob());
   },
-  async sttBlob(blob) {
+  // Turn-based voice: one utterance → text (Groq Whisper, Gemini fallback).
+  async transcribe(blob, mime) {
     const fd = new FormData();
-    fd.append("audio", blob, "clip.webm");
-    const res = await fetch(API_BASE + "/api/voice/stt", { method: "POST", body: fd });
+    fd.append("audio", blob, (mime || "").includes("mp4") ? "clip.mp4" : "clip.webm");
+    const res = await fetch(API_BASE + "/api/voice/transcribe", {
+      method: "POST", headers: authHeaders(), body: fd,   // browser sets the multipart boundary
+    });
     return res.json();
   },
+
+  // Reviews (user side)
+  reviewChat: (history) => post("/api/reviews/chat", { history }),
+  reviewSubmit: (text) => post("/api/reviews", { text }),
+
+  // Newsletter (user side + public landing subscribe)
+  newsletterState: () => get("/api/newsletter/state"),
+  newsletterOpt: (choice) => post("/api/newsletter/opt", { choice }),
+  newsletterSubscribe: (email) => post("/api/newsletter/subscribe", { email }),
+
+  // Admin console (owner only — 404s for everyone else)
+  adminUsers: () => get("/api/admin/users"),
+  adminReviews: () => get("/api/admin/reviews"),
+  adminReviewRead: (id) => post(`/api/admin/reviews/${id}/read`, {}),
+  adminNewsChat: (history, draft) => post("/api/admin/newsletter/chat", { history, draft }),
+  adminNewsRecipients: () => get("/api/admin/newsletter/recipients"),
+  adminNewsTest: (subject, html) => post("/api/admin/newsletter/test", { subject, html }),
+  adminNewsSend: (subject, html) => post("/api/admin/newsletter/send", { subject, html }),
+  adminNewsHistory: () => get("/api/admin/newsletter/history"),
+  adminNewsDomain: () => get("/api/admin/newsletter/domain"),
+  adminNewsDomainRegister: () => post("/api/admin/newsletter/domain/register", {}),
 
   inboxDeleteAll: () => req("/api/inbox/delete_all", { method: "POST", body: JSON.stringify({ confirm: true }) }),
   inboxUndo: () => req("/api/inbox/undo", { method: "POST", body: JSON.stringify({}) }),
@@ -227,7 +251,8 @@ export const api = {
   async speechUrl(text) {
     const res = await fetch(API_BASE + "/api/voice/tts", {
       method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ text }),
+      // speechify strips markdown/links so TTS never reads asterisks aloud
+      body: JSON.stringify({ text: speechify(text) }),
     });
     if (!res.ok) return null;
     return URL.createObjectURL(await res.blob());

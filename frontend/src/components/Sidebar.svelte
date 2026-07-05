@@ -5,7 +5,8 @@
   import { createEventDispatcher, onDestroy } from "svelte";
   import { slide, fade } from "svelte/transition";
   import { threads, activeThread, appView, openThread, openLegacy, newChat,
-           renameThread, deleteThread, brainReady, connectedApps, me, notifications } from "../lib/store.js";
+           renameThread, deleteThread, brainReady, connectedApps, me, notifications,
+           showReviewModal } from "../lib/store.js";
   import { auth } from "../lib/supabase.js";
   import { WORKSPACES } from "../lib/workspaces.js";
   import ThemeToggle from "./ThemeToggle.svelte";
@@ -152,6 +153,14 @@
         <button class="pm-item" on:click={() => pick(() => appView.set("help"))}>
           <i class="ti ti-help-circle"></i> Help
         </button>
+        <button class="pm-item" on:click={() => pick(() => showReviewModal.set(true))}>
+          <i class="ti ti-message-star"></i> Reviews
+        </button>
+        {#if $me.is_admin}
+          <button class="pm-item" on:click={() => pick(() => appView.set("admin"))}>
+            <i class="ti ti-shield-cog"></i> Admin console
+          </button>
+        {/if}
         <div class="pm-row">
           <span><i class="ti ti-palette"></i> Theme</span>
           <ThemeToggle />

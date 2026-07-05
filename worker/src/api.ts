@@ -11,6 +11,9 @@ import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
          listConnections, connectionStates, initiateConnection, disconnect } from "./composio";
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile, extractProfileFields, saveProfileFields } from "./onboarding";
+import { reviewReply, extractReview, saveReview, type ReviewTurn } from "./reviews";
+import { newsletterDraftReply, recipientList, sendNewsletter, sendNewsletterEmail } from "./newsletter";
+import { transcribe } from "./stt";
 import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
 import { proactiveBriefing } from "./briefing";
 import { pollNotifications, listNotifications } from "./notifications";
@@ -172,6 +175,243 @@ apiRoutes.get("/suggestions", async (c) => {
 apiRoutes.post("/voice/tts", async (c) => {
   const b = await c.req.json().catch(() => ({} as { text?: string; voice?: string }));
   return synthesize(c.env, String(b.text || ""), b.voice ? String(b.voice) : undefined);
+});
+
+// ---- speech-to-text (the turn-based voice pipeline's ear) ----------------------
+
+apiRoutes.post("/voice/transcribe", async (c) => {
+  const form = await c.req.formData().catch(() => null);
+  // Workers' FormData typing says string-only; at runtime file parts arrive as File.
+  const f = form?.get("audio") as unknown as File | string | null | undefined;
+  if (!f || typeof f === "string" || !f.size) return c.json({ ok: false, error: "audio required" }, 400);
+  if (f.size > 20 * 1024 * 1024) return c.json({ ok: false, error: "clip too long" }, 413);
+  return c.json(await transcribe(c.env, f));
+});
+
+// ---- user reviews (AI-guided interview or typed) -------------------------------
+
+apiRoutes.post("/reviews/chat", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { history?: Array<{ role: string; text: string }> }));
+  const history: ReviewTurn[] = (Array.isArray(b.history) ? b.history : [])
+    .filter((t: { role?: string; text?: unknown }) =>
+      (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
+    .map((t: { role: string; text: string }) =>
+      ({ role: t.role as "user" | "assistant", text: t.text.slice(0, 2000) }));
+  const r = await reviewReply(c.env, history);
+  if (!r) return c.json({ ok: false, error: "unavailable" }, 503);
+  if (r.done) {
+    const full = [...history, { role: "assistant" as const, text: r.reply }];
+    const { summary, sentiment } = await extractReview(c.env, full);
+    const id = await saveReview(c.env, c.get("userId"), "ai", summary, full, sentiment)
+      .catch((e) => { console.error("review save failed:", e); return 0; });
+    return c.json({ ok: true, reply: r.reply, done: true, saved: id > 0 });
+  }
+  return c.json({ ok: true, reply: r.reply, done: false });
+});
+
+apiRoutes.post("/reviews", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { text?: string }));
+  const text = String(b.text || "").trim();
+  if (!text) return c.json({ ok: false, error: "empty review" }, 400);
+  const id = await saveReview(c.env, c.get("userId"), "typed", text.slice(0, 4000), null)
+    .catch((e) => { console.error("review save failed:", e); return 0; });
+  return c.json({ ok: id > 0, id });
+});
+
+// ---- newsletter opt state (all users; weekly popup logic) ----------------------
+
+apiRoutes.get("/newsletter/state", async (c) => {
+  const p = await c.env.DB.prepare(
+    "SELECT newsletter_opt, newsletter_prompted_at FROM profiles WHERE user_id = ?1")
+    .bind(c.get("userId"))
+    .first<{ newsletter_opt: number | null; newsletter_prompted_at: string | null }>();
+  const opt = p?.newsletter_opt ?? null;
+  let prompt = false;
+  if (opt === null) {
+    const last = p?.newsletter_prompted_at;
+    if (!last) prompt = true;
+    else {
+      const row = await c.env.DB.prepare(
+        "SELECT (?1 < datetime('now', '-7 days')) AS stale").bind(last).first<{ stale: number }>();
+      prompt = Boolean(row?.stale);
+    }
+  }
+  return c.json({ opt, prompt });
+});
+
+apiRoutes.post("/newsletter/opt", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { choice?: string }));
+  const choice = String(b.choice || "");
+  if (!["in", "out", "later"].includes(choice)) return c.json({ ok: false, error: "bad choice" }, 400);
+  const opt = choice === "in" ? 1 : choice === "out" ? 0 : null;
+  if (choice === "later") {
+    await c.env.DB.prepare(
+      "UPDATE profiles SET newsletter_prompted_at = datetime('now') WHERE user_id = ?1")
+      .bind(c.get("userId")).run();
+  } else {
+    await c.env.DB.prepare(
+      "UPDATE profiles SET newsletter_opt = ?2, newsletter_prompted_at = datetime('now') WHERE user_id = ?1")
+      .bind(c.get("userId"), opt).run();
+  }
+  return c.json({ ok: true });
+});
+
+// ---- admin console (owner only — 404 for everyone else, same as /audit) --------
+
+apiRoutes.get("/admin/users", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const rows = await c.env.DB.prepare(
+    `SELECT u.id, u.email, u.verified, u.created_at,
+            p.display_name, p.role, p.onboarded, p.newsletter_opt
+     FROM users u LEFT JOIN profiles p ON p.user_id = u.id
+     ORDER BY u.created_at DESC LIMIT 500`).all();
+  const items = rows.results || [];
+  return c.json({ items, total: items.length });
+});
+
+apiRoutes.get("/admin/reviews", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const rows = await c.env.DB.prepare(
+    `SELECT r.id, r.kind, r.summary, r.transcript, r.sentiment, r.status, r.created_at,
+            u.email, p.display_name
+     FROM reviews r
+     LEFT JOIN users u ON u.id = r.user_id
+     LEFT JOIN profiles p ON p.user_id = r.user_id
+     ORDER BY r.id DESC LIMIT 200`).all();
+  const items = rows.results || [];
+  const nc = await c.env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM reviews WHERE status = 'new'").first<{ n: number }>();
+  return c.json({ items, new_count: nc?.n ?? 0 });
+});
+
+apiRoutes.post("/admin/reviews/:id/read", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  await c.env.DB.prepare("UPDATE reviews SET status = 'read' WHERE id = ?1")
+    .bind(parseInt(c.req.param("id")) || 0).run();
+  return c.json({ ok: true });
+});
+
+apiRoutes.post("/admin/newsletter/chat", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const b = await c.req.json().catch(() => ({} as {
+    history?: Array<{ role: string; text: string }>;
+    draft?: { subject?: string; html?: string } | null }));
+  const history = (Array.isArray(b.history) ? b.history : [])
+    .filter((t: { role?: string; text?: unknown }) =>
+      (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
+    .map((t: { role: string; text: string }) =>
+      ({ role: t.role as "user" | "assistant", text: t.text.slice(0, 4000) }));
+  const draft = (b.draft && typeof b.draft.html === "string")
+    ? { subject: String(b.draft.subject || ""), html: b.draft.html } : null;
+  const r = await newsletterDraftReply(c.env, history, draft);
+  if (!r) return c.json({ ok: false, error: "unavailable" }, 503);
+  return c.json({ ok: true, ...r });
+});
+
+apiRoutes.get("/admin/newsletter/recipients", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const { members, subscribers } = await recipientList(c.env);
+  return c.json({ count: members.length + subscribers.length,
+    members: members.length, subscribers: subscribers.length });
+});
+
+apiRoutes.post("/admin/newsletter/test", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const b = await c.req.json().catch(() => ({} as { subject?: string; html?: string }));
+  const owner = await c.env.DB.prepare("SELECT email FROM users WHERE id = ?1")
+    .bind(c.env.EMBLEM_OWNER_USER_ID || "").first<{ email: string }>();
+  if (!owner?.email) return c.json({ ok: false, error: "owner email not found" });
+  const r = await sendNewsletterEmail(c.env, owner.email,
+    String(b.subject || ""), String(b.html || ""));
+  return c.json({ ...r, to: owner.email });
+});
+
+apiRoutes.post("/admin/newsletter/send", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const b = await c.req.json().catch(() => ({} as { subject?: string; html?: string }));
+  const subject = String(b.subject || "").trim();
+  const html = String(b.html || "").trim();
+  if (!subject || !html) return c.json({ ok: false, error: "subject and html required" }, 400);
+  const r = await sendNewsletter(c.env, subject, html);
+  await c.env.DB.prepare(
+    "INSERT INTO newsletters (subject, html, sent_count, fail_count) VALUES (?1, ?2, ?3, ?4)")
+    .bind(subject, html, r.sent, r.failed).run().catch(() => {});
+  return c.json({ ok: r.failed === 0 && r.sent > 0, ...r });
+});
+
+apiRoutes.get("/admin/newsletter/history", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  const rows = await c.env.DB.prepare(
+    "SELECT id, subject, sent_count, fail_count, created_at FROM newsletters ORDER BY id DESC LIMIT 50").all();
+  return c.json({ items: rows.results || [] });
+});
+
+apiRoutes.get("/admin/newsletter/domain", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  if (!c.env.RESEND_KEY || !c.env.RESEND_DOMAIN) {
+    return c.json({ configured: false, domain: c.env.RESEND_DOMAIN || null, status: "missing" });
+  }
+  try {
+    const res = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${c.env.RESEND_KEY}` } });
+    if (!res.ok) {
+      return c.json({ configured: true, domain: c.env.RESEND_DOMAIN, status: "unknown",
+        error: `resend ${res.status}` });
+    }
+    const d = await res.json<{ data?: Array<{ id: string; name: string; status: string }> }>();
+    const match = (d.data || []).find((x) => x.name === c.env.RESEND_DOMAIN);
+    let records: unknown = null;
+    if (match) {
+      const det = await fetch(`https://api.resend.com/domains/${match.id}`, {
+        headers: { Authorization: `Bearer ${c.env.RESEND_KEY}` } }).catch(() => null);
+      if (det?.ok) records = (await det.json<{ records?: unknown }>()).records ?? null;
+    }
+    return c.json({ configured: true, domain: c.env.RESEND_DOMAIN,
+      status: match ? match.status : "missing", id: match?.id ?? null, records });
+  } catch {
+    return c.json({ configured: true, domain: c.env.RESEND_DOMAIN, status: "unknown" });
+  }
+});
+
+// Registers RESEND_DOMAIN with Resend (or verifies an existing registration) and
+// returns the DNS records Judah must add in NAMECHEAP (the domain's DNS host).
+apiRoutes.post("/admin/newsletter/domain/register", async (c) => {
+  if (!c.get("isOwner")) return notFound(c);
+  if (!c.env.RESEND_KEY || !c.env.RESEND_DOMAIN) {
+    return c.json({ ok: false, error: "RESEND_KEY / RESEND_DOMAIN not configured" });
+  }
+  const auth = { Authorization: `Bearer ${c.env.RESEND_KEY}`, "Content-Type": "application/json" };
+  try {
+    // Already registered? Trigger a verify pass and return its records.
+    const list = await fetch("https://api.resend.com/domains", { headers: auth });
+    if (list.ok) {
+      const d = await list.json<{ data?: Array<{ id: string; name: string; status: string }> }>();
+      const match = (d.data || []).find((x) => x.name === c.env.RESEND_DOMAIN);
+      if (match) {
+        await fetch(`https://api.resend.com/domains/${match.id}/verify`, {
+          method: "POST", headers: auth }).catch(() => {});
+        const det = await fetch(`https://api.resend.com/domains/${match.id}`, { headers: auth });
+        const dd = det.ok ? await det.json<Record<string, unknown>>() : {};
+        return c.json({ ok: true, existing: true, id: match.id,
+          status: (dd as { status?: string }).status ?? match.status,
+          records: (dd as { records?: unknown }).records ?? null });
+      }
+    }
+    const res = await fetch("https://api.resend.com/domains", {
+      method: "POST", headers: auth,
+      body: JSON.stringify({ name: c.env.RESEND_DOMAIN }),
+    });
+    const body = await res.json<Record<string, unknown>>().catch(() => ({} as Record<string, unknown>));
+    if (!res.ok) {
+      return c.json({ ok: false,
+        error: (body as { message?: string }).message || `resend ${res.status}` });
+    }
+    return c.json({ ok: true, existing: false, id: (body as { id?: string }).id ?? null,
+      status: (body as { status?: string }).status ?? "pending",
+      records: (body as { records?: unknown }).records ?? null });
+  } catch (e) {
+    return c.json({ ok: false, error: e instanceof Error ? e.message : "registration failed" });
+  }
 });
 
 // ---- conversations ----------------------------------------------------------

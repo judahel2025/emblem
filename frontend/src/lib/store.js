@@ -18,6 +18,7 @@ export const filesTab = writable("files");      // files | notes | memory | skil
 export const appView = writable("chat");
 export const showVoiceOverlay = writable(false);   // full-screen live voice (VoiceLive)
 export const showOperator = writable(false);       // admin-only operator/kernel panel (SettingsPanel)
+export const showReviewModal = writable(false);    // user review flow (AI-guided or typed)
 
 // --- notifications: connector activity feed + badge + Chrome popups --------------
 export const notifications = writable({ items: [], unread: 0 });

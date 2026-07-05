@@ -10,7 +10,23 @@ import { apiRoutes } from "./api";
 import { heartbeat } from "./cron";
 import "./tools";  // registers native tools with the kernel
 import { fileRoutes } from "./r2";
+import { verifyUnsubSig } from "./newsletter";
+import { b64urlDecode } from "./lib/crypto";
 export { VoiceRelay } from "./voice_do";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// Tiny standalone page for the unsubscribe flow — no app assets needed.
+const unsubPage = (title: string, body: string) => `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} — Emblem</title></head>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#ebe9dd;
+  font-family:sans-serif;color:#0a0a0a">
+<div style="max-width:420px;padding:36px;text-align:center">
+  <div style="font-size:40px;margin-bottom:12px">🌿</div>
+  <h1 style="font-size:22px;margin:0 0 10px">${title}</h1>
+  <p style="font-size:15px;line-height:1.6;color:#4d4a40;margin:0">${body}</p>
+</div></body></html>`;
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -53,6 +69,45 @@ app.get("/api/logo/:slug", async (c) => {
     });
   } catch {
     return c.text("not found", 404);
+  }
+});
+
+// PUBLIC newsletter endpoints — registered before apiRoutes so requireUser never
+// sees them. Must live under /api/* (run_worker_first + the Vercel rewrites only
+// carry /api and /auth to the Worker).
+app.post("/api/newsletter/subscribe", async (c) => {
+  const b = await c.req.json().catch(() => ({} as { email?: string }));
+  const email = String(b.email || "").trim().toLowerCase();
+  // Always answer ok — no email enumeration; the UNIQUE index absorbs duplicates.
+  if (!EMAIL_RE.test(email) || email.length > 254) return c.json({ ok: true });
+  await c.env.DB.prepare(
+    `INSERT INTO subscribers (email, opted, source) VALUES (?1, 1, 'landing')
+     ON CONFLICT(email) DO UPDATE SET opted = 1`)
+    .bind(email).run().catch(() => {});
+  return c.json({ ok: true });
+});
+
+app.get("/api/newsletter/unsub", async (c) => {
+  const failPage = unsubPage("That link didn't work",
+    "This unsubscribe link is invalid or expired. If you still want out, use the link in a newer email.");
+  try {
+    const e = c.req.query("e") || "";
+    const sig = c.req.query("sig") || "";
+    const email = new TextDecoder().decode(b64urlDecode(e)).trim().toLowerCase();
+    if (!email || !sig || !(await verifyUnsubSig(c.env, email, sig))) {
+      return c.html(failPage, 400);
+    }
+    await c.env.DB.prepare("UPDATE subscribers SET opted = 0 WHERE email = ?1").bind(email).run();
+    const u = await c.env.DB.prepare("SELECT id FROM users WHERE email = ?1").bind(email)
+      .first<{ id: string }>();
+    if (u?.id) {
+      await c.env.DB.prepare(
+        "UPDATE profiles SET newsletter_opt = 0 WHERE user_id = ?1").bind(u.id).run();
+    }
+    return c.html(unsubPage("You're unsubscribed",
+      "You won't get any more newsletters from Emblem. Changed your mind? You can re-subscribe anytime from the app or the website footer."));
+  } catch {
+    return c.html(failPage, 400);
   }
 });
 
