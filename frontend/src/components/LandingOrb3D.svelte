@@ -32,19 +32,19 @@
     renderer.setSize(width, height);
     host.appendChild(renderer.domElement);
 
-    // White-hot mono: a luminous silver sphere on the always-black hero.
+    // Verdant: a luminous moss sphere on the warm-ink hero.
     const orb = new THREE.Mesh(
       new THREE.SphereGeometry(1.5, 64, 64),
       new THREE.MeshPhongMaterial({
-        color: 0xe8e8e8, transparent: true, opacity: 0.85,
-        shininess: 120, emissive: 0x2a2a2a,
+        color: 0xc9d6a3, transparent: true, opacity: 0.85,
+        shininess: 120, emissive: 0x2b331a,
       }));
     scene.add(orb);
 
     const shell = new THREE.Mesh(
       new THREE.SphereGeometry(1.55, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0xffffff, wireframe: true, transparent: true, opacity: 0.08,
+        color: 0x93a566, wireframe: true, transparent: true, opacity: 0.1,
       }));
     scene.add(shell);
 

@@ -1,9 +1,43 @@
-/* Emblem — WHITE-HOT MONO design system (Judah's pick, option D):
-   No accent color anywhere. Pure neutral black canvas with luminous white in
-   dark mode; pure white canvas with ink black in light mode. The "glow" does
-   the work color used to do: primary actions are white-hot (dark) / ink-solid
-   (light), focus is a soft halo, the Orb is a ball of light.
-   Geist type, engineered radii (4/8/12), thin borders, glass depth. */
+/* Emblem — VERDANT design system (Judah's pick, 2026-07):
+   Moss #5B6B39 primary + Clay #C67B45 secondary on the milk #EBE9DD light
+   ground / warm-ink dark ground. Dark mode lifts moss to #93A566 so it stays
+   luminous on ink. The glow is mossy light: primary actions, focus halo and
+   the Orb all carry the Verdant green. Hanken Grotesk (self-hosted, variable),
+   engineered radii (4/8/12), thin borders, glass depth. */
+
+/* ── Hanken Grotesk — self-hosted variable font (wght 100–900) ── */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/hanken-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/hanken-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/hanken-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/hanken-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
 :root, [data-theme="light"] {
   color-scheme: light;
@@ -35,15 +69,17 @@
   --text-3: #807c6d;
   --text-on-accent: #ebe9dd;
 
-  /* ── "Accent" — black actions; text on them is MILK. ────────── */
-  --accent:      #0a0a0a;
-  --accent-h:    #262626;
-  --accent-ink:  #0a0a0a;   /* interactive text = ink */
-  --accent-t:    #ebe9dd;   /* text/icon ON black fills = milk */
-  --accent-bg:   rgba(0, 0, 0, 0.07);
-  --accent-glow: rgba(0, 0, 0, 0.16);
-  --accent-grad: linear-gradient(180deg, #26241d, #0a0a0a);
-  --accent-2:    #262626;
+  /* ── Accent — VERDANT moss actions; text on them is milk. ───── */
+  --accent:      #5b6b39;   /* moss */
+  --accent-h:    #6a7c44;
+  --accent-ink:  #4f5d31;   /* interactive text = deep moss (AA on milk) */
+  --accent-t:    #f4f3e9;   /* text/icon ON moss fills = milk-white */
+  --accent-bg:   rgba(91, 107, 57, 0.10);
+  --accent-glow: rgba(91, 107, 57, 0.28);
+  --accent-grad: linear-gradient(180deg, #68793f, #52612f);
+  --accent-2:    #c67b45;   /* clay — the secondary */
+  --clay:        #c67b45;
+  --clay-bg:     rgba(198, 123, 69, 0.12);
 
   /* ── Legacy aliases (older components) ──────────────────────── */
   --bg-1:   var(--s1);
@@ -60,11 +96,11 @@
   --danger-bg:  rgba(185, 28, 28, 0.08);
   --info:       var(--text-2);
 
-  /* ── Glow (Orb, focus moments) — WHITE in light mode too: the orb is
-        always a ball of light; a silver rim keeps it visible on white. ── */
-  --glow-core: rgba(255, 255, 255, 0.95);
-  --glow-soft: rgba(255, 255, 255, 0.85);
-  --glow-rim:  rgba(0, 0, 0, 0.10);
+  /* ── Glow (Orb, focus moments) — mossy light: a white-hot core with a
+        Verdant halo; a moss rim keeps it visible on milk. ── */
+  --glow-core: rgba(248, 250, 238, 0.95);
+  --glow-soft: rgba(147, 165, 102, 0.55);
+  --glow-rim:  rgba(91, 107, 57, 0.25);
 
   /* ── Shadows — soft ambient only ────────────────────────────── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -88,18 +124,18 @@
   --t-slow:   0.4s;
   --spring:   cubic-bezier(0.34, 1.3, 0.64, 1);
 
-  font-family: 'Geist', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* ── Surfaces — PURE black, no tint whatsoever ──────────────── */
-  --bg:    #000000;
-  --bg-2:  #070707;
-  --s1:    #0e0e0e;
-  --s2:    #151515;
-  --s3:    #1d1d1d;
+  /* ── Surfaces — warm ink: near-black with an earthen undertone ── */
+  --bg:    #0d0c09;
+  --bg-2:  #12110c;
+  --s1:    #181711;
+  --s2:    #1e1d16;
+  --s3:    #26241b;
   --s4:    #ebe9dd;
 
   --surface:    rgba(18, 18, 18, 0.55);
@@ -119,15 +155,17 @@
   --text-3: #6b6860;
   --text-on-accent: #0a0a0a;
 
-  /* ── "Accent" — luminous MILK actions + halo. ──────────────── */
-  --accent:      #ebe9dd;
-  --accent-h:    #ebe9dd;
-  --accent-ink:  #ebe9dd;
-  --accent-t:    #0a0a0a;   /* ink text ON milk fills */
-  --accent-bg:   rgba(235, 233, 221, 0.09);
-  --accent-glow: rgba(235, 233, 221, 0.28);
-  --accent-grad: linear-gradient(180deg, #ebe9dd, #cbc8b7);
-  --accent-2:    #cbc8b7;
+  /* ── Accent — luminous moss actions + halo. ─────────────────── */
+  --accent:      #93a566;   /* moss, lifted for dark */
+  --accent-h:    #a3b478;
+  --accent-ink:  #93a566;
+  --accent-t:    #12150a;   /* ink text ON moss fills */
+  --accent-bg:   rgba(147, 165, 102, 0.10);
+  --accent-glow: rgba(147, 165, 102, 0.30);
+  --accent-grad: linear-gradient(180deg, #a3b478, #8a9c5d);
+  --accent-2:    #d08f5c;   /* clay, lifted for dark */
+  --clay:        #d08f5c;
+  --clay-bg:     rgba(208, 143, 92, 0.12);
 
   --safe:       #4ade80;
   --safe-bg:    rgba(74, 222, 128, 0.10);
@@ -137,9 +175,9 @@
   --danger-bg:  rgba(255, 143, 138, 0.10);
   --info:       var(--text-2);
 
-  --glow-core: rgba(235, 233, 221, 0.92);
-  --glow-soft: rgba(235, 233, 221, 0.28);
-  --glow-rim:  rgba(235, 233, 221, 0.18);
+  --glow-core: rgba(232, 240, 206, 0.92);
+  --glow-soft: rgba(147, 165, 102, 0.32);
+  --glow-rim:  rgba(147, 165, 102, 0.20);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.5);

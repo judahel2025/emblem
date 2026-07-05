@@ -1,14 +1,16 @@
 {
-  "name": "Emblem",
+  "name": "Emblem by Quaniac",
   "short_name": "Emblem",
   "description": "Emblem is the workspace you talk to — it connects to your tools, remembers what matters, and quietly gets things done.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#100904",
-  "theme_color": "#100904",
+  "background_color": "#ebe9dd",
+  "theme_color": "#5b6b39",
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

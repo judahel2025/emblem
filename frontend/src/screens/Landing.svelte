@@ -38,12 +38,12 @@
   ];
 
   const features = [
-    { i: "ti-message-2", t: "Chat that acts", d: "Ask in plain words. It drafts, sends, schedules, and files — not just answers." },
+    { i: "ti-message-2", t: "Chat that acts", d: "Say it in plain words. It drafts, sends, schedules, and files — answers are just the start." },
     { i: "ti-microphone", t: "Real voice mode", d: "Hold to talk, or go hands-free. It listens, thinks, and speaks back naturally." },
-    { i: "ti-plug-connected", t: "20,000+ tools", d: "Connect your Gmail, Calendar, GitHub, socials and more — each account stays yours." },
-    { i: "ti-brain", t: "Remembers you", d: "It learns your people, preferences and projects, and carries them across every session." },
-    { i: "ti-bolt", t: "Works while you sleep", d: "Set an automation once — a morning brief, an inbox sweep — it runs on its own." },
-    { i: "ti-file-text", t: "Pages & calendar", d: "Turn a conversation into a page or an event with one line. Your workspace, built as you talk." },
+    { i: "ti-plug-connected", t: "20,000+ tools", d: "Gmail, Calendar, GitHub, your socials and more — each account stays rooted to you." },
+    { i: "ti-brain", t: "Memory that grows", d: "It learns your people, preferences and projects, and every session builds on the last." },
+    { i: "ti-bolt", t: "Works while you rest", d: "Plant an automation once — a morning brief, an inbox sweep — and it keeps running on its own." },
+    { i: "ti-file-text", t: "Pages & calendar", d: "Turn a conversation into a page or an event with one line. Your workspace, grown as you talk." },
   ];
 
   const year = new Date().getFullYear();
@@ -52,7 +52,7 @@
 <div class="lp">
   <!-- Nav — rides on the black hero, so it's night-scoped too -->
   <header class="nav glass night">
-    <div class="brand"><span class="mark"><Logo size={24} /></span> <span class="word">EMBLEM</span></div>
+    <div class="brand"><span class="mark"><Logo size={24} /></span> <span class="word">EMBLEM</span> <span class="byline">by Quaniac</span></div>
     <nav class="links">
       <a href="#features">Product</a>
       <a href="#connect">Connections</a>
@@ -69,10 +69,11 @@
     <LandingShader alwaysDark />
     <div class="hero-inner" use:reveal>
       <LandingOrb3D />
-      <div class="eyebrow"><i class="ti ti-microphone"></i> Voice-first · does the work for you</div>
-      <h1>Your whole workday.<br/>One voice.</h1>
+      <div class="eyebrow"><i class="ti ti-microphone"></i> Voice-first · grows with you</div>
+      <h1>Say it once.<br/>Watch it take root.</h1>
       <p class="sub">Emblem is the AI workspace you talk to. It connects to the tools you already use,
-        remembers what matters, and quietly gets things done — so you don't have to.</p>
+        remembers what matters, and quietly grows into the way you work — so things get done
+        while you stay in flow.</p>
       <div class="hero-cta">
         <button class="primary big" on:click={enter}>Start free <i class="ti ti-arrow-right"></i></button>
         <button class="ghost big glassy" on:click={enter}><i class="ti ti-player-play"></i> Meet Emblem</button>
@@ -83,7 +84,7 @@
 
   <!-- Connections trust row -->
   <section id="connect" class="trust" use:reveal>
-    <div class="trust-label">Connects to everything you work in — 20,000+ tools</div>
+    <div class="trust-label">Rooted in everything you work in — 20,000+ tools</div>
     <div class="tiles">
       {#each tools as t}
         <div class="tile gloss" use:tilt><i class="ti {t.i}"></i><span>{t.n}</span></div>
@@ -94,7 +95,7 @@
 
   <!-- Features bento -->
   <section id="features" class="features" use:reveal>
-    <h2>A workspace that works back.</h2>
+    <h2>A workspace that grows back.</h2>
     <div class="bento">
       {#each features as f, idx}
         <div class="fcard glass gloss" class:wide={idx === 0} use:tilt use:reveal>
@@ -112,7 +113,7 @@
       <span class="ring r1"></span><span class="ring r2"></span>
       <span class="core"><i class="ti ti-microphone"></i></span>
     </div>
-    <h2>Talk to it. It does the rest.</h2>
+    <h2>Talk to it. It tends the rest.</h2>
     <p class="sub">Say "reply to Sarah and put a follow-up on Friday." It drafts the email, stages the
       event, and shows you both to approve — out loud or on screen.</p>
     <button class="primary big" on:click={enter}>Try the voice demo <i class="ti ti-arrow-right"></i></button>
@@ -120,7 +121,8 @@
 
   <!-- Big CTA -->
   <section class="cta" use:reveal>
-    <h2>Meet the assistant that has your back.</h2>
+    <h2>Good work grows here.</h2>
+    <p class="cta-sub">Meet the assistant that has your back — and gets better every day you use it.</p>
     <button class="primary big" on:click={enter}>Open your workspace <i class="ti ti-arrow-right"></i></button>
   </section>
 
@@ -128,9 +130,9 @@
   <footer class="foot">
     <div class="foot-grid">
       <div class="foot-brand">
-        <div class="brand"><span class="mark"><Logo size={26} /></span> <span class="word">EMBLEM</span></div>
+        <div class="brand"><span class="mark"><Logo size={26} /></span> <span class="word">EMBLEM</span> <span class="byline">by Quaniac</span></div>
         <p class="tagline">The workspace you talk to. It connects to your tools, remembers what
-          matters, and quietly gets things done.</p>
+          matters, and quietly gets things done — growing into the way you work.</p>
       </div>
       <div class="foot-col">
         <h5>Product</h5>
@@ -153,7 +155,7 @@
       </div>
     </div>
     <div class="foot-bar">
-      <span>© {year} Emblem. All rights reserved.</span>
+      <span>© {year} Quaniac LLC. All rights reserved.</span>
       <span class="dim">Made for people who'd rather just say it.</span>
     </div>
   </footer>
@@ -162,20 +164,21 @@
 <style>
   .lp { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-  /* The cinematic scope: hero + nav are pure black in BOTH themes.
-     Re-declaring the tokens locally keeps every child component correct. */
+  /* The cinematic scope: hero + nav are warm ink in BOTH themes, with the
+     Verdant moss carrying the light. Re-declaring the tokens locally keeps
+     every child component correct. */
   .night {
-    --bg: #000000; --bg-2: #070707; --s1: #0e0e0e; --s2: #151515; --s3: #1d1d1d;
-    --text: #ffffff; --text-2: #a3a3a3; --text-3: #6e6e6e;
-    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.18);
-    --divider: rgba(255,255,255,0.09);
-    --surface: rgba(14,14,14,0.72);
-    --accent: #ffffff; --accent-h: #ffffff; --accent-ink: #ffffff; --accent-t: #0a0a0a;
-    --accent-bg: rgba(255,255,255,0.08); --accent-glow: rgba(255,255,255,0.30);
-    --accent-grad: linear-gradient(180deg,#ffffff,#d4d4d4); --accent-2: #d4d4d4;
-    --glow-core: rgba(255,255,255,0.92); --glow-soft: rgba(255,255,255,0.28);
-    --glow-rim: rgba(255,255,255,0.18);
-    background: #000;
+    --bg: #0d0c09; --bg-2: #12110c; --s1: #181711; --s2: #1e1d16; --s3: #26241b;
+    --text: #f2f0e6; --text-2: #a5a294; --text-3: #6f6c60;
+    --border: rgba(242,240,230,0.09); --border-strong: rgba(242,240,230,0.18);
+    --divider: rgba(242,240,230,0.09);
+    --surface: rgba(24,23,17,0.72);
+    --accent: #93a566; --accent-h: #a3b478; --accent-ink: #93a566; --accent-t: #12150a;
+    --accent-bg: rgba(147,165,102,0.10); --accent-glow: rgba(147,165,102,0.30);
+    --accent-grad: linear-gradient(180deg,#a3b478,#8a9c5d); --accent-2: #d08f5c;
+    --glow-core: rgba(232,240,206,0.92); --glow-soft: rgba(147,165,102,0.32);
+    --glow-rim: rgba(147,165,102,0.20);
+    background: #0d0c09;
     color: var(--text);
   }
   .lp :global(h1), .lp :global(h2) { font-weight: 600; letter-spacing: -0.04em; color: var(--text); margin: 0; }
@@ -192,6 +195,8 @@
     padding: 14px 40px; border-left: none; border-right: none; border-top: none; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .word { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+  .byline { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-3); align-self: flex-end; margin: 0 0 2px 2px; }
   .mark { display: grid; place-items: center; color: var(--accent-ink); }
   .links { display: flex; gap: 30px; }
   .links a { color: var(--text-2); font-size: 14px; font-weight: 500; text-decoration: none; transition: color var(--t-fast); }
@@ -273,8 +278,9 @@
 
   /* ── CTA ── */
   .cta { padding: 90px 24px; text-align: center; border-top: 1px solid var(--border);
-    display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    display: flex; flex-direction: column; align-items: center; gap: 18px; }
   .cta h2 { font-size: clamp(26px, 4.5vw, 40px); }
+  .cta-sub { margin: 0; color: var(--text-2); font-size: 15.5px; max-width: 480px; line-height: 1.6; }
 
   /* ── Footer ── */
   .foot { border-top: 1px solid var(--border); background: var(--s1); }

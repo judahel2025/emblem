@@ -122,8 +122,9 @@
   <Login on:done={onLogin} />
 {:else if !identityReady}
   <div class="splash">
-    <div class="splash-v pulse">E</div>
+    <div class="splash-v pulse"><Logo size={44} /></div>
     <p class="splash-sub">One moment…</p>
+    <span class="splash-by">Emblem by Quaniac</span>
   </div>
 {:else if !onboarded}
   <Onboarding on:done={onOnboarded} />
@@ -212,18 +213,15 @@
     background: var(--bg);
   }
   .splash-v {
-    width: 56px; height: 56px;
-    border-radius: 14px;
-    background: var(--accent-grad);
-    color: var(--accent-t);
-    font-size: 28px; font-weight: 800;
+    padding: 10px 16px;
+    border-radius: 18px;
     display: grid; place-items: center;
-    box-shadow: 0 0 24px var(--accent-glow);
     margin-bottom: 4px;
   }
-  .splash-v.pulse { animation: breathe-glow 1.8s ease-in-out infinite; }
+  .splash-v.pulse { animation: breathe-glow 1.8s ease-in-out infinite; border-radius: 999px; }
   .splash h1 { margin: 0; font-size: 18px; color: var(--text); }
   .splash-sub { margin: 0; color: var(--text-3); font-size: 13px; }
+  .splash-by { margin-top: 18px; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
   .retry-btn {
     margin-top: 8px;
     padding: 9px 22px;

@@ -327,7 +327,7 @@
        transition:fade={{ duration: 150 }} role="presentation">
     <div class="consent glass gloss" transition:fly={{ y: 12, duration: 220 }}>
       <div class="consent-marks">
-        <span class="cmark emblem"><Logo size={30} /></span>
+        <span class="cmark emblem"><Logo size={20} /></span>
         <span class="cdots"><i class="ti ti-arrow-right"></i></span>
         <span class="cmark app" class:mono={MONO_LOGOS.has(confirmTk)}>
           {#if brandLogo(confirmTk)}{@html brandLogo(confirmTk)}

@@ -54,7 +54,7 @@ export function askNotifPermission() {
 function popChrome(n) {
   try {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
-    const note = new Notification(n.title || "Emblem", { body: n.body || "", tag: `emblem-${n.id}`, icon: "/icon.svg" });
+    const note = new Notification(n.title || "Emblem", { body: n.body || "", tag: `emblem-${n.id}`, icon: "/icon-192.png" });
     note.onclick = () => { window.focus(); appView.set("notifications"); note.close(); };
   } catch {}
 }
