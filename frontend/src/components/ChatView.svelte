@@ -311,7 +311,7 @@
       on:mic={() => showVoiceOverlay.set(true)}
       on:stop={stopGeneration}
     />
-    <p class="footnote">Emblem can act in your connected apps — consequential actions always ask first.</p>
+    <p class="footnote">Emblem can act in your connected apps. Consequential actions always ask first.</p>
   </div>
 </div>
 

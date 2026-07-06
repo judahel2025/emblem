@@ -38,12 +38,39 @@ export async function unsubUrl(env: Env, email: string): Promise<string> {
 
 // ---- sending ------------------------------------------------------------------
 
+// The ONLY domain Emblem links to. Models love to invent "emblem.com" and
+// friends; every outgoing email is scrubbed so CTAs can never point at a
+// domain we don't own.
+function realOrigin(env: Env): string {
+  return (env.APP_ORIGIN || "https://emblem.thequaniac.com").replace(/\/$/, "");
+}
+
+export function sanitizeNewsletterHtml(env: Env, html: string): string {
+  const origin = realOrigin(env);
+  let out = html || "";
+  // Fully-qualified wrong emblem domains (any TLD, any path).
+  out = out.replace(/https?:\/\/(?:www\.)?emblem\.(?:com|ai|io|app|co|net|org)(?:\/[^\s"'<)]*)?/gi, origin);
+  // Scheme-less variants in hrefs or visible text.
+  out = out.replace(/(?:www\.)?emblem\.(?:com|ai|io|app|co|net|org)\b/gi, origin.replace(/^https?:\/\//, ""));
+  // The recurring typo of the real domain.
+  out = out.replace(/thequanoac/gi, "thequaniac");
+  // Generic placeholder hosts pointed home.
+  out = out.replace(/https?:\/\/(?:www\.)?example\.(?:com|org)(?:\/[^\s"'<)]*)?/gi, origin);
+  return out;
+}
+
 function withFooter(html: string, unsub: string): string {
   return `${html}
-<div style="max-width:600px;margin:28px auto 0;padding:14px 0;border-top:1px solid #ddd;
-  font-family:sans-serif;font-size:12px;color:#8a8a8a;text-align:center">
-  You're receiving this because you subscribed to Emblem updates.
-  <a href="${unsub}" style="color:#8a8a8a">Unsubscribe</a>
+<div style="max-width:600px;margin:32px auto 0;padding:22px 16px 8px;border-top:1px solid #e3e5ee;
+  font-family:Inter,Helvetica,Arial,sans-serif;font-size:12.5px;color:#5f6885;text-align:center;line-height:1.6">
+  <p style="margin:0 0 14px">You're getting this because you subscribed to Emblem updates.</p>
+  <a href="${unsub}"
+     style="display:inline-block;padding:11px 26px;border-radius:999px;background:#ffffff;
+       color:#0b1020;font-size:13px;font-weight:600;text-decoration:none;
+       border:1px solid #c9ced9;box-shadow:0 1px 3px rgba(11,16,32,0.08)">
+    Unsubscribe
+  </a>
+  <p style="margin:14px 0 0;color:#9aa3bf">Emblem by Quaniac · emblem.thequaniac.com</p>
 </div>`;
 }
 
@@ -58,7 +85,7 @@ export async function sendNewsletterEmail(env: Env, to: string, subject: string,
       from: `Emblem <emblem@${env.RESEND_DOMAIN}>`,
       to: [to],
       subject: subject || "(no subject)",
-      html: withFooter(html, await unsubUrl(env, to)),
+      html: withFooter(sanitizeNewsletterHtml(env, html), await unsubUrl(env, to)),
     }),
   });
   if (!res.ok) {
@@ -95,13 +122,14 @@ export async function sendNewsletter(env: Env, subject: string, html: string):
   const all = [...members, ...subscribers];
   const results: Array<{ to: string; ok: boolean; error?: string }> = [];
 
+  const clean = sanitizeNewsletterHtml(env, html);
   for (let i = 0; i < all.length; i += 100) {
     const batch = all.slice(i, i + 100);
     const payload = await Promise.all(batch.map(async (to) => ({
       from: `Emblem <emblem@${env.RESEND_DOMAIN}>`,
       to: [to],
       subject: subject || "(no subject)",
-      html: withFooter(html, await unsubUrl(env, to)),
+      html: withFooter(clean, await unsubUrl(env, to)),
     })));
     const res = await fetch("https://api.resend.com/emails/batch", {
       method: "POST",
@@ -125,25 +153,86 @@ export async function sendNewsletter(env: Env, subject: string, html: string):
 
 const NEWSLETTER_WRITER =
   "You are Emblem's newsletter editor, working with the product owner on a single email " +
-  "newsletter. Discuss, propose, and revise until the owner is happy.\n\n" +
-  "ALWAYS reply with ONLY a JSON object: {\"reply\": string — your conversational " +
-  "message to the owner (questions, suggestions, what you changed), \"subject\": " +
+  "newsletter. Discuss, propose, and revise until the owner is happy. You also SUGGEST: " +
+  "when audience context is provided, propose newsletter ideas that fit what the " +
+  "audience is actually doing.\n\n" +
+  "ALWAYS reply with ONLY a JSON object: {\"reply\": string (your conversational " +
+  "message to the owner: questions, suggestions, what you changed), \"subject\": " +
   "string or null, \"html\": string or null}. Include subject+html with the CURRENT " +
   "full draft whenever a draft exists or changed; use null for both only when there is " +
-  "genuinely no draft yet (e.g. your first clarifying question).\n\n" +
-  "HTML rules: a complete inline-styled email body — a single wrapper div with " +
-  "max-width:600px;margin:0 auto;font-family:sans-serif, clear heading hierarchy, " +
-  "short paragraphs, moss-green (#5b6b39) accents for links/buttons. No external CSS, " +
-  "no JavaScript, no images you weren't explicitly given, no placeholder text like " +
-  "{{name}}. Do NOT add an unsubscribe link — it is appended automatically on send.\n\n" +
-  "If the owner hasn't said what this issue should cover, start by asking. Never " +
-  "reveal which AI or provider powers you.";
+  "genuinely no draft yet (for example your first clarifying question).\n\n" +
+  "THE ONE DOMAIN (hard rule): every link, button, and mention points to " +
+  "https://emblem.thequaniac.com and nowhere else. Never write emblem.com, www.emblem.com, " +
+  "or any other domain you did not verify. If you need a link and only the homepage " +
+  "exists, link the homepage.\n\n" +
+  "DESIGN (the Emblem brand, follow exactly): a complete inline-styled email on a white " +
+  "canvas, one wrapper div max-width:600px;margin:0 auto;font-family:Inter,Helvetica," +
+  "Arial,sans-serif;color:#0b1020. Optional header band in deep navy #0b1020 with white " +
+  "text and the word Emblem. Headings #0b1020, weight 600. Body text #3a4157, 15px, " +
+  "line-height 1.7. Accent color for links and highlights: crimson #e5484d. Secondary " +
+  "accent when needed: electric blue #3e63dd. CTA buttons are bulletproof anchors: " +
+  "display:inline-block;padding:13px 30px;border-radius:999px;background:#e5484d;" +
+  "color:#ffffff;font-weight:600;text-decoration:none. One primary CTA per email. " +
+  "No external CSS, no JavaScript, no images you were not explicitly given, no " +
+  "placeholders like {{name}}. Do NOT add an unsubscribe link or footer; it is appended " +
+  "automatically on send.\n\n" +
+  "VOICE: warm, plain, human. Short sentences. Write like a person emailing people they " +
+  "respect, not a corporation. Never use em dashes or en dashes anywhere, use commas or " +
+  "periods instead. No corporate filler, no hype words, no exclamation pileups.\n\n" +
+  "If the owner has not said what this issue should cover, suggest 2-3 concrete ideas " +
+  "drawn from the audience context, then ask which direction they want. Never reveal " +
+  "which AI or provider powers you.";
+
+// Aggregate, anonymous audience signals for the drafting AI. Numbers only:
+// no names, no emails, no message content. Context awareness without disclosure.
+export async function newsletterContext(env: Env): Promise<string> {
+  const one = async (sql: string) => {
+    try { return (await env.DB.prepare(sql).first<{ n: number }>())?.n ?? 0; }
+    catch { return 0; }
+  };
+  const [total, new7, onboarded, optedIn, subs, msgs7, autos, reviews30] = await Promise.all([
+    one("SELECT COUNT(*) n FROM users"),
+    one("SELECT COUNT(*) n FROM users WHERE created_at >= datetime('now','-7 days')"),
+    one("SELECT COUNT(*) n FROM profiles WHERE onboarded = 1"),
+    one("SELECT COUNT(*) n FROM profiles WHERE newsletter_opt = 1"),
+    one("SELECT COUNT(*) n FROM subscribers WHERE opted = 1"),
+    one("SELECT COUNT(*) n FROM conversations WHERE created_at >= datetime('now','-7 days')"),
+    one("SELECT COUNT(*) n FROM automations WHERE enabled = 1"),
+    one("SELECT COUNT(*) n FROM reviews WHERE created_at >= datetime('now','-30 days')"),
+  ]);
+  let toolkits = "";
+  try {
+    const rows = await env.DB.prepare(
+      "SELECT toolkit, COUNT(*) n FROM connections GROUP BY toolkit ORDER BY n DESC LIMIT 5")
+      .all<{ toolkit: string; n: number }>();
+    toolkits = (rows.results || []).map((r) => `${r.toolkit} (${r.n})`).join(", ");
+  } catch { /* fine */ }
+  let lastSent = "never";
+  try {
+    const r = await env.DB.prepare(
+      "SELECT subject, created_at FROM newsletters ORDER BY id DESC LIMIT 1")
+      .first<{ subject: string; created_at: string }>();
+    if (r) lastSent = `"${r.subject}" on ${r.created_at}`;
+  } catch { /* fine */ }
+  return [
+    "AUDIENCE CONTEXT (aggregate and anonymous, use it to suggest relevant topics; never " +
+    "imply you can see any individual person):",
+    `- Members: ${total} total, ${new7} joined in the last 7 days, ${onboarded} onboarded.`,
+    `- Newsletter reach: ${optedIn} opted-in members + ${subs} site subscribers.`,
+    `- Activity: ${msgs7} chat messages in the last 7 days, ${autos} automations running.`,
+    toolkits ? `- Most-connected apps: ${toolkits}.` : "",
+    `- Reviews in the last 30 days: ${reviews30}.`,
+    `- Last newsletter sent: ${lastSent}.`,
+  ].filter(Boolean).join("\n");
+}
 
 export async function newsletterDraftReply(env: Env,
     history: Array<{ role: "user" | "assistant"; text: string }>,
-    currentDraft: { subject: string; html: string } | null):
+    currentDraft: { subject: string; html: string } | null,
+    context?: string):
     Promise<{ reply: string; subject: string | null; html: string | null } | null> {
   const messages: ChatMsg[] = [{ role: "system", content: NEWSLETTER_WRITER }];
+  if (context) messages.push({ role: "system", content: context });
   if (currentDraft?.html) {
     messages.push({ role: "system", content:
       `CURRENT DRAFT (revise from here, don't start over):\nSubject: ${currentDraft.subject}\n${currentDraft.html.slice(0, 8000)}` });
@@ -157,7 +246,8 @@ export async function newsletterDraftReply(env: Env,
     return {
       reply: typeof p.reply === "string" && p.reply.trim() ? p.reply.trim() : "Here's the updated draft.",
       subject: typeof p.subject === "string" && p.subject.trim() ? p.subject.trim() : null,
-      html: typeof p.html === "string" && p.html.trim() ? p.html.trim() : null,
+      html: typeof p.html === "string" && p.html.trim()
+        ? sanitizeNewsletterHtml(env, p.html.trim()) : null,
     };
   } catch {
     // Model slipped out of JSON — treat the whole thing as conversation, keep the draft.

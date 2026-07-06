@@ -52,7 +52,18 @@
   let confirmSend = false;
   let sending = false;
   let sendResult = null;          // {sent, failed, results}
+  let sentLocked = false;         // this issue went out; discussion is closed
   let nlLinesEl, nlInputEl;
+
+  // A sent newsletter is done. Close the discussion and open a fresh window.
+  function freshNewsletter() {
+    nlLines = [];
+    draft = { subject: "", html: "" };
+    sendResult = null;
+    sentLocked = false;
+    editHtml = false;
+    loadNewsletterMeta();
+  }
 
   async function loadNewsletterMeta() {
     api.adminNewsDomain().then((d) => (domain = d)).catch(() => {});
@@ -61,7 +72,7 @@
 
   async function nlSend() {
     const t = nlDraft.trim();
-    if (!t || nlBusy) return;
+    if (!t || nlBusy || sentLocked) return;
     nlDraft = "";
     nlLines = [...nlLines, { who: "user", text: t }];
     scrollNl();
@@ -113,8 +124,9 @@
       const r = await api.adminNewsSend(draft.subject, draft.html);
       sendResult = r;
       if (r.sent > 0 && r.failed === 0) notify(`Newsletter sent to ${r.sent} people.`, "safe");
-      else if (r.sent > 0) notify(`Sent ${r.sent}, failed ${r.failed} — see results.`, "caution");
+      else if (r.sent > 0) notify(`Sent ${r.sent}, failed ${r.failed}. See results.`, "caution");
       else notify(`Send failed: ${r.results?.[0]?.error || "unknown error"}`, "danger");
+      if (r.sent > 0) sentLocked = true;   // it's out — close this discussion
       loadNewsletterMeta();
     } catch (e) { notify("Send failed.", "danger"); }
     sending = false;
@@ -242,14 +254,24 @@
           {/each}
           {#if nlBusy}<p class="line assistant dots"><span></span><span></span><span></span></p>{/if}
         </div>
-        <div class="composer">
-          <input bind:value={nlDraft} bind:this={nlInputEl}
-                 placeholder="e.g. announce the new voice mode and notes"
-                 on:keydown={(e) => e.key === "Enter" && nlSend()} />
-          <button class="send" on:click={nlSend} disabled={nlBusy} aria-label="Send">
-            <i class="ti ti-arrow-up"></i>
-          </button>
-        </div>
+        {#if sentLocked}
+          <div class="sentlock" in:fade={{ duration: 150 }}>
+            <i class="ti ti-circle-check"></i>
+            <span>This newsletter went out{sendResult?.sent ? ` to ${sendResult.sent} people` : ""}. This discussion is closed.</span>
+            <button class="freshb" on:click={freshNewsletter}>
+              <i class="ti ti-plus"></i> Start a new newsletter
+            </button>
+          </div>
+        {:else}
+          <div class="composer">
+            <input bind:value={nlDraft} bind:this={nlInputEl}
+                   placeholder="e.g. announce the new voice mode and notes"
+                   on:keydown={(e) => e.key === "Enter" && nlSend()} />
+            <button class="send" on:click={nlSend} disabled={nlBusy} aria-label="Send">
+              <i class="ti ti-arrow-up"></i>
+            </button>
+          </div>
+        {/if}
       </div>
 
       <div class="nlpreview card glass">
@@ -268,11 +290,11 @@
           <div class="empty">No draft yet — start the chat on the left.</div>
         {/if}
         <div class="sendbar">
-          <button class="ghostb" on:click={testSend} disabled={sending || !draft.html}>
+          <button class="ghostb" on:click={testSend} disabled={sending || sentLocked || !draft.html}>
             <i class="ti ti-send"></i> Send test to me
           </button>
-          <button class="primaryb" on:click={askSend} disabled={sending || !draft.html}>
-            {sending ? "Sending…" : "Approve & send"}
+          <button class="primaryb" on:click={askSend} disabled={sending || sentLocked || !draft.html}>
+            {sentLocked ? "Sent ✓" : sending ? "Sending…" : "Approve & send"}
           </button>
         </div>
         {#if sendResult}
@@ -401,6 +423,16 @@
     animation: dot-bounce 1.2s ease-in-out infinite; }
   .line.dots span:nth-child(2) { animation-delay: 0.15s; }
   .line.dots span:nth-child(3) { animation-delay: 0.3s; }
+
+  .sentlock { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: var(--r-md);
+    border: 1px solid var(--safe); background: var(--safe-bg);
+    font-size: 13.5px; color: var(--safe); }
+  .sentlock i { font-size: 17px; }
+  .freshb { margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: var(--r-pill); background: var(--accent-grad);
+    color: var(--accent-t); font-size: 13px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 0 12px var(--accent-glow); }
 
   .composer { display: flex; gap: 8px; border: 1px solid var(--border); border-radius: var(--r-md);
     padding: 5px 5px 5px 14px; background: var(--s1); }

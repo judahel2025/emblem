@@ -88,7 +88,7 @@
         } else if (Date.now() - (startedAt[k] || 0) > TIMEOUT_MS) {
           delete connecting[k];
           delete startedAt[k];
-          notify("Connection not completed — try again", "caution");
+          notify("Connection not completed. Try again.", "caution");
         }
       }
       connecting = connecting;   // reactivity after deletes
@@ -168,7 +168,7 @@
   <header class="head">
     <div>
       <h1>Connections</h1>
-      <p class="sub">Connect your apps — Emblem acts in YOUR accounts, with your approval, always. Sign-in happens securely and can be revoked anytime.</p>
+      <p class="sub">Connect your apps. Emblem acts in YOUR accounts, with your approval, always. Sign-in is secure and you can revoke access anytime.</p>
     </div>
     <div class="headside">
       {#if !loading}
@@ -190,7 +190,7 @@
   {#if pending}
     <div class="connecting-banner glass gloss" in:fly={{ y: -6, duration: 160 }}>
       <span class="spin"></span>
-      <span>Finish the sign-in in the pop-up — we'll detect it automatically.</span>
+      <span>Finish the sign-in in the pop-up. We'll detect it automatically.</span>
       <button class="btn ghost sm" on:click={checkNow}>Check now</button>
     </div>
   {/if}

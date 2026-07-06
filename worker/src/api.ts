@@ -12,7 +12,7 @@ import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile, extractProfileFields, saveProfileFields } from "./onboarding";
 import { reviewReply, extractReview, saveReview, type ReviewTurn } from "./reviews";
-import { newsletterDraftReply, recipientList, sendNewsletter, sendNewsletterEmail } from "./newsletter";
+import { newsletterDraftReply, newsletterContext, recipientList, sendNewsletter, sendNewsletterEmail } from "./newsletter";
 import { transcribe } from "./stt";
 import { BUILTIN_SKILLS, draftSkill, normalizeSkill } from "./skills";
 import { proactiveBriefing } from "./briefing";
@@ -303,7 +303,8 @@ apiRoutes.post("/admin/newsletter/chat", async (c) => {
       ({ role: t.role as "user" | "assistant", text: t.text.slice(0, 4000) }));
   const draft = (b.draft && typeof b.draft.html === "string")
     ? { subject: String(b.draft.subject || ""), html: b.draft.html } : null;
-  const r = await newsletterDraftReply(c.env, history, draft);
+  const context = await newsletterContext(c.env).catch(() => "");
+  const r = await newsletterDraftReply(c.env, history, draft, context || undefined);
   if (!r) return c.json({ ok: false, error: "unavailable" }, 503);
   return c.json({ ok: true, ...r });
 });

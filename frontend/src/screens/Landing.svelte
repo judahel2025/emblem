@@ -54,11 +54,11 @@
   ];
 
   const features = [
-    { i: "ti-message-2", t: "Chat that acts", d: "Say it in plain words. It drafts, sends, schedules, and files — answers are just the start." },
+    { i: "ti-message-2", t: "Chat that acts", d: "Say it in plain words. It drafts, sends, schedules, and files. Answers are just the start." },
     { i: "ti-microphone", t: "Real voice mode", d: "Hands-free conversation: it listens, thinks, and speaks back naturally." },
-    { i: "ti-plug-connected", t: "20,000+ tools", d: "Gmail, Calendar, GitHub, your socials and more — each account stays yours." },
+    { i: "ti-plug-connected", t: "20,000+ tools", d: "Gmail, Calendar, GitHub, your socials and more. Every account stays yours." },
     { i: "ti-brain", t: "Memory that grows", d: "It learns your people, preferences and projects, and every session builds on the last." },
-    { i: "ti-bolt", t: "Works while you rest", d: "Set an automation once — a morning brief, an inbox sweep — and it keeps running on its own." },
+    { i: "ti-bolt", t: "Works while you rest", d: "Set an automation once, a morning brief or an inbox sweep, and it keeps running on its own." },
     { i: "ti-file-text", t: "Notes & calendar", d: "Turn a conversation into a note or an event with one line. Your workspace, built as you talk." },
   ];
 
@@ -105,7 +105,7 @@
       <h1><span class="quiet">Your all-in-one</span> <span class="red">AI workspace</span><br/>
         <span class="loud">personalized, fast and yours.</span></h1>
       <p class="sub">Emblem connects to the tools you already use, remembers what matters,
-        and quietly gets things done — chat it, speak it, or let it run on its own.</p>
+        and quietly gets things done. Chat it, speak it, or let it run on its own. Built for every kind of work, from a one-person shop to a full team.</p>
       <div class="hero-cta">
         <button class="whitepill big" on:click={enter}>Start free <i class="ti ti-arrow-right"></i></button>
         <button class="glasspill big" on:click={enter}><i class="ti ti-player-play"></i> Meet Emblem</button>
@@ -142,7 +142,7 @@
       <div class="showcard right glass gloss edge-blue" use:tilt>
         <div class="orbseat"><Orb size={72} state="idle" /></div>
         <div class="ask glass">
-          <span class="ask-ph">Ask me anything — or just say it</span>
+          <span class="ask-ph">Ask me anything, or just say it</span>
           <span class="ask-send"><i class="ti ti-arrow-up"></i></span>
         </div>
         <div class="ask-row">
@@ -174,7 +174,7 @@
     <div class="v-orb"><Orb size={84} state="speaking" /></div>
     <h2>Talk to it. <span class="red">It does the rest.</span></h2>
     <p class="sub">Say "reply to Sarah and put a follow-up on Friday." It drafts the email, stages the
-      event, and shows you both to approve — out loud or on screen.</p>
+      event, and shows you both to approve, out loud or on screen.</p>
     <button class="whitepill big" on:click={enter}>Try the voice mode <i class="ti ti-arrow-right"></i></button>
   </section>
 
@@ -182,7 +182,7 @@
   <section class="cta" use:reveal>
     <span class="dotfield df3" aria-hidden="true"></span>
     <h2>Meet the assistant that <span class="red">has your back</span>.</h2>
-    <p class="cta-sub">Personalized from day one — and better every day you use it.</p>
+    <p class="cta-sub">Personalized from day one, and better every day you use it.</p>
     <button class="whitepill big" on:click={enter}>Open your workspace <i class="ti ti-arrow-right"></i></button>
   </section>
 
@@ -204,7 +204,7 @@
                      aria-label="Email for the newsletter" />
               <button class="nl-btn" disabled={nlBusy}>{nlBusy ? "…" : "Sign up"}</button>
             </form>
-            {#if nlErr}<span class="nl-err">Couldn't subscribe — try again.</span>{/if}
+            {#if nlErr}<span class="nl-err">Couldn't subscribe. Try again.</span>{/if}
           {/if}
         </div>
       </div>

@@ -73,6 +73,123 @@ export const BUILTIN_SKILLS: Skill[] = [
       "- List open items and 3-5 suggested talking points.\n" +
       "- Offer to draft any follow-up, but confirm before sending.",
   },
+  {
+    name: "marketing-strategist",
+    description: "Use for marketing plans, campaigns, launches, promotions, audience or brand " +
+      "questions, ads, growth ideas, or how to get more customers for any business.",
+    instructions:
+      "When helping with marketing:\n" +
+      "- Start from who the customer is and what they actually want; name the ONE message.\n" +
+      "- Recommend 2-3 channels that fit THEIR business and budget, not a generic list of ten.\n" +
+      "- Turn strategy into a concrete 2-4 week plan: what goes out, where, when, and how " +
+      "they will know it worked (one simple metric per channel).\n" +
+      "- Offer to draft the actual assets (posts, emails, pages) and save the plan as a note.",
+  },
+  {
+    name: "sales-outreach",
+    description: "Use for sales, leads, prospecting, cold email or DM outreach, follow-ups, " +
+      "closing deals, pricing conversations, proposals, or winning back customers.",
+    instructions:
+      "When helping with sales:\n" +
+      "- Lead with the prospect's problem, not the user's product; one clear ask per message.\n" +
+      "- Outreach drafts: short (under 120 words), specific to the recipient, no fake flattery.\n" +
+      "- Build simple cadences: first touch, a 3-day nudge, a 10-day value follow-up, then rest.\n" +
+      "- For proposals and pricing: anchor on value delivered, give 2-3 options, make the next " +
+      "step tiny and dated. Always show drafts for approval before anything is sent.",
+  },
+  {
+    name: "finance-analyst",
+    description: "Use for money questions: budgets, cash flow, pricing, margins, unit economics, " +
+      "revenue, costs, invoices, runway, forecasts, or reading financial numbers.",
+    instructions:
+      "When working with money:\n" +
+      "- Get the real numbers first; if they are not provided, ask for the 2-3 that matter " +
+      "instead of guessing.\n" +
+      "- Show the arithmetic plainly: revenue, costs, margin, and what changes each lever.\n" +
+      "- Translate findings into one plain-language sentence a non-finance person gets.\n" +
+      "- Flag when a real accountant is needed (taxes, compliance, anything filed). Offer a " +
+      "spreadsheet via create_document when a table would serve better than prose.",
+  },
+  {
+    name: "business-analyst",
+    description: "Use when asked to analyze, compare, evaluate, or decide: options, vendors, " +
+      "markets, competitors, metrics, trade-offs, SWOT, or any 'should I do A or B' question.",
+    instructions:
+      "When analyzing a decision:\n" +
+      "- Nail the actual question and the decision criteria (cost, time, risk, upside) first.\n" +
+      "- Compare options against the SAME criteria; a small table beats paragraphs.\n" +
+      "- State a clear recommendation with the single strongest reason, then the main risk " +
+      "and how to hedge it. Never end on 'it depends' without saying on WHAT.\n" +
+      "- Use search_web for facts you do not have; never invent numbers.",
+  },
+  {
+    name: "customer-service",
+    description: "Use for customer complaints, support replies, refunds, angry messages, " +
+      "reviews responses, or keeping an unhappy customer.",
+    instructions:
+      "When handling a customer situation:\n" +
+      "- Acknowledge the specific problem first, in plain words, without corporate apology-speak.\n" +
+      "- Fix what can be fixed now; say exactly what happens next and when.\n" +
+      "- Give the user 2 reply drafts: one generous, one firm-but-fair, and say which fits.\n" +
+      "- Spot the pattern: if this complaint repeats, suggest the small operational fix behind it.",
+  },
+  {
+    name: "hiring-helper",
+    description: "Use for hiring, job descriptions, interviews, screening candidates, offers, " +
+      "onboarding new staff, or delegating work to a first employee or contractor.",
+    instructions:
+      "When helping hire:\n" +
+      "- Define the outcomes the role must own before writing a single requirement.\n" +
+      "- Job posts: real work described plainly, honest pay range, no buzzword soup.\n" +
+      "- Interviews: 5-6 questions tied to the outcomes, each with what a good answer sounds like.\n" +
+      "- Offers and onboarding: checklist form, first-week plan, one clear 30-day goal.",
+  },
+  {
+    name: "strategy-planner",
+    description: "Use for planning: goals, quarterly plans, roadmaps, prioritizing, OKRs, " +
+      "what to focus on next, or turning a big vague ambition into steps.",
+    instructions:
+      "When planning:\n" +
+      "- Compress the ambition into one sentence with a number and a date.\n" +
+      "- Work backwards: the 3 milestones that must be true, then this month, then this week.\n" +
+      "- Cut ruthlessly: flag the items that do not serve the goal and say why.\n" +
+      "- Save the plan as a note, and offer an automation for the weekly check-in.",
+  },
+  {
+    name: "copy-editor",
+    description: "Use when asked to rewrite, edit, improve, shorten, fix, or polish any text: " +
+      "emails, posts, pages, bios, product descriptions, scripts, or documents.",
+    instructions:
+      "When editing text:\n" +
+      "- Keep the writer's voice; make it clearer, not different.\n" +
+      "- Cut filler, passive voice, and throat-clearing openers. Shorter almost always wins.\n" +
+      "- Match register to purpose: a legal letter and an Instagram caption are different jobs.\n" +
+      "- Never use em dashes or en dashes. Return the clean version first, then (only if " +
+      "useful) one line on what you changed.",
+  },
+  {
+    name: "ops-organizer",
+    description: "Use for operations: processes, checklists, SOPs, workflows, inventory, " +
+      "scheduling staff, recurring chores, or 'how do I stop doing this manually'.",
+    instructions:
+      "When fixing operations:\n" +
+      "- Map the current steps in one list; circle the slowest or most error-prone one.\n" +
+      "- Write the SOP as numbered steps a new person could follow on day one.\n" +
+      "- Automate what Emblem can own: propose the exact automation (schedule + instruction) " +
+      "and set it up on approval.\n" +
+      "- Keep each SOP in a note so it lives somewhere findable.",
+  },
+  {
+    name: "data-summarizer",
+    description: "Use when given data, a spreadsheet, a report, metrics, or asked what the " +
+      "numbers mean, trends, statistics, or a summary of a long document.",
+    instructions:
+      "When summarizing data or documents:\n" +
+      "- Lead with the 1-3 findings that would change a decision; numbers with their direction.\n" +
+      "- Separate what the data says from what you infer; label the inference.\n" +
+      "- Note what is missing or suspicious in the data honestly.\n" +
+      "- Offer the deeper cut: a table, a chart-ready sheet via create_document, or a note.",
+  },
 ];
 
 const norm = (s: string) => (s || "").toLowerCase();
