@@ -383,9 +383,9 @@
 
   .q-pill { display: inline-flex; align-items: center; gap: 9px; align-self: flex-start;
     padding: 11px 18px; border-radius: var(--r-pill);
-    background: rgba(229,72,77,0.12); border: 1px solid rgba(240,90,94,0.35);
+    background: var(--accent-bg); border: 1px solid var(--accent-glow);
     color: var(--text); font-size: 14px; font-weight: 500;
-    box-shadow: 0 0 18px rgba(229,72,77,0.25); }
+    box-shadow: 0 0 18px var(--accent-glow); }
   .q-pill i { color: var(--accent-ink); }
   .mini { border-radius: var(--r-md); padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
   .mini-head { font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
