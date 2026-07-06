@@ -32,20 +32,20 @@
     renderer.setSize(width, height);
     host.appendChild(renderer.domElement);
 
-    // AURORA: a glossy dark sphere with a crimson undertone and a faint
-    // electric-blue wire shell, the reference's orb, in three.js.
+    // REEF: a sea-glass sphere with a coral emissive undertone and a faint
+    // sea-glass wire shell.
     const orb = new THREE.Mesh(
       new THREE.SphereGeometry(1.5, 64, 64),
       new THREE.MeshPhongMaterial({
-        color: 0x1a2340, transparent: true, opacity: 0.92,
-        shininess: 160, emissive: 0x3e1220,
+        color: 0x17484f, transparent: true, opacity: 0.92,
+        shininess: 160, emissive: 0x7a3a22,
       }));
     scene.add(orb);
 
     const shell = new THREE.Mesh(
       new THREE.SphereGeometry(1.55, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x5a7cf0, wireframe: true, transparent: true, opacity: 0.12,
+        color: 0x8fd9c4, wireframe: true, transparent: true, opacity: 0.12,
       }));
     scene.add(shell);
 

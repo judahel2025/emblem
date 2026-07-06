@@ -1,9 +1,10 @@
-/* Emblem, AURORA (Judah's reference, 2026-07-05): deep navy ink with twin
-   colour blooms, electric blue and crimson, heavy dark glassmorphism with
-   glowing card edges, halftone dot textures, white pill CTAs, and one clean
-   grotesque (Inter) doing the talking through weight contrast (300 quiet /
-   600 loud). Crimson is the primary; blue is the atmosphere; the two meet
-   in --duo-grad. Light mode is a lavender mist from the same world. */
+/* Emblem, REEF (Judah's pick, 2026-07-06): a living coral reef. Deep ocean
+   teal at night, sea-glass and coral as the twin blooms, flowing asymmetric
+   "water-worn" shapes instead of engineered corners. Coral is the primary
+   (what acts, what glows); sea-glass is the atmosphere; the two meet in
+   --duo-grad. Light mode is a tide pool from the same world. Same token
+   NAMES as the prior Aurora system on purpose, only values changed, so every
+   component that reads var(--accent)/var(--blue)/etc. recolors for free. */
 
 /* ── The faces, self-hosted, latin ── */
 @font-face {
@@ -24,13 +25,13 @@
 :root, [data-theme="light"] {
   color-scheme: light;
 
-  /* ── Surfaces, LAVENDER MIST: the reference's pale outer frame ── */
-  --bg:    #eeebf7;   /* pale lavender */
-  --bg-2:  #e9e4f4;
-  --s1:    #e2dcef;   /* sidebar/panels */
-  --s2:    #d8d1e9;   /* inputs/tiles */
-  --s3:    #ccc3e0;   /* hover */
-  --s4:    #171c33;   /* high-contrast fill */
+  /* ── Surfaces, TIDE POOL: pale sea-foam by daylight ────────── */
+  --bg:    #f2f6f3;   /* foam */
+  --bg-2:  #eaf1ec;
+  --s1:    #e2ece6;   /* sidebar/panels */
+  --s2:    #d6e4dc;   /* inputs/tiles */
+  --s3:    #c8d8ce;   /* hover */
+  --s4:    #0b2e33;   /* high-contrast fill */
 
   /* glass, translucent white-lavender, top-lit */
   --surface:    rgba(255, 255, 255, 0.55);
@@ -41,42 +42,42 @@
   --glass-sheen: radial-gradient(120% 80% at 15% -10%, rgba(255,255,255,.45), rgba(255,255,255,0) 55%);
 
   /* ── Borders ────────────────────────────────────────────────── */
-  --border:        rgba(23, 28, 51, 0.10);
-  --border-strong: rgba(23, 28, 51, 0.20);
-  --divider:       rgba(23, 28, 51, 0.09);
+  --border:        rgba(11, 46, 51, 0.10);
+  --border-strong: rgba(11, 46, 51, 0.20);
+  --divider:       rgba(11, 46, 51, 0.09);
 
-  /* ── Text, ink-navy on lavender ────────────────────────────── */
-  --text:   #171c33;
-  --text-2: #5a5f7a;
-  --text-3: #8b8fa8;
+  /* ── Text, deep teal ink on foam ──────────────────────────── */
+  --text:   #0b2e33;
+  --text-2: #4c6664;
+  --text-3: #7c948f;
   --text-on-accent: #ffffff;
 
-  /* ── Primary accent, CRIMSON; secondary, ELECTRIC BLUE ────── */
-  --accent:      #d4383e;
-  --accent-h:    #e04a4f;
-  --accent-ink:  #bf3238;   /* interactive text (AA on lavender) */
+  /* ── Primary accent, CORAL; secondary, SEA GLASS ──────────── */
+  --accent:      #c85a3d;
+  --accent-h:    #d66a4b;
+  --accent-ink:  #b14e33;   /* interactive text (AA on foam) */
   --accent-t:    #ffffff;
-  --accent-bg:   rgba(212, 56, 62, 0.10);
-  --accent-glow: rgba(212, 56, 62, 0.30);
-  --accent-grad: linear-gradient(135deg, #e04a4f, #b92e37);
-  --accent-2:    #3453c4;
+  --accent-bg:   rgba(200, 90, 61, 0.10);
+  --accent-glow: rgba(200, 90, 61, 0.30);
+  --accent-grad: linear-gradient(135deg, #d66a4b, #b1502f);
+  --accent-2:    #3f8f76;
 
-  --blue:      #3453c4;
-  --blue-h:    #4a68d8;
-  --blue-bg:   rgba(52, 83, 196, 0.10);
-  --blue-glow: rgba(52, 83, 196, 0.30);
+  --blue:      #3f8f76;
+  --blue-h:    #4ba384;
+  --blue-bg:   rgba(63, 143, 118, 0.10);
+  --blue-glow: rgba(63, 143, 118, 0.30);
 
   /* Twin-glow atmosphere + the meeting gradient */
-  --aurora: radial-gradient(900px 600px at 12% 0%, rgba(52, 83, 196, 0.10), transparent 60%),
-            radial-gradient(900px 600px at 88% 12%, rgba(212, 56, 62, 0.08), transparent 60%);
-  --duo-grad: linear-gradient(90deg, #3453c4, #d4383e);
-  --edge-blue: 0 0 24px rgba(52, 83, 196, 0.18), inset 0 0 0 1px rgba(74, 104, 216, 0.22);
-  --edge-red:  0 0 24px rgba(212, 56, 62, 0.16), inset 0 0 0 1px rgba(224, 74, 79, 0.22);
-  --dots: radial-gradient(rgba(23, 28, 51, 0.14) 1px, transparent 1.4px);
+  --aurora: radial-gradient(900px 600px at 12% 0%, rgba(63, 143, 118, 0.10), transparent 60%),
+            radial-gradient(900px 600px at 88% 12%, rgba(200, 90, 61, 0.08), transparent 60%);
+  --duo-grad: linear-gradient(90deg, #3f8f76, #c85a3d);
+  --edge-blue: 0 0 24px rgba(63, 143, 118, 0.18), inset 0 0 0 1px rgba(75, 163, 132, 0.22);
+  --edge-red:  0 0 24px rgba(200, 90, 61, 0.16), inset 0 0 0 1px rgba(214, 106, 75, 0.22);
+  --dots: radial-gradient(rgba(11, 46, 51, 0.14) 1px, transparent 1.4px);
 
-  /* ── Kill switch, its own darker red, nothing else uses it ─── */
-  --oxblood:    #8a2222;
-  --oxblood-bg: rgba(138, 34, 34, 0.10);
+  /* ── Kill switch, its own deep rust, nothing else uses it ──── */
+  --oxblood:    #6b241b;
+  --oxblood-bg: rgba(107, 36, 27, 0.10);
 
   /* ── Legacy aliases (older components) ──────────────────────── */
   --bg-1:   var(--s1);
@@ -85,31 +86,32 @@
   --line-2: var(--border-strong);
 
   /* ── Status ─────────────────────────────────────────────────── */
-  --safe:       #2f9e44;
-  --safe-bg:    rgba(47, 158, 68, 0.10);
-  --caution:    #c77b1c;    /* pending / waiting */
-  --caution-bg: rgba(199, 123, 28, 0.10);
-  --danger:     #d4383e;    /* shares crimson with the accent by design */
-  --danger-bg:  rgba(212, 56, 62, 0.09);
+  --safe:       #2e7d5f;
+  --safe-bg:    rgba(46, 125, 95, 0.10);
+  --caution:    #a87232;    /* pending / waiting, sandy amber */
+  --caution-bg: rgba(168, 114, 50, 0.10);
+  --danger:     #b23a31;    /* distinct from the coral accent on purpose */
+  --danger-bg:  rgba(178, 58, 49, 0.09);
   --info:       var(--text-2);
 
-  /* ── Glow (Orb), pink-white core, red bloom, blue rim ──────── */
-  --glow-core: rgba(255, 240, 243, 0.95);
-  --glow-soft: rgba(212, 56, 62, 0.35);
-  --glow-rim:  rgba(52, 83, 196, 0.28);
+  /* ── Glow (Orb), bright foam core, coral bloom, sea-glass rim ── */
+  --glow-core: rgba(232, 255, 244, 0.95);
+  --glow-soft: rgba(200, 90, 61, 0.35);
+  --glow-rim:  rgba(63, 143, 118, 0.28);
 
   /* ── Shadows, soft ambient only ────────────────────────────── */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
   --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.08);
 
-  /* ── Radius, "engineered, not organic" ─────────────────────── */
-  --r-sm:   4px;    /* inputs, buttons, chips */
-  --r-md:   8px;    /* cards, containers */
-  --r-lg:   12px;   /* modals, large sheets */
-  --r-xl:   16px;
-  --r-pill: 999px;  /* pills everywhere, the reference is pill-heavy */
-  --r-ghost: 4px;
+  /* ── Radius, flowing and water-worn, not engineered ────────── */
+  --r-sm:   8px;    /* inputs, buttons, chips */
+  --r-md:   14px;   /* cards, containers */
+  --r-lg:   20px;   /* modals, large sheets */
+  --r-xl:   26px;
+  --r-pill: 999px;  /* pills everywhere */
+  --r-tide: 16px 32px 20px 28px;  /* asymmetric "moment" surfaces, water-worn glass */
+  --r-ghost: 8px;
   --radius:    var(--r-md);
   --radius-sm: var(--r-sm);
   --radius-lg: var(--r-lg);
@@ -131,69 +133,69 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* ── Surfaces, DEEP NAVY INK: the reference's dark card ────── */
-  --bg:    #0b1020;   /* navy ink */
-  --bg-2:  #0e142a;
-  --s1:    #121a33;   /* cards, panels */
-  --s2:    #1a2340;   /* inputs, nested */
-  --s3:    #232d4f;   /* hover */
-  --s4:    #edf0fa;
+  /* ── Surfaces, DEEP REEF: the ocean at night ───────────────── */
+  --bg:    #0b2e33;   /* deep teal */
+  --bg-2:  #0f363c;
+  --s1:    #123e45;   /* cards, panels */
+  --s2:    #17484f;   /* inputs, nested */
+  --s3:    #1d555d;   /* hover */
+  --s4:    #f2f6f3;
 
-  --surface:    rgba(18, 26, 51, 0.55);
+  --surface:    rgba(18, 62, 69, 0.55);
   --glass-blur: blur(28px);
   --glass-sat:  saturate(1.5);
   --gloss:      linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 42%);
   --glass-hi:   inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.05);
   --glass-sheen: radial-gradient(120% 80% at 15% -10%, rgba(255,255,255,.09), rgba(255,255,255,0) 55%);
 
-  --border:        rgba(237, 240, 250, 0.10);
-  --border-strong: rgba(237, 240, 250, 0.20);
-  --divider:       rgba(237, 240, 250, 0.09);
+  --border:        rgba(242, 246, 243, 0.10);
+  --border-strong: rgba(242, 246, 243, 0.20);
+  --divider:       rgba(242, 246, 243, 0.09);
 
-  /* ── Foreground, cool off-white ────────────────────────────── */
-  --text:   #edf0fa;
-  --text-2: #9aa3bf;
-  --text-3: #5f6885;
+  /* ── Foreground, foam white ─────────────────────────────────── */
+  --text:   #f2f6f3;
+  --text-2: #9fc2c0;
+  --text-3: #6c8e8c;
   --text-on-accent: #ffffff;
 
-  /* ── Primary accent, CRIMSON; secondary, ELECTRIC BLUE ────── */
-  --accent:      #e5484d;
-  --accent-h:    #f05a5e;
-  --accent-ink:  #f27b7e;   /* interactive text = lifted crimson (AA on navy) */
-  --accent-t:    #ffffff;
-  --accent-bg:   rgba(229, 72, 77, 0.14);
-  --accent-glow: rgba(229, 72, 77, 0.38);
-  --accent-grad: linear-gradient(135deg, #f05a5e, #c93a44);
-  --accent-2:    #3e63dd;
+  /* ── Primary accent, CORAL; secondary, SEA GLASS ──────────── */
+  --accent:      #e8724c;
+  --accent-h:    #f0876a;
+  --accent-ink:  #f0987a;   /* interactive text = lifted coral (AA on deep teal) */
+  --accent-t:    #0b2e33;
+  --accent-bg:   rgba(232, 114, 76, 0.14);
+  --accent-glow: rgba(232, 114, 76, 0.38);
+  --accent-grad: linear-gradient(135deg, #f0876a, #d9603f);
+  --accent-2:    #8fd9c4;
 
-  --blue:      #3e63dd;
-  --blue-h:    #5a7cf0;
-  --blue-bg:   rgba(62, 99, 221, 0.14);
-  --blue-glow: rgba(62, 99, 221, 0.40);
+  --blue:      #8fd9c4;
+  --blue-h:    #a3e2d1;
+  --blue-bg:   rgba(143, 217, 196, 0.14);
+  --blue-glow: rgba(143, 217, 196, 0.40);
 
   /* Twin-glow atmosphere + the meeting gradient */
-  --aurora: radial-gradient(900px 600px at 12% 0%, rgba(62, 99, 221, 0.20), transparent 60%),
-            radial-gradient(900px 600px at 88% 12%, rgba(229, 72, 77, 0.14), transparent 60%);
-  --duo-grad: linear-gradient(90deg, #3e63dd, #e5484d);
-  --edge-blue: 0 0 24px rgba(62, 99, 221, 0.25), inset 0 0 0 1px rgba(90, 124, 240, 0.22);
-  --edge-red:  0 0 24px rgba(229, 72, 77, 0.22), inset 0 0 0 1px rgba(240, 90, 94, 0.22);
-  --dots: radial-gradient(rgba(237, 240, 250, 0.13) 1px, transparent 1.4px);
+  --aurora: radial-gradient(900px 600px at 12% 0%, rgba(143, 217, 196, 0.20), transparent 60%),
+            radial-gradient(900px 600px at 88% 12%, rgba(232, 114, 76, 0.14), transparent 60%);
+  --duo-grad: linear-gradient(90deg, #8fd9c4, #e8724c);
+  --edge-blue: 0 0 24px rgba(143, 217, 196, 0.25), inset 0 0 0 1px rgba(163, 226, 209, 0.22);
+  --edge-red:  0 0 24px rgba(232, 114, 76, 0.22), inset 0 0 0 1px rgba(240, 135, 106, 0.22);
+  --dots: radial-gradient(rgba(242, 246, 243, 0.13) 1px, transparent 1.4px);
 
-  --oxblood:    #b22b2b;
-  --oxblood-bg: rgba(178, 43, 43, 0.14);
+  --oxblood:    #7a2e24;
+  --oxblood-bg: rgba(122, 46, 36, 0.14);
 
-  --safe:       #46a758;
-  --safe-bg:    rgba(70, 167, 88, 0.12);
-  --caution:    #f5a623;    /* pending / waiting */
-  --caution-bg: rgba(245, 166, 35, 0.12);
-  --danger:     #e5484d;    /* shares crimson with the accent by design */
-  --danger-bg:  rgba(229, 72, 77, 0.12);
+  --safe:       #6fbfa0;
+  --safe-bg:    rgba(111, 191, 160, 0.12);
+  --caution:    #d9a05b;    /* pending / waiting, sandy amber */
+  --caution-bg: rgba(217, 160, 91, 0.12);
+  --danger:     #c9544a;    /* distinct from the coral accent on purpose */
+  --danger-bg:  rgba(201, 84, 74, 0.12);
   --info:       var(--text-2);
 
-  /* ── Glow (Orb), pink-white core, red bloom, blue rim ──────── */
-  --glow-core: rgba(255, 235, 240, 0.95);
-  --glow-soft: rgba(229, 72, 77, 0.40);
-  --glow-rim:  rgba(62, 99, 221, 0.30);
+  /* ── Glow (Orb), bright foam core, coral bloom, sea-glass rim ── */
+  --glow-core: rgba(232, 255, 244, 0.92);
+  --glow-soft: rgba(232, 114, 76, 0.35);
+  --glow-rim:  rgba(143, 217, 196, 0.30);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.5);
@@ -275,7 +277,7 @@ a { color: var(--accent-ink); }
 .edge-red  { box-shadow: var(--edge-red),  var(--shadow-md); }
 /* White pill CTA, the reference's "Add to chrome" button. */
 .btn.white {
-  background: #ffffff; color: #0b1020; border-color: transparent;
+  background: #ffffff; color: #0b2e33; border-color: transparent;
   border-radius: var(--r-pill); font-weight: 600;
   box-shadow: 0 0 22px rgba(255, 255, 255, 0.25), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
@@ -422,6 +424,12 @@ a { color: var(--accent-ink); }
 @keyframes pulse-ring {
   from { transform: scale(1);   opacity: 0.5; }
   to   { transform: scale(1.5); opacity: 0; }
+}
+@keyframes rise {
+  0%   { transform: translateY(0) scale(0.6); opacity: 0; }
+  15%  { opacity: 0.85; }
+  85%  { opacity: 0.35; }
+  100% { transform: translateY(-92%) scale(1); opacity: 0; }
 }
 @keyframes dot-bounce {
   0%, 100% { transform: translateY(0);    opacity: 0.4; }

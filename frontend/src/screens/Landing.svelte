@@ -252,23 +252,23 @@
 <style>
   /* The whole landing lives in the reference's dark navy world in BOTH themes, the aurora scope re-declares the dark tokens locally. */
   .lp {
-    --bg: #0b1020; --bg-2: #0e142a; --s1: #121a33; --s2: #1a2340; --s3: #232d4f;
-    --text: #edf0fa; --text-2: #9aa3bf; --text-3: #5f6885;
-    --border: rgba(237,240,250,0.10); --border-strong: rgba(237,240,250,0.20);
-    --divider: rgba(237,240,250,0.09);
-    --surface: rgba(18,26,51,0.55);
-    --accent: #e5484d; --accent-h: #f05a5e; --accent-ink: #f27b7e; --accent-t: #ffffff;
-    --accent-bg: rgba(229,72,77,0.14); --accent-glow: rgba(229,72,77,0.38);
-    --accent-grad: linear-gradient(135deg,#f05a5e,#c93a44); --accent-2: #3e63dd;
-    --blue: #3e63dd; --blue-glow: rgba(62,99,221,0.40);
-    --glow-core: rgba(255,235,240,0.95); --glow-soft: rgba(229,72,77,0.40);
-    --glow-rim: rgba(62,99,221,0.30);
-    --aurora: radial-gradient(1000px 700px at 10% -5%, rgba(62,99,221,0.24), transparent 60%),
-              radial-gradient(1000px 700px at 92% 8%, rgba(229,72,77,0.18), transparent 60%);
-    --edge-blue: 0 0 28px rgba(62,99,221,0.28), inset 0 0 0 1px rgba(90,124,240,0.24);
-    --edge-red:  0 0 28px rgba(229,72,77,0.24), inset 0 0 0 1px rgba(240,90,94,0.24);
-    --dots: radial-gradient(rgba(237,240,250,0.13) 1px, transparent 1.4px);
-    background: var(--aurora), #0b1020;
+    --bg: #0b2e33; --bg-2: #0f363c; --s1: #123e45; --s2: #17484f; --s3: #1d555d;
+    --text: #f2f6f3; --text-2: #9fc2c0; --text-3: #6c8e8c;
+    --border: rgba(242,246,243,0.10); --border-strong: rgba(242,246,243,0.20);
+    --divider: rgba(242,246,243,0.09);
+    --surface: rgba(18,62,69,0.55);
+    --accent: #e8724c; --accent-h: #f0876a; --accent-ink: #f0987a; --accent-t: #0b2e33;
+    --accent-bg: rgba(232,114,76,0.14); --accent-glow: rgba(232,114,76,0.38);
+    --accent-grad: linear-gradient(135deg,#f0876a,#d9603f); --accent-2: #8fd9c4;
+    --blue: #8fd9c4; --blue-glow: rgba(143,217,196,0.40);
+    --glow-core: rgba(232,255,244,0.92); --glow-soft: rgba(232,114,76,0.35);
+    --glow-rim: rgba(143,217,196,0.30);
+    --aurora: radial-gradient(1000px 700px at 10% -5%, rgba(143,217,196,0.24), transparent 60%),
+              radial-gradient(1000px 700px at 92% 8%, rgba(232,114,76,0.18), transparent 60%);
+    --edge-blue: 0 0 28px rgba(143,217,196,0.28), inset 0 0 0 1px rgba(163,226,209,0.24);
+    --edge-red:  0 0 28px rgba(232,114,76,0.24), inset 0 0 0 1px rgba(240,135,106,0.24);
+    --dots: radial-gradient(rgba(242,246,243,0.13) 1px, transparent 1.4px);
+    background: var(--aurora), #0b2e33;
     color: var(--text);
     min-height: 100vh; overflow-x: hidden; scroll-behavior: smooth;
   }
@@ -325,7 +325,7 @@
   /* The reference's white pill CTA */
   .whitepill {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #ffffff; color: #0b1020; border: none;
+    background: #ffffff; color: #0b2e33; border: none;
     padding: 10px 20px; border-radius: var(--r-pill);
     font-size: 14px; font-weight: 600; cursor: pointer;
     box-shadow: 0 0 22px rgba(255,255,255,0.22), 0 4px 14px rgba(0,0,0,0.3);
@@ -415,8 +415,8 @@
   .ask-ic { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;
     color: var(--text-3); font-size: 16px; background: var(--s1); border: 1px solid var(--border); }
   .duo-toggle { margin-left: auto; width: 46px; height: 24px; border-radius: 99px;
-    background: linear-gradient(90deg, #3e63dd, #e5484d); position: relative;
-    box-shadow: 0 0 12px rgba(62,99,221,0.35); }
+    background: var(--duo-grad); position: relative;
+    box-shadow: 0 0 12px var(--blue-glow); }
   .duo-knob { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
     border-radius: 50%; background: #fff; }
 
@@ -431,7 +431,7 @@
   .fcard.wide { grid-column: span 3; }
   @media (max-width: 860px) { .fcard.wide { grid-column: span 1; } }
   .ficon { width: 42px; height: 42px; border-radius: 10px;
-    background: var(--blue-bg, rgba(62,99,221,0.14)); color: #5a7cf0;
+    background: var(--blue-bg, rgba(143,217,196,0.14)); color: var(--blue);
     display: grid; place-items: center; font-size: 21px; margin-bottom: 16px; }
   .ftitle { font-size: 17px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
   .fdesc { font-size: 14px; line-height: 1.6; color: var(--text-2); }

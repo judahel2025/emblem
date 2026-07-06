@@ -26,7 +26,7 @@ resolvedTheme.subscribe((mode) => {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.theme = mode;
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.content = mode === "dark" ? "#0b1020" : "#eeebf7";
+  if (m) m.content = mode === "dark" ? "#0b2e33" : "#f2f6f3";
 });
 
 export function setTheme(pref) {

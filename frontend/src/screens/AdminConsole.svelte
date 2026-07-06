@@ -473,7 +473,7 @@
   .veil { position: fixed; inset: 0; z-index: 130; background: rgba(0,0,0,0.5);
     display: grid; place-items: center; padding: 20px;
     -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-  .confirm { width: min(440px, 100%); border-radius: var(--r-lg); padding: 22px;
+  .confirm { width: min(440px, 100%); border-radius: var(--r-tide); padding: 22px;
     display: flex; flex-direction: column; gap: 12px; }
   .confirm h3 { margin: 0; font-size: 17px; color: var(--text); }
   .confirm p { margin: 0; font-size: 14px; color: var(--text-2); line-height: 1.6; }

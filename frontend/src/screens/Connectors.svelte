@@ -380,7 +380,7 @@
   }
   .consent {
     width: min(420px, calc(100vw - 40px));
-    border-radius: var(--r-lg); padding: 28px 26px 22px;
+    border-radius: var(--r-tide); padding: 28px 26px 22px;
     text-align: center; box-shadow: var(--edge-blue), var(--shadow-lg);
   }
   .consent-marks { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 18px; }

@@ -36,13 +36,13 @@
         vec2 uv = v_texCoord;
         vec2 mouse = u_mouse / u_resolution;
         float dist = distance(uv, mouse);
-        // AURORA: lavender <-> navy grounds; the cursor bloom lerps from
-        // electric blue (left) to crimson (right) across the screen.
-        vec3 base1 = mix(vec3(0.933, 0.922, 0.969), vec3(0.043, 0.063, 0.125), u_dark);
-        vec3 base2 = mix(vec3(0.957, 0.945, 0.980), vec3(0.031, 0.045, 0.090), u_dark);
-        vec3 blueA = vec3(0.243, 0.388, 0.867);
-        vec3 redA  = vec3(0.898, 0.282, 0.302);
-        vec3 accent = mix(blueA, redA, uv.x);
+        // REEF: foam <-> deep teal grounds; the cursor bloom lerps from
+        // sea glass (left) to coral (right) across the screen.
+        vec3 base1 = mix(vec3(0.949, 0.965, 0.953), vec3(0.043, 0.180, 0.200), u_dark);
+        vec3 base2 = mix(vec3(0.886, 0.925, 0.902), vec3(0.031, 0.137, 0.153), u_dark);
+        vec3 seaGlassA = vec3(0.561, 0.851, 0.769);
+        vec3 coralA    = vec3(0.910, 0.447, 0.298);
+        vec3 accent = mix(seaGlassA, coralA, uv.x);
         float noise = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.1;
         float influence = smoothstep(0.4, 0.0, dist + noise);
         vec3 finalColor = mix(base1, base2, uv.y);

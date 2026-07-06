@@ -271,7 +271,7 @@
   }
   .popup {
     width: min(640px, 100%); max-height: min(560px, 90vh);
-    border-radius: var(--r-lg); padding: 20px 24px 22px;
+    border-radius: var(--r-tide); padding: 20px 24px 22px;
     display: flex; flex-direction: column; gap: 16px;
     box-shadow: var(--shadow-lg);
   }

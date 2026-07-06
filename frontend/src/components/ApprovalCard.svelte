@@ -119,7 +119,7 @@
 
 <style>
   .ap-card {
-    border-radius: var(--r-lg);
+    border-radius: var(--r-tide);
     box-shadow: var(--edge-red), var(--shadow-md);
     display: flex; flex-direction: column; gap: 10px;
     transition: opacity var(--t-fast);

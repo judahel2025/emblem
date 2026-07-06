@@ -143,7 +143,7 @@
   }
   .panel {
     width: min(520px, 100%);
-    border-radius: var(--r-lg); padding: 20px 22px;
+    border-radius: var(--r-tide); padding: 20px 22px;
     box-shadow: var(--shadow-lg);
     display: flex; flex-direction: column; gap: 14px;
     max-height: min(640px, 90vh);

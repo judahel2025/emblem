@@ -23,11 +23,10 @@
   <span class="halo"></span>
   <span class="rim"></span>
   <span class="core"></span>
-  <span class="spark" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2 C 13 9, 15 11, 22 12 C 15 13, 13 15, 12 22 C 11 15, 9 13, 2 12 C 9 11, 11 9, 12 2 Z"
-            fill="#ffffff" fill-opacity="0.95"/>
-    </svg>
+  <span class="bubbles" aria-hidden="true">
+    <span class="bubble b1"></span>
+    <span class="bubble b2"></span>
+    <span class="bubble b3"></span>
   </span>
   {#if state === "speaking"}
     <span class="ripple r1"></span>
@@ -66,30 +65,39 @@
     animation: throb var(--speed) ease-in-out infinite;
     animation-delay: calc(var(--speed) / -3);
   }
-  /* the glossy dark sphere itself, pink-white specular, crimson body,
-     near-black keel; the red bloom + blue rim come from halo/rim tokens */
+  /* the glossy bioluminescent core: bright foam-sea-glass center warming to
+     a coral edge and settling into the deep teal keel */
   .core {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     background: radial-gradient(circle at 38% 32%,
-      #ffeef2 0%, #f27b7e 18%, #a92d44 45%, #3a1030 74%, #12081c 100%);
+      #f7fffc 0%, #cdf2e6 16%, #e8724c 46%, #8a3f26 74%, #0f363c 100%);
     box-shadow: inset 0 calc(var(--d) * -0.06) calc(var(--d) * 0.14) rgba(0, 0, 0, 0.35),
                 0 0 calc(var(--d) * 0.35) var(--glow-soft);
     animation: throb var(--speed) ease-in-out infinite;
   }
-  /* the reference's four-point sparkle, riding the upper-right of the core */
-  .spark {
+  /* rising bubbles drifting up through the core, underwater breathing motif */
+  .bubbles {
     position: absolute;
-    top: calc(var(--d) * 0.10);
-    right: calc(var(--d) * 0.10);
-    width: calc(var(--d) * 0.34);
-    height: calc(var(--d) * 0.34);
-    filter: drop-shadow(0 0 calc(var(--d) * 0.08) rgba(255, 220, 228, 0.9));
-    animation: throb var(--speed) ease-in-out infinite;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    pointer-events: none;
   }
-  .spark svg { width: 100%; height: 100%; display: block; }
-  .orb.off .halo, .orb.off .rim, .orb.off .core, .orb.off .spark { animation: none; opacity: 0.4; }
+  .bubble {
+    position: absolute;
+    bottom: 6%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%,
+      #ffffff 0%, rgba(255, 255, 255, 0.55) 55%, rgba(255, 255, 255, 0) 100%);
+    opacity: 0;
+    animation: rise var(--speed) ease-in infinite;
+  }
+  .bubble.b1 { left: 30%; width: calc(var(--d) * 0.10); height: calc(var(--d) * 0.10); animation-delay: 0s; }
+  .bubble.b2 { left: 52%; width: calc(var(--d) * 0.065); height: calc(var(--d) * 0.065); animation-delay: calc(var(--speed) / -2.4); }
+  .bubble.b3 { left: 41%; width: calc(var(--d) * 0.045); height: calc(var(--d) * 0.045); animation-delay: calc(var(--speed) / -1.3); }
+  .orb.off .halo, .orb.off .rim, .orb.off .core, .orb.off .bubble { animation: none; opacity: 0.4; }
   .orb.thinking .halo { opacity: 0.45; }
 
   /* speaking: slow rings leaving the core */

@@ -1,7 +1,8 @@
 <script>
-  // The Emblem mark, the AURORA orb (Judah's reference, 2026-07-05): a glossy
-  // near-black sphere with a crimson bloom, a thin electric-blue rim, and a
-  // white four-point sparkle riding the upper right. Vector, crisp anywhere,
+  // The Emblem mark, the REEF glyph (Judah's pick, 2026-07-06): a coral branch,
+  // one trunk forking into three limbs, each ending in a small glowing node.
+  // Coral-to-rust gradient on the branches, a soft sea-glass rim behind them.
+  // Reads as "one root, many capable branches." Vector, crisp anywhere,
   // identical in both themes. `size` is the rendered diameter.
   export let size = 28;
   export let glow = false;
@@ -14,25 +15,33 @@
      xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
      style={glow ? "filter: drop-shadow(0 0 8px var(--accent-glow));" : ""}>
   <defs>
-    <radialGradient id="orb-shade-{uid}" cx="38%" cy="32%" r="78%">
-      <stop offset="0%"  stop-color="#ffeef2"/>
-      <stop offset="18%" stop-color="#f27b7e"/>
-      <stop offset="45%" stop-color="#a92d44"/>
-      <stop offset="74%" stop-color="#3a1030"/>
-      <stop offset="100%" stop-color="#12081c"/>
-    </radialGradient>
-    <radialGradient id="orb-sheen-{uid}" cx="34%" cy="26%" r="38%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.65"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="branch-{uid}" x1="50" y1="100" x2="50" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#7a3a22"/>
+      <stop offset="55%" stop-color="#d9603f"/>
+      <stop offset="100%" stop-color="#f0987a"/>
+    </linearGradient>
   </defs>
 
-  <circle cx="50" cy="50" r="45" fill="url(#orb-shade-{uid})"/>
-  <!-- top-left specular -->
-  <circle cx="50" cy="50" r="45" fill="url(#orb-sheen-{uid})"/>
-  <!-- electric-blue rim -->
-  <circle cx="50" cy="50" r="44.5" stroke="#5a7cf0" stroke-opacity="0.55" stroke-width="1.4"/>
-  <!-- the four-point sparkle -->
-  <path d="M72 12 C 74 24, 78 28, 90 30 C 78 32, 74 36, 72 48 C 70 36, 66 32, 54 30 C 66 28, 70 24, 72 12 Z"
-        fill="#ffffff" fill-opacity="0.96"/>
+  <!-- sea-glass rim, glowing behind the branches -->
+  <g fill="none" stroke="#8fd9c4" stroke-opacity="0.35" stroke-width="15"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 90 C 50 74, 50 66, 50 58"/>
+    <path d="M50 58 C 40 48, 30 38, 23 27"/>
+    <path d="M50 58 C 51 42, 52 26, 53 13"/>
+    <path d="M50 58 C 60 50, 70 42, 77 31"/>
+  </g>
+
+  <!-- the coral branches themselves -->
+  <g fill="none" stroke="url(#branch-{uid})" stroke-width="10"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 90 C 50 74, 50 66, 50 58"/>
+    <path d="M50 58 C 40 48, 30 38, 23 27"/>
+    <path d="M50 58 C 51 42, 52 26, 53 13"/>
+    <path d="M50 58 C 60 50, 70 42, 77 31"/>
+  </g>
+
+  <!-- glowing tip nodes -->
+  <circle cx="23" cy="27" r="7"   fill="#f0987a"/>
+  <circle cx="53" cy="13" r="7.5" fill="#f2f6f3"/>
+  <circle cx="77" cy="31" r="7"   fill="#f0987a"/>
 </svg>
