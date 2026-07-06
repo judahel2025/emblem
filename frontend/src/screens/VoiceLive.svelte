@@ -1,14 +1,20 @@
 <script>
-  // Emblem's voice mode — full-screen HANDS-FREE conversation with the breathing
-  // mark. Turn-based pipeline: your words → transcription → the REAL agent loop
-  // (tools, approvals, thread persistence — sendCommand) → the reply spoken back
-  // → listening again, until you close it. Opened from a click (the composer
-  // mic), so audio starts inside a user gesture.
+  // Emblem's voice mode — full-screen conversation with the breathing mark.
+  // DEFAULT ENGINE: Gemini Live (lib/live.js) — realtime, talk-and-respond-almost-
+  // immediately, with a small set of SAFE tools (search, notes, memory, calendar,
+  // automations) it can call directly. Anything consequential (send/post/etc.)
+  // still runs through the normal agent + approval-card pipeline; this screen
+  // surfaces any pending approval right here so voice mode is never a dead end —
+  // tap it, or just say "yes"/"approve" or "no"/"decline" while it's showing.
+  // Opt back into the turn-based STT pipeline for testing via
+  // localStorage.emblem_voice_engine = "turns".
   import { createEventDispatcher, onMount, onDestroy } from "svelte";
   import { fly } from "svelte/transition";
   import { VoiceTurnClient } from "../lib/voiceturn.js";
   import { LiveClient } from "../lib/live.js";
-  import { sendCommand } from "../lib/store.js";
+  import { sendCommand, approvals, decideAndContinue, messages } from "../lib/store.js";
+  import { get } from "svelte/store";
+  import { api } from "../lib/api.js";
   import Orb from "../components/Orb.svelte";
   const dispatch = createEventDispatcher();
 
@@ -35,11 +41,9 @@
     onLevel: (l) => (level = l),
     onError: (m) => (errorMsg = m),
   };
-  // Debug escape hatch back to the realtime relay: localStorage emblem_voice_engine = "live".
-  const useLegacy = typeof localStorage !== "undefined" && localStorage.getItem("emblem_voice_engine") === "live";
-  const client = useLegacy
-    ? new LiveClient({ mode: "chat", ...events })
-    : new VoiceTurnClient({
+  const useTurns = typeof localStorage !== "undefined" && localStorage.getItem("emblem_voice_engine") === "turns";
+  const client = useTurns
+    ? new VoiceTurnClient({
         mode: "chat",
         // The brain IS the normal agent loop — messages land in the thread,
         // tools run, approval cards render in the chat behind this overlay.
@@ -48,7 +52,8 @@
           return r?.reply || null;
         },
         ...events,
-      });
+      })
+    : new LiveClient({ mode: "chat", ...events });
 
   async function begin() {
     errorMsg = "";
@@ -74,7 +79,7 @@
 
   function stop() { client.stop(); dispatch("close"); }
   onMount(begin);
-  onDestroy(() => client.stop());
+  onDestroy(() => { client.stop(); try { apAudio?.pause(); } catch {} });
 
   $: label = muted ? "muted — tap the mic to resume" : ({
     connecting: "waking up…",
@@ -85,6 +90,58 @@
     error: errorMsg || "couldn't connect",
     ended: "session ended",
   }[state] ?? "");
+
+  // ── Approvals, surfaced right here — never a silent dead end in voice mode ──
+  let resolvedIds = new Set();
+  let apBusy = false;
+  let apAudio = null;
+  $: pendingApproval = ($approvals.pending || []).find((p) => !resolvedIds.has(p.id)) || null;
+
+  async function speakText(text) {
+    try {
+      const url = await api.speechUrl(text);
+      if (!url) return;
+      try { apAudio?.pause(); } catch {}
+      apAudio = new Audio(url);
+      await apAudio.play();
+    } catch { /* captions already carry it */ }
+  }
+
+  async function decideVoice(approved) {
+    if (!pendingApproval || apBusy) return;
+    const { id, summary } = pendingApproval;
+    resolvedIds = new Set([...resolvedIds, id]);
+    apBusy = true;
+    const r = await decideAndContinue(id, approved, summary);
+    // The real narrated confirmation lands in the chat thread a beat later —
+    // speak it too, so voice mode hears the outcome, not just sees it.
+    setTimeout(() => {
+      const last = get(messages).slice().reverse().find((m) => m.role === "assistant");
+      if (last?.text) speakText(last.text);
+      apBusy = false;
+    }, 500);
+    return r;
+  }
+
+  // Say "yes"/"approve" or "no"/"decline" while a card is showing — short,
+  // deliberate replies only (never scan a long unrelated sentence for a stray yes/no).
+  function voiceIntent(text) {
+    const words = (text || "").toLowerCase().replace(/[^a-z' ]/g, " ").trim().split(/\s+/).filter(Boolean);
+    if (!words.length || words.length > 5) return null;
+    const flat = words.join(" ");
+    if (words[0] === "no" || words[0] === "nope" || /\b(decline|declined|cancel|stop)\b/.test(flat) || /\bdon'?t\b/.test(flat)) return "decline";
+    if (["yes", "yeah", "yep", "approve", "approved", "confirm", "sure", "ok", "okay"].includes(words[0]) || /\b(go ahead|do it|send it)\b/.test(flat)) return "approve";
+    return null;
+  }
+  let lastCheckedLine = "";
+  $: if (pendingApproval && !apBusy && lines.length) {
+    const last = lines[lines.length - 1];
+    if (last.who === "user" && last.text !== lastCheckedLine) {
+      lastCheckedLine = last.text;
+      const intent = voiceIntent(last.text);
+      if (intent) decideVoice(intent === "approve");
+    }
+  }
 </script>
 
 <div class="veil" role="dialog" aria-label="Voice">
@@ -109,6 +166,22 @@
       </button>
     {/if}
   </div>
+
+  {#if pendingApproval}
+    <div class="apcard glass gloss" in:fly={{ y: 10, duration: 200 }}>
+      <div class="ap-chip"><i class="ti ti-shield-half-filled"></i> Waiting on you</div>
+      <p class="ap-summary">{pendingApproval.summary}</p>
+      <div class="ap-row">
+        <button class="ap-btn approve" on:click={() => decideVoice(true)} disabled={apBusy}>
+          <i class="ti ti-check"></i> Approve
+        </button>
+        <button class="ap-btn decline" on:click={() => decideVoice(false)} disabled={apBusy}>
+          <i class="ti ti-x"></i> Decline
+        </button>
+      </div>
+      <p class="ap-hint">Tap one, or just say "yes" or "no."</p>
+    </div>
+  {/if}
 
   <div class="caps" bind:this={linesEl}>
     {#each lines as l}
@@ -146,6 +219,24 @@
     transition: filter var(--t-fast);
   }
   .retry:hover { filter: brightness(1.07); }
+
+  .apcard { width: 100%; max-width: 420px; padding: 16px 18px;
+    border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column; gap: 10px; }
+  .ap-chip { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+    padding: 3px 10px; border-radius: var(--r-pill);
+    background: var(--caution-bg); border: 1px solid var(--caution);
+    font-size: 11.5px; font-weight: 500; color: var(--caution); }
+  .ap-summary { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--text); }
+  .ap-row { display: flex; gap: 8px; }
+  .ap-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 0; border-radius: var(--r-pill); font-size: 13.5px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--s1); color: var(--text); }
+  .ap-btn.approve:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-bg); }
+  .ap-btn.decline:hover { border-color: var(--danger); color: var(--danger); }
+  .ap-btn:disabled { opacity: 0.5; cursor: default; }
+  .ap-hint { margin: 0; font-size: 11.5px; color: var(--text-3); text-align: center; }
+
   .caps { width: 100%; max-width: 560px; flex: 1; overflow-y: auto;
     display: flex; flex-direction: column; gap: 12px; }
   .line { margin: 0; font-size: 16px; line-height: 1.55; animation: reveal .3s ease; }

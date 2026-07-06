@@ -94,8 +94,9 @@
   async function refocus() { await tick(); try { inputEl?.focus(); } catch {} }
   function focusNow(node) { try { node.focus(); } catch {} }
 
-  // ── Engine 1: hands-free voice (turn-based: STT → interviewer brain → TTS).
-  //    localStorage emblem_voice_engine = "live" forces the old realtime relay. ──
+  // ── Engine 1: hands-free voice. DEFAULT = Gemini Live (realtime, immediate).
+  //    localStorage emblem_voice_engine = "turns" opts into the turn-based
+  //    STT → interviewer brain → TTS pipeline instead. ──
   let voiceDone = false;   // interview complete — finish once the reply is spoken
   async function startLive(mic) {
     withMic = mic;
@@ -118,7 +119,7 @@
       onLevel: (l) => (level = l),
       onError: (m) => (errorMsg = m),
     };
-    if (typeof localStorage !== "undefined" && localStorage.getItem("emblem_voice_engine") === "live") {
+    if (!(typeof localStorage !== "undefined" && localStorage.getItem("emblem_voice_engine") === "turns")) {
       client = new LiveClient({ mode: "onboarding", ...events });
     } else {
       client = new VoiceTurnClient({

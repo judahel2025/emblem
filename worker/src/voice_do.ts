@@ -9,6 +9,7 @@
 
 import type { Env } from "./env";
 import { userFromToken } from "./auth";
+import { execNative } from "./agent";
 
 const HOST = "generativelanguage.googleapis.com";
 const MODEL = "models/gemini-3.1-flash-live-preview";
@@ -16,7 +17,39 @@ const VOICE = "Zephyr";
 
 const PERSONA_CHAT =
   "You are Emblem — the user's warm, concise, decisive voice assistant. Keep replies " +
-  "short and spoken-natural. Never reveal which AI, model, or provider powers you.";
+  "short and spoken-natural. You can search the web, save notes, remember durable facts, " +
+  "and manage their local calendar and automations — call the matching tool directly, " +
+  "don't just describe doing it. For anything bigger (sending email, posting, editing " +
+  "files, or anything in a connected app beyond the local calendar) tell them briefly " +
+  "you've got it and that it's waiting for their approval in the chat view — you can't " +
+  "act on those from voice yet. Never reveal which AI, model, or provider powers you. " +
+  "Never use em dashes or en dashes when you speak; use a natural pause instead.";
+
+// SAFE, never-need-approval tools — the only ones voice can call directly. Anything
+// consequential (Composio sends/posts) stays out of Live's function-calling on purpose:
+// it routes through the text agent + approval cards instead (see PERSONA_CHAT above).
+const CHAT_TOOLS = {
+  function_declarations: [
+    { name: "search_web", description: "Search the web for current information.",
+      parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] } },
+    { name: "save_note", description: "Save a note to the user's Notes.",
+      parameters: { type: "OBJECT", properties: { title: { type: "STRING" }, body: { type: "STRING" } }, required: ["body"] } },
+    { name: "remember", description: "Store a durable, generalizable fact about the user in long-term memory.",
+      parameters: { type: "OBJECT", properties: { fact: { type: "STRING" } }, required: ["fact"] } },
+    { name: "add_calendar_event", description: "Add an event or reminder to the user's local calendar. starts_at is ISO 8601.",
+      parameters: { type: "OBJECT", properties: {
+        title: { type: "STRING" }, starts_at: { type: "STRING" },
+        ends_at: { type: "STRING" }, remind_secs: { type: "INTEGER" },
+      }, required: ["title", "starts_at"] } },
+    { name: "list_calendar_events", description: "List the user's upcoming calendar events.",
+      parameters: { type: "OBJECT", properties: {} } },
+    { name: "create_automation", description: "Set up a recurring automation in plain language.",
+      parameters: { type: "OBJECT", properties: {
+        instruction: { type: "STRING" }, every_secs: { type: "INTEGER", description: "seconds, default 86400" },
+      }, required: ["instruction"] } },
+  ],
+};
+const CHAT_TOOL_NAMES = new Set(CHAT_TOOLS.function_declarations.map((t) => t.name));
 
 const PERSONA_ONBOARDING =
   "You are Emblem, meeting a brand-new member for the very first time — and YOU speak first. " +
@@ -85,25 +118,31 @@ export class VoiceRelay {
       return new Response(null, { status: 101, webSocket: client });
     };
 
-    if (!userId || !this.env.GEMINI_KEY) return denyReturn("unavailable");
+    const keys = [this.env.GEMINI_KEY, this.env.GEMINI_KEY2].filter((k): k is string => Boolean(k));
+    if (!userId || !keys.length) return denyReturn("unavailable");
 
     // Standard client constructor — the supported way to hold a long-lived
     // OUTBOUND socket from the Workers runtime (fetch-Upgrade sockets get torn
-    // down with the request context; these don't).
-    let upstream: WebSocket | null = null;
-    try {
-      upstream = new WebSocket(
-        `wss://${HOST}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${this.env.GEMINI_KEY}`);
+    // down with the request context; these don't). Try each key in turn — one
+    // quota-exhausted key shouldn't take the whole voice session down.
+    const tryConnect = (key: string) => new Promise<WebSocket | null>((resolve) => {
+      let sock: WebSocket;
+      try { sock = new WebSocket(
+        `wss://${HOST}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${key}`); }
+      catch { resolve(null); return; }
       // Gemini Live sends BINARY frames. The constructor socket defaults to
       // binaryType "blob", which TextDecoder can't read — every frame (incl.
       // setupComplete) then throws and gets dropped, so "ready" never fires.
-      try { (upstream as any).binaryType = "arraybuffer"; } catch { /* older runtime */ }
-      await new Promise<void>((resolve, reject) => {
-        const to = setTimeout(() => reject(new Error("upstream open timeout")), 12000);
-        upstream!.addEventListener("open", () => { clearTimeout(to); resolve(); });
-        upstream!.addEventListener("error", () => { clearTimeout(to); reject(new Error("upstream error")); });
-      });
-    } catch { upstream = null; }
+      try { (sock as any).binaryType = "arraybuffer"; } catch { /* older runtime */ }
+      const to = setTimeout(() => resolve(null), 12000);
+      sock.addEventListener("open", () => { clearTimeout(to); resolve(sock); });
+      sock.addEventListener("error", () => { clearTimeout(to); resolve(null); });
+    });
+    let upstream: WebSocket | null = null;
+    for (const key of keys) {
+      upstream = await tryConnect(key);
+      if (upstream) break;
+    }
     if (!upstream) return denyReturn("unavailable");
     const up = upstream;
 
@@ -116,6 +155,7 @@ export class VoiceRelay {
       system_instruction: { parts: [{ text: mode === "onboarding" ? PERSONA_ONBOARDING : PERSONA_CHAT }] },
     };
     if (mode === "onboarding") setup.tools = [SAVE_PROFILE_TOOL];
+    else setup.tools = [CHAT_TOOLS];
     up.send(JSON.stringify({ setup }));
 
     let ready = false;
@@ -153,6 +193,12 @@ export class VoiceRelay {
                 up.send(JSON.stringify({ tool_response: {
                   function_responses: [{ id: fc.id, name: fc.name, response: { ok: true } }] } }));
                 send({ type: "status", state: "onboarded" });
+              } else if (mode === "chat" && CHAT_TOOL_NAMES.has(fc.name)) {
+                let result = "";
+                try { [result] = await execNative(this.env, userId, fc.name, fc.args || {}); }
+                catch (e) { result = `Tool failed: ${e instanceof Error ? e.message : e}`; }
+                up.send(JSON.stringify({ tool_response: {
+                  function_responses: [{ id: fc.id, name: fc.name, response: { result } }] } }));
               }
             }
           }

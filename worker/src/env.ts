@@ -12,6 +12,7 @@ export interface Env {
   CEREBRAS_KEY?: string;
   GROQ_KEY?: string;
   GEMINI_KEY?: string;
+  GEMINI_KEY2?: string;  // secondary Gemini key — rotated to on 429/quota (text + voice)
   COMPOSIO_KEY?: string;
   RESEND_KEY?: string;
   RESEND_DOMAIN?: string;

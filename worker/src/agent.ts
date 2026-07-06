@@ -204,6 +204,16 @@ YOUR TOOLS (call them; don't just describe):
   IMAGE. These require a REAL, public file/URL the user provides — never fabricate or guess a
   media link. If the app isn't connected, offer connect_app(...). If it's connected but you
   have no media, ask the user for the real video/image instead of failing silently.
+- READING THE USER'S OWN CONNECTED ACCOUNT (their channel, their profile, their page,
+  their posts, "my account", "analyze my X"): the connection is already live — NEVER ask
+  them for a URL, a handle, or an ID, and NEVER fall back to search_web for something a
+  connected tool can answer directly. Some platforms have a direct "me" tool (e.g.
+  LinkedIn's GET_MY_INFO) — call it with no extra input. Others need an internal id first:
+  for YouTube, if they haven't given a handle, ask ONCE for their @handle or channel URL;
+  once you have it, chain it yourself — look up the id (e.g.
+  YOUTUBE_GET_CHANNEL_ID_BY_HANDLE), THEN call the stats/list tools with that id in the
+  SAME turn. Never surface the intermediate id-lookup step to the user or ask them to do
+  it manually — that's your job, not theirs.
 
 YOUR SCREENS (mention/navigate when relevant): Chat · Notifications (all connector activity
 + badge) · Connections · Notes (the "pages" view) · Calendar · Automations · Settings (Profile, Memory,
@@ -317,7 +327,7 @@ const NATIVE_NAMES = new Set(NATIVE_TOOLS.map((t) => t.function.name));
 
 type UiAction = Record<string, unknown>;
 
-async function execNative(env: Env, userId: string, name: string,
+export async function execNative(env: Env, userId: string, name: string,
                           a: Record<string, unknown>): Promise<[string, UiAction | null]> {
   switch (name) {
     case "search_web": {

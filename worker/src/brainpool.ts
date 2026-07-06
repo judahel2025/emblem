@@ -1,8 +1,13 @@
 // The brain pool — ONE ordered provider chain for every text-generation need
 // (agent loop, onboarding interviewer, titles, suggestions, extraction).
 // Strategy: Cerebras (fastest) → Groq → Gemini generateContent. Each provider
-// gets a retry on 429/5xx, then the chain falls through — three keys means no
-// single point of failure. Provider-blind to clients, as always.
+// gets a retry on 429/5xx, then the chain falls through — four keys (two
+// Gemini) means no single point of failure. Gemini is a REAL last resort even
+// when tools are requested: it converts the OpenAI-shaped tool defs to
+// Gemini's function-calling schema and parses functionCall parts back into
+// the same tool_calls shape, so a Cerebras+Groq outage no longer dead-ends
+// the agent loop with "I'm having trouble thinking." Provider-blind to
+// clients, as always.
 
 import type { Env } from "./env";
 
@@ -68,38 +73,85 @@ async function openAICompatible(url: string, key: string, model: string,
   return null;
 }
 
-/** Gemini generateContent as the last text fallback (no tool-calling here). */
-async function geminiText(env: Env, messages: ChatMsg[], opts: PoolOpts): Promise<PoolResult | null> {
-  if (!env.GEMINI_KEY || opts.tools?.length) return null;
-  try {
-    const sys = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
-    const turns = messages.filter((m) => m.role === "user" || m.role === "assistant");
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: sys ? { parts: [{ text: sys }] } : undefined,
-          contents: turns.map((m) => ({
-            role: m.role === "assistant" ? "model" : "user",
-            parts: [{ text: m.content || "" }],
-          })),
-          generationConfig: {
-            maxOutputTokens: opts.maxTokens ?? 2400,
-            ...(opts.json ? { responseMimeType: "application/json" } : {}),
-          },
-        }),
-      });
-    if (!res.ok) return null;
-    const data = await res.json<{ candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }>();
-    const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "";
-    if (!text) return null;
-    return { content: text, tool_calls: [], raw: { role: "assistant", content: text } };
-  } catch { return null; }
+// ---- Gemini schema conversion — OpenAI JSON Schema → Gemini's uppercase Type enum ----
+
+function toGeminiSchema(node: unknown): unknown {
+  if (!node || typeof node !== "object") return node;
+  const n = node as Record<string, unknown>;
+  const out: Record<string, unknown> = { ...n };
+  if (typeof n.type === "string") out.type = n.type.toUpperCase();
+  if (n.properties && typeof n.properties === "object") {
+    const props: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(n.properties as Record<string, unknown>)) props[k] = toGeminiSchema(v);
+    out.properties = props;
+  }
+  if (n.items) out.items = toGeminiSchema(n.items);
+  return out;
 }
 
-/** Ask the pool. Falls through Cerebras → Groq → Gemini; null only if ALL fail. */
+function toGeminiTools(tools: OpenAIToolDef[]): Record<string, unknown> {
+  return {
+    function_declarations: tools.map((t) => ({
+      name: t.function.name,
+      description: t.function.description,
+      parameters: toGeminiSchema(t.function.parameters),
+    })),
+  };
+}
+
+/** Gemini generateContent — a REAL fallback, tool-calling included. Tries
+ *  GEMINI_KEY then GEMINI_KEY2 on 429/5xx/network so one exhausted key
+ *  doesn't take the whole pool down with it. */
+async function geminiText(env: Env, messages: ChatMsg[], opts: PoolOpts): Promise<PoolResult | null> {
+  const keys = [env.GEMINI_KEY, env.GEMINI_KEY2].filter((k): k is string => Boolean(k));
+  if (!keys.length) return null;
+
+  const sys = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+  // Gemini's generateContent turns are user/model only — fold any tool results
+  // back in as plain user-role context so a Cerebras/Groq tool loop can still
+  // be picked up mid-flight by this fallback.
+  const turns = messages.filter((m) => m.role === "user" || m.role === "assistant" || m.role === "tool");
+  const contents = turns.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.role === "tool" ? `[tool result] ${m.content || ""}` : (m.content || "") }],
+  }));
+
+  for (const key of keys) {
+    try {
+      const body: Record<string, unknown> = {
+        system_instruction: sys ? { parts: [{ text: sys }] } : undefined,
+        contents,
+        generationConfig: {
+          maxOutputTokens: opts.maxTokens ?? 2400,
+          ...(opts.json ? { responseMimeType: "application/json" } : {}),
+        },
+      };
+      if (opts.tools?.length) body.tools = [toGeminiTools(opts.tools)];
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (res.status === 429 || res.status >= 500) continue;   // try the next key
+      if (!res.ok) return null;
+      const data = await res.json<{ candidates?: Array<{ content?: { parts?: Array<{
+        text?: string; functionCall?: { name: string; args?: Record<string, unknown> } }> } }> }>();
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      const text = parts.map((p) => p.text || "").join("");
+      const calls = parts.filter((p) => p.functionCall).map((p, i) => ({
+        id: `gemini-call-${i}`, name: p.functionCall!.name, args: p.functionCall!.args || {},
+      }));
+      if (!text && !calls.length) return null;
+      return {
+        content: text,
+        tool_calls: calls,
+        raw: { role: "assistant", content: text || null,
+          tool_calls: calls.map((c) => ({ id: c.id, function: { name: c.name, arguments: JSON.stringify(c.args) } })) },
+      };
+    } catch { /* network — try the next key */ }
+  }
+  return null;
+}
+
+/** Ask the pool. Falls through Cerebras → Groq → Gemini (2 keys); null only if ALL fail. */
 export async function poolChat(env: Env, messages: ChatMsg[], opts: PoolOpts = {}):
     Promise<PoolResult | null> {
   const providers: Array<() => Promise<PoolResult | null>> = [];
