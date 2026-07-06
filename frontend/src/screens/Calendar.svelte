@@ -6,7 +6,7 @@
   import GcalWorkspace from "./workspaces/GcalWorkspace.svelte";
   import ApprovalCard from "../components/ApprovalCard.svelte";
 
-  // When Google Calendar is connected it becomes the ONE calendar — the page shows
+  // When Google Calendar is connected it becomes the ONE calendar, the page shows
   // and writes the user's real Google events (via the proven GcalWorkspace). The
   // local store is only used when Google isn't connected.
   $: gcalConnected = $connectedApps.includes("googlecalendar");

@@ -1,4 +1,4 @@
-// VoiceTurnClient — the turn-based, hands-free voice pipeline that replaced the
+// VoiceTurnClient, the turn-based, hands-free voice pipeline that replaced the
 // realtime relay: mic + silence detection → one recorded utterance → STT
 // (/api/voice/transcribe: Groq Whisper, Gemini fallback) → the caller's brain
 // (onTranscript returns the reply text) → spoken reply via /api/voice/tts →
@@ -6,7 +6,7 @@
 // onLevel, onError; connecting/listening/thinking/speaking/unavailable/error)
 // so VoiceLive.svelte and Onboarding.svelte shells work unchanged.
 //
-// VAD tuning lives here — one place to tweak after real-world testing.
+// VAD tuning lives here, one place to tweak after real-world testing.
 const SILENCE_MS = 1400;        // this much quiet after speech ends the utterance
 const MIN_SPEECH_MS = 250;      // shorter blips are noise, not speech
 const MAX_UTTERANCE_MS = 30000; // force-stop marathon clips (keeps uploads small)
@@ -51,7 +51,7 @@ export class VoiceTurnClient {
     this._idleMs = 0;
     this._bargeMs = 0;
 
-    // The "audioCtx" LiveClient exposed — screens call client.audioCtx?.resume()
+    // The "audioCtx" LiveClient exposed, screens call client.audioCtx?.resume()
     // from their tap-to-enable button, so keep that exact shape.
     this.audioCtx = { resume: async () => this._resumeAudio() };
   }
@@ -147,7 +147,7 @@ export class VoiceTurnClient {
           (this._silenceMs >= SILENCE_MS || this._utterMs >= MAX_UTTERANCE_MS)) {
         this._finishUtterance();
       } else if (!this._hadSpeech && this._idleMs >= IDLE_RESTART_MS) {
-        // Nothing said for a while — restart the recorder so silence doesn't pile up.
+        // Nothing said for a while, restart the recorder so silence doesn't pile up.
         this._restartRecorder();
       }
     } else if (this._state === "speaking" && !this._muted) {
@@ -187,7 +187,7 @@ export class VoiceTurnClient {
       this._recorder.ondataavailable = (e) => { if (e.data?.size) this._chunks.push(e.data); };
       this._recorder.start();
     } catch {
-      this.onError("Recorder failed — voice paused.");
+      this.onError("Recorder failed, voice paused.");
       this._set("unavailable");
     }
   }
@@ -208,8 +208,8 @@ export class VoiceTurnClient {
       } catch (e) { console.warn("transcribe failed:", e); }
       if (this._stopped) return;
       if (!text) {
-        // Didn't catch it — no dead ends, just keep listening.
-        this.onError("Didn't catch that — try again.");
+        // Didn't catch it, no dead ends, just keep listening.
+        this.onError("Didn't catch that, try again.");
         this._startListening();
         return;
       }
@@ -223,7 +223,7 @@ export class VoiceTurnClient {
     this._set("thinking");
     let reply = null;
     try { reply = await this.onTranscript(text); }
-    catch (e) { console.error("voice turn brain failed:", e); this.onError("Something went wrong — say that again?"); }
+    catch (e) { console.error("voice turn brain failed:", e); this.onError("Something went wrong, say that again?"); }
     if (this._stopped) return;
     if (!reply) { this._startListening(); return; }
     this.onCaption({ who: "assistant", text: reply });
@@ -239,7 +239,7 @@ export class VoiceTurnClient {
     this._runTurn(t);
   }
 
-  // ── speech out — chunked TTS, sequential playback ──────────────────
+  // ── speech out, chunked TTS, sequential playback ──────────────────
   async _speak(text) {
     this._set("speaking");
     this._speechQueue = this._chunkText(text);
@@ -247,7 +247,7 @@ export class VoiceTurnClient {
       const chunk = this._speechQueue.shift();
       let url = null;
       try { url = await api.speechUrl(chunk); } catch {}
-      if (!url) break;                      // TTS down — captions already carry it
+      if (!url) break;                      // TTS down, captions already carry it
       const done = await this._playUrl(url);
       if (!done) break;                     // paused (barge-in) or blocked
     }
@@ -278,7 +278,7 @@ export class VoiceTurnClient {
       a.onerror = () => resolve(true);      // skip a bad chunk, keep going
       a.onpause = () => { if (!a.ended) resolve(false); };
       a.play().catch(() => {
-        // Autoplay blocked — remember it so the tap-to-enable button can retry.
+        // Autoplay blocked, remember it so the tap-to-enable button can retry.
         this._suspended = true;
         this._pendingAudio = a;
         resolve(false);

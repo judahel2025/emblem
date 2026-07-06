@@ -1,5 +1,5 @@
 <script>
-  // The weekly newsletter nudge — shown ONLY to members who never decided
+  // The weekly newsletter nudge, shown ONLY to members who never decided
   // (newsletter_opt IS NULL) and at most once a week. The server timestamp is
   // the single source of truth; every button records the answer server-side.
   import { createEventDispatcher } from "svelte";
@@ -14,7 +14,7 @@
     busy = true;
     try {
       await api.newsletterOpt(choice);
-      if (choice === "in") notify("You're in — the occasional good stuff, no noise.", "safe");
+      if (choice === "in") notify("You're in, the occasional good stuff, no noise.", "safe");
     } catch (e) { console.error("newsletter opt failed:", e); }
     dispatch("close");
   }
@@ -25,11 +25,11 @@
        aria-label="Newsletter invitation">
     <div class="ic"><i class="ti ti-mail-heart"></i></div>
     <h3>Want the Emblem newsletter?</h3>
-    <p>Occasional product news and genuinely useful tips — no noise, and one click to leave anytime.</p>
+    <p>Occasional product news and genuinely useful tips, no noise, and one click to leave anytime.</p>
     <button class="primaryb" on:click={() => choose("in")} disabled={busy}>Count me in</button>
     <div class="row">
       <button class="quiet" on:click={() => choose("later")} disabled={busy}>Not now</button>
-      <button class="quiet" on:click={() => choose("out")} disabled={busy}>No thanks — don't ask again</button>
+      <button class="quiet" on:click={() => choose("out")} disabled={busy}>No thanks, don't ask again</button>
     </div>
   </div>
 </div>

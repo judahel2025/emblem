@@ -1,4 +1,4 @@
-// Files on R2 — generated documents + user uploads, per user, streamed through
+// Files on R2, generated documents + user uploads, per user, streamed through
 // the Worker (no public bucket). Keys are namespaced by user id so listing and
 // access are naturally scoped.
 

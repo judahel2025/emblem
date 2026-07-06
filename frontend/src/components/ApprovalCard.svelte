@@ -1,7 +1,7 @@
 <script>
   // Shared approval card (WHITE-HOT MONO): used inline in the chat's approvals
   // bar and as the modal card inside workspace veils. The parent owns the
-  // lifecycle — it drives `state` (idle | running | done | error) via props or
+  // lifecycle, it drives `state` (idle | running | done | error) via props or
   // bind, and reacts to approve/decline events (or passes callback props).
   import { createEventDispatcher } from "svelte";
   import { slide } from "svelte/transition";
@@ -10,7 +10,7 @@
   export let variant = "inline";     // "inline" | "modal"
   export let state = "idle";         // idle | running | done | error (bindable)
   export let error = "";             // message shown in the error state
-  export let onApprove = null;       // optional callback — overrides nothing, just runs
+  export let onApprove = null;       // optional callback, overrides nothing, just runs
   export let onDecline = null;
 
   const dispatch = createEventDispatcher();
@@ -37,7 +37,7 @@
       });
   }
 
-  // The moment of sealing: timestamped in mono, kept in the done state — the
+  // The moment of sealing: timestamped in mono, kept in the done state, the
   // one permanent visual trace a completed action leaves.
   let sealedAt = "";
   const stampTime = () => new Date().toLocaleTimeString([], { hour12: false });
@@ -59,7 +59,7 @@
 </script>
 
 <div class="ap-card glass gloss {variant}" class:settled={state !== "idle"}>
-  <!-- Header chip — ochre: waiting on the user. The shield is the signet; it
+  <!-- Header chip, ochre: waiting on the user. The shield is the signet; it
        plays the press when the seal is applied. -->
   <div class="ap-head">
     <span class="ap-chip" class:stamping={state === "running" && choice === "approve"}>
@@ -85,7 +85,7 @@
   {/if}
 
   {#if state === "idle"}
-    <!-- Option rows — like the AskUserQuestion answer buttons -->
+    <!-- Option rows, like the AskUserQuestion answer buttons -->
     <div class="ap-options">
       <button class="ap-option approve" on:click={approve}>
         <span class="ap-opt-key"><i class="ti ti-check"></i></span>
@@ -102,7 +102,7 @@
   {:else if state === "running"}
     <div class="ap-status">
       <span class="ap-spin" aria-hidden="true"></span>
-      {choice === "decline" ? "Declining…" : "Approved — running…"}
+      {choice === "decline" ? "Declining…" : "Approved, running…"}
     </div>
   {:else if state === "done"}
     {#if choice === "decline"}
@@ -136,17 +136,17 @@
     box-shadow: var(--shadow-lg);
   }
 
-  /* Header chip — the small tag above the question (AskUserQuestion style) */
+  /* Header chip, the small tag above the question (AskUserQuestion style) */
   .ap-head { display: flex; align-items: center; }
   .ap-chip {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 3px 10px; border-radius: var(--r-pill);
     background: var(--blue-bg); border: 1px solid var(--blue);
     font-size: 11.5px; font-weight: 500; letter-spacing: 0.01em;
-    color: var(--blue-h);   /* blue — waiting on the user */
+    color: var(--blue-h);   /* blue, waiting on the user */
   }
   .ap-chip i { font-size: 13px; }
-  /* The stamp: weight applied, then settling — no bounce, no overshoot. */
+  /* The stamp: weight applied, then settling, no bounce, no overshoot. */
   .ap-chip.stamping i { animation: stamp-press 200ms cubic-bezier(0.4, 0, 0.2, 1); }
   @keyframes stamp-press {
     0%   { transform: scale(1); }
@@ -188,7 +188,7 @@
     overflow-wrap: anywhere;
   }
 
-  /* Option rows — selectable answer buttons, like Claude's question card */
+  /* Option rows, selectable answer buttons, like Claude's question card */
   .ap-options { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
   .ap-option {
     display: flex; align-items: center; gap: 11px; text-align: left;
@@ -224,7 +224,7 @@
     font-size: 13px; font-weight: 500; color: var(--text-2);
     min-height: 32px;
   }
-  .ap-status.sealed { color: var(--accent-ink); font-weight: 500; }  /* brass — Emblem sealed it */
+  .ap-status.sealed { color: var(--accent-ink); font-weight: 500; }  /* brass, Emblem sealed it */
   .ap-status.sealed i { font-size: 16px; }
   .ap-stamp { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
   .ap-status.error { color: var(--danger); }

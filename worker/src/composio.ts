@@ -1,4 +1,4 @@
-// Composio v3 REST — per-user app connections (Gmail, GitHub, Calendar, socials).
+// Composio v3 REST, per-user app connections (Gmail, GitHub, Calendar, socials).
 // Same verified flow as the Python port: auth_configs → connected_accounts/link →
 // tools → execute. Reads run free; actions pass the kernel DANGER gate.
 
@@ -71,7 +71,7 @@ export async function listConnections(env: Env, userId: string): Promise<string[
   } catch { return []; }
 }
 
-// Active + broken (expired/failed) connections in one pass — the agent needs both:
+// Active + broken (expired/failed) connections in one pass, the agent needs both:
 // active ones it can use, broken ones it should offer to reconnect instead of
 // treating as "not connected".
 export async function connectionStates(env: Env, userId: string):
@@ -126,10 +126,9 @@ export async function allToolkits(env: Env): Promise<string[]> {
 const MAX_PER_TOOLKIT = 15;
 const MAX_TOTAL = 90;
 
-// Slugs that MUST be in the agent's tool list whenever the toolkit is connected —
-// `important=true` sometimes omits the very actions users ask for by name
+// Slugs that MUST be in the agent's tool list whenever the toolkit is connected, // `important=true` sometimes omits the very actions users ask for by name
 // (LinkedIn posting was invisible to the model for exactly this reason).
-// Every slug here is VERIFIED against the live catalog — never guess these.
+// Every slug here is VERIFIED against the live catalog, never guess these.
 const PINNED_SLUGS: Record<string, string[]> = {
   gmail: ["GMAIL_SEND_EMAIL", "GMAIL_FETCH_EMAILS", "GMAIL_REPLY_TO_THREAD"],
   googlecalendar: ["GOOGLECALENDAR_CREATE_EVENT", "GOOGLECALENDAR_EVENTS_LIST"],
@@ -223,7 +222,7 @@ async function executeLinkedIn(env: Env, userId: string, slug: string,
                                args: Record<string, unknown>): Promise<unknown> {
   const accountId = await activeAccountId(env, userId, "linkedin");
   if (!accountId) {
-    throw new Error("Your LinkedIn connection is missing or has expired — reconnect LinkedIn and I'll pick this right back up.");
+    throw new Error("Your LinkedIn connection is missing or has expired, reconnect LinkedIn and I'll pick this right back up.");
   }
 
   if (slug === "LINKEDIN_GET_MY_INFO") {
@@ -283,7 +282,7 @@ async function executeLinkedIn(env: Env, userId: string, slug: string,
 
 // Fake/placeholder image hosts that social platforms reject ("media couldn't be
 // fetched"). If a post's media URL points at one of these, fail EARLY with a clear
-// message instead of a cryptic platform error — the model must use a real image.
+// message instead of a cryptic platform error, the model must use a real image.
 const PLACEHOLDER_HOSTS = /(via\.placeholder\.com|placeholder\.com|placehold\.co|dummyimage\.com|example\.com|lorempixel|placekitten|placebear|fakeimg)/i;
 function assertRealMedia(slug: string, args: Record<string, unknown>) {
   const s = slug.toUpperCase();
@@ -292,7 +291,7 @@ function assertRealMedia(slug: string, args: Record<string, unknown>) {
     if (typeof v !== "string" || !/url|image|media|photo|video|thumbnail/i.test(k)) continue;
     if (PLACEHOLDER_HOSTS.test(v)) {
       throw new Error("That post used a placeholder/example image, which the platform " +
-        "rejects. Post with a REAL, publicly-viewable image — ask the user to attach a photo " +
+        "rejects. Post with a REAL, publicly-viewable image, ask the user to attach a photo " +
         "or give a public image URL. Never invent an image link.");
     }
   }
@@ -314,7 +313,7 @@ export async function executeComposio(env: Env, userId: string, slug: string,
     if (/not in an ACTIVE state|No connected account found/i.test(msg)) {
       const tk = upper.split("_")[0].toLowerCase();
       const label = TOOLKIT_LABELS[tk] || tk;
-      throw new Error(`Your ${label} connection is missing or has expired — reconnect it and I'll pick this right back up.`);
+      throw new Error(`Your ${label} connection is missing or has expired, reconnect it and I'll pick this right back up.`);
     }
     throw e;
   }
@@ -322,13 +321,13 @@ export async function executeComposio(env: Env, userId: string, slug: string,
   return res.data ?? res;
 }
 
-// Slug fragments that mean "read-only" — everything else is consequential.
+// Slug fragments that mean "read-only", everything else is consequential.
 const READ_HINTS = ["GET_", "_GET", "LIST", "FETCH", "SEARCH", "READ", "FIND",
                     "RETRIEVE", "_INFO", "PROFILE", "STATS", "COUNT", "CHECK"];
 export const isReadOnly = (slug: string) =>
   READ_HINTS.some((h) => slug.toUpperCase().includes(h));
 
-// Human summaries for approval cards — the user must see WHAT happens in WHOSE
+// Human summaries for approval cards, the user must see WHAT happens in WHOSE
 // account, never a raw tool slug.
 const TOOLKIT_LABELS: Record<string, string> = {
   gmail: "Gmail", googlecalendar: "Google Calendar", github: "GitHub", youtube: "YouTube",
@@ -343,7 +342,7 @@ export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): str
     case "GMAIL_SEND_EMAIL": {
       const to = str("recipient_email") || str("to") || "a recipient";
       const subj = str("subject");
-      return `Send email to ${to}${subj ? ` — “${subj.slice(0, 60)}”` : ""} via your Gmail`;
+      return `Send email to ${to}${subj ? `, “${subj.slice(0, 60)}”` : ""} via your Gmail`;
     }
     case "GMAIL_REPLY_TO_THREAD":
       return `Reply${str("recipient_email") ? ` to ${str("recipient_email")}` : ""} in your Gmail`;
@@ -355,10 +354,10 @@ export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): str
       return `Add “${(str("summary") || str("title") || "an event").slice(0, 60)}” to your Google Calendar`;
     case "LINKEDIN_CREATE_LINKED_IN_POST": {
       const body = str("commentary") || str("text") || str("content");
-      return `Publish a post on your LinkedIn${body ? ` — “${body.slice(0, 70)}…”` : ""}`;
+      return `Publish a post on your LinkedIn${body ? `, “${body.slice(0, 70)}…”` : ""}`;
     }
     case "TWITTER_CREATION_OF_A_POST":
-      return `Post on your X (Twitter)${str("text") ? ` — “${str("text").slice(0, 70)}…”` : ""}`;
+      return `Post on your X (Twitter)${str("text") ? `, “${str("text").slice(0, 70)}…”` : ""}`;
     case "INSTAGRAM_CREATE_POST":
       return "Publish a post on your Instagram";
     case "FACEBOOK_CREATE_POST":
@@ -375,7 +374,7 @@ export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): str
                  : `${action.charAt(0).toUpperCase()}${action.slice(1)} in a connected app`;
 }
 
-// Kernel gateway tools — every connected-app call passes the same gate as native tools.
+// Kernel gateway tools, every connected-app call passes the same gate as native tools.
 registerTool({
   name: "composio.read",
   tier: "safe",

@@ -1,11 +1,11 @@
-// VoiceRelay — a Durable Object that bridges the browser WebSocket to Gemini Live.
+// VoiceRelay, a Durable Object that bridges the browser WebSocket to Gemini Live.
 //
 // A plain Worker can't keep an OUTBOUND WebSocket (to Gemini) alive after its fetch
 // handler returns, so audio never pumps. A Durable Object instance stays alive as long
 // as its sockets are open, which is exactly what a realtime relay needs. Each voice
 // session gets its own short-lived DO instance.
 //
-// The client sees only generic frames ({type: audio|caption|status}) — never the provider.
+// The client sees only generic frames ({type: audio|caption|status}), never the provider.
 
 import type { Env } from "./env";
 import { userFromToken } from "./auth";
@@ -16,16 +16,16 @@ const MODEL = "models/gemini-3.1-flash-live-preview";
 const VOICE = "Zephyr";
 
 const PERSONA_CHAT =
-  "You are Emblem — the user's warm, concise, decisive voice assistant. Keep replies " +
+  "You are Emblem, the user's warm, concise, decisive voice assistant. Keep replies " +
   "short and spoken-natural. You can search the web, save notes, remember durable facts, " +
-  "and manage their local calendar and automations — call the matching tool directly, " +
+  "and manage their local calendar and automations, call the matching tool directly, " +
   "don't just describe doing it. For anything bigger (sending email, posting, editing " +
   "files, or anything in a connected app beyond the local calendar) tell them briefly " +
-  "you've got it and that it's waiting for their approval in the chat view — you can't " +
+  "you've got it and that it's waiting for their approval in the chat view, you can't " +
   "act on those from voice yet. Never reveal which AI, model, or provider powers you. " +
   "Never use em dashes or en dashes when you speak; use a natural pause instead.";
 
-// SAFE, never-need-approval tools — the only ones voice can call directly. Anything
+// SAFE, never-need-approval tools, the only ones voice can call directly. Anything
 // consequential (Composio sends/posts) stays out of Live's function-calling on purpose:
 // it routes through the text agent + approval cards instead (see PERSONA_CHAT above).
 const CHAT_TOOLS = {
@@ -52,10 +52,10 @@ const CHAT_TOOLS = {
 const CHAT_TOOL_NAMES = new Set(CHAT_TOOLS.function_declarations.map((t) => t.name));
 
 const PERSONA_ONBOARDING =
-  "You are Emblem, meeting a brand-new member for the very first time — and YOU speak first. " +
+  "You are Emblem, meeting a brand-new member for the very first time, and YOU speak first. " +
   "Open warmly: ask how they're doing and their name. Then hold a real conversation, ONE " +
   "question at a time, always reacting to what they just said (by name once you know it) " +
-  "before asking the next thing — follow up when an answer is interesting or vague. Over the " +
+  "before asking the next thing, follow up when an answer is interesting or vague. Over the " +
   "conversation (natural order) learn: how they're doing + name; what " +
   "they do; a follow-up personalized to their work; what a typical day looks like; what " +
   "they're working on right now; their biggest time sink or frustration; what they'd most " +
@@ -121,9 +121,9 @@ export class VoiceRelay {
     const keys = [this.env.GEMINI_KEY, this.env.GEMINI_KEY2].filter((k): k is string => Boolean(k));
     if (!userId || !keys.length) return denyReturn("unavailable");
 
-    // Standard client constructor — the supported way to hold a long-lived
+    // Standard client constructor, the supported way to hold a long-lived
     // OUTBOUND socket from the Workers runtime (fetch-Upgrade sockets get torn
-    // down with the request context; these don't). Try each key in turn — one
+    // down with the request context; these don't). Try each key in turn, one
     // quota-exhausted key shouldn't take the whole voice session down.
     const tryConnect = (key: string) => new Promise<WebSocket | null>((resolve) => {
       let sock: WebSocket;
@@ -131,7 +131,7 @@ export class VoiceRelay {
         `wss://${HOST}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${key}`); }
       catch { resolve(null); return; }
       // Gemini Live sends BINARY frames. The constructor socket defaults to
-      // binaryType "blob", which TextDecoder can't read — every frame (incl.
+      // binaryType "blob", which TextDecoder can't read, every frame (incl.
       // setupComplete) then throws and gets dropped, so "ready" never fires.
       try { (sock as any).binaryType = "arraybuffer"; } catch { /* older runtime */ }
       const to = setTimeout(() => resolve(null), 12000);
@@ -171,7 +171,7 @@ export class VoiceRelay {
             send({ type: "status", state: "ready" });
             if (mode === "onboarding") {
               up.send(JSON.stringify({ client_content: {
-                turns: [{ role: "user", parts: [{ text: "(the new member just arrived — greet them and begin)" }] }],
+                turns: [{ role: "user", parts: [{ text: "(the new member just arrived, greet them and begin)" }] }],
                 turn_complete: true } }));
             }
             return;

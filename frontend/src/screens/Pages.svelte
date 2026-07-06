@@ -1,5 +1,5 @@
 <script>
-  // Pages — notes and documents with a REAL creation flow: rich editor
+  // Pages, notes and documents with a REAL creation flow: rich editor
   // (bold/italic/headings/lists/quotes), a color per note, and an explicit
   // Deploy. Content model: blocks [{t:"html", html}], color carried in the
   // pages.icon column (no migration). Legacy agent blocks ({t:"p"}/{type:
@@ -17,7 +17,7 @@
   let saving = false;
   let savedFlash = false;
 
-  // Muted "paper" palette — quiet enough to live inside the mono system.
+  // Muted "paper" palette, quiet enough to live inside the mono system.
   const COLORS = [
     { id: "default",  tint: "transparent",              chip: "var(--s3)" },
     { id: "graphite", tint: "rgba(120,120,120,0.10)",   chip: "#8a8a8a" },

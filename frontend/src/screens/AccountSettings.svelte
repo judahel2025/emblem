@@ -1,5 +1,5 @@
 <script>
-  // Account settings — layout from stitch_emblem_core_ui/account_settings:
+  // Account settings, layout from stitch_emblem_core_ui/account_settings:
   // display header, horizontal sub-tabs, bento split (profile + interface cards
   // left, status rail right), underline inputs, glass panels.
   import { onMount } from "svelte";
@@ -15,7 +15,7 @@
   let saving = false;
   let savedAt = 0;
 
-  // Tone trait chips — the fastest "make it mine" lever (delivery only). Stored
+  // Tone trait chips, the fastest "make it mine" lever (delivery only). Stored
   // comma-separated in profile.tone; free-text still works alongside.
   const TONE_CHIPS = ["Direct", "Warm", "Concise", "Detailed", "Playful", "Formal",
                       "Encouraging", "Candid", "Professional"];
@@ -38,7 +38,7 @@
     loadMemories();
   });
 
-  // ── Memory panel — transparent + editable (the Claude model) ──
+  // ── Memory panel, transparent + editable (the Claude model) ──
   let memories = [];
   let memLoading = true;
   let newMem = "";
@@ -166,7 +166,7 @@
               <input bind:value={profile.role} placeholder="e.g. writer, founder, engineer" />
             </label>
             <label class="ufield wide">
-              <span>Tone — how replies should feel</span>
+              <span>Tone, how replies should feel</span>
               <div class="chips">
                 {#each TONE_CHIPS as chip}
                   <button type="button" class="tonechip" class:on={toneSet.has(chip)}
@@ -185,8 +185,7 @@
 
         <section class="panel glass gloss" in:fly={{ y: 10, duration: 200, delay: 40 }}>
           <h3><i class="ti ti-message-2-cog"></i> Master instructions</h3>
-          <p class="paneltext">Two standing notes Emblem follows in every conversation —
-             change them anytime. The first is who you are; the second is exactly how you
+          <p class="paneltext">Two standing notes Emblem follows in every conversation, change them anytime. The first is who you are; the second is exactly how you
              want Emblem to talk to you.</p>
           <label class="ufield wide">
             <span>What Emblem should know about you</span>
@@ -196,7 +195,7 @@
           <label class="ufield wide" style="margin-top:16px">
             <span>How Emblem should respond</span>
             <textarea bind:value={profile.comm_style} rows="3"
-              placeholder="e.g. Keep it warm but professional. Call me Judah. Short, direct answers — skip the pep talk. Use British spelling. Be candid when you disagree."></textarea>
+              placeholder="e.g. Keep it warm but professional. Call me Judah. Short, direct answers, skip the pep talk. Use British spelling. Be candid when you disagree."></textarea>
           </label>
           <div class="actions">
             <button class="btn primary" on:click={save} disabled={saving}>
@@ -208,7 +207,7 @@
       {:else if tab === "memory"}
         <section class="panel glass gloss" in:fly={{ y: 10, duration: 200 }}>
           <h3><i class="ti ti-brain"></i> Memory</h3>
-          <p class="paneltext">Everything Emblem remembers about you — visible, and yours to
+          <p class="paneltext">Everything Emblem remembers about you, visible, and yours to
              edit. Add facts or standing preferences, edit anything, pin what should never be
              forgotten, delete what's wrong. Emblem shows a “Personalized from memory” note in
              chat when it uses one of these.</p>
@@ -224,8 +223,7 @@
           {#if memLoading}
             <div class="memempty">Loading…</div>
           {:else if memories.length === 0}
-            <div class="memempty">Nothing yet. As you chat, Emblem saves durable facts here —
-              or add your own above.</div>
+            <div class="memempty">Nothing yet. As you chat, Emblem saves durable facts here, or add your own above.</div>
           {:else}
             <ul class="memlist">
               {#each memories as m (m.id)}
@@ -240,7 +238,7 @@
                   {:else}
                     <span class="memtext">{m.content}</span>
                     <div class="memacts">
-                      <button class="mem-icon" class:active={m.pinned} title={m.pinned ? "Unpin" : "Pin — never forget"} on:click={() => togglePin(m)}><i class="ti ti-pin"></i></button>
+                      <button class="mem-icon" class:active={m.pinned} title={m.pinned ? "Unpin" : "Pin, never forget"} on:click={() => togglePin(m)}><i class="ti ti-pin"></i></button>
                       <button class="mem-icon" title="Edit" on:click={() => startEdit(m)}><i class="ti ti-pencil"></i></button>
                       <button class="mem-icon danger" title="Delete" on:click={() => deleteMemory(m)}><i class="ti ti-trash"></i></button>
                     </div>
@@ -283,7 +281,7 @@
                   {/each}
                 </ul>
               {:else}
-                <div class="memempty">No skills yet — create your first above.</div>
+                <div class="memempty">No skills yet, create your first above.</div>
               {/if}
 
               {#if builtinSkills.length}
@@ -315,7 +313,7 @@
           {:else if skillMode === 'edit'}
             <label class="ufield wide"><span>Name</span>
               <input bind:value={draft.name} placeholder="kebab-case-name" /></label>
-            <label class="ufield wide" style="margin-top:14px"><span>Description — what it does + when to use it</span>
+            <label class="ufield wide" style="margin-top:14px"><span>Description, what it does + when to use it</span>
               <textarea bind:value={draft.description} rows="2"></textarea></label>
             <label class="ufield wide" style="margin-top:14px"><span>Instructions Emblem follows</span>
               <textarea bind:value={draft.instructions} rows="7"></textarea></label>
@@ -343,7 +341,7 @@
               </div>
               <div class="quiet">
                 <input bind:value={quiet.quiet_start} aria-label="Quiet hours start" placeholder="22:00" />
-                <span>—</span>
+                <span>to</span>
                 <input bind:value={quiet.quiet_end} aria-label="Quiet hours end" placeholder="07:00" />
               </div>
             </div>
@@ -363,7 +361,7 @@
         {#if $connectedApps.length}
           <p class="railtext">{$connectedApps.length} app{$connectedApps.length === 1 ? "" : "s"} linked to your account.</p>
         {:else}
-          <p class="railtext">Nothing connected yet — link your Gmail, Calendar or GitHub so Emblem can act in your accounts.</p>
+          <p class="railtext">Nothing connected yet, link your Gmail, Calendar or GitHub so Emblem can act in your accounts.</p>
         {/if}
         <button class="link" on:click={() => appView.set("connect")}>
           Manage connections <i class="ti ti-arrow-right"></i>

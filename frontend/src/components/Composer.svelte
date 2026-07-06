@@ -1,6 +1,6 @@
 <script>
   // The ChatGPT-style composer pill: attach + textarea + mic + send.
-  // Pure input component — the parent owns submit/attach/mic behavior.
+  // Pure input component, the parent owns submit/attach/mic behavior.
   import { createEventDispatcher } from "svelte";
 
   export let disabled = false;      // block typing/submit (e.g. legacy callers)

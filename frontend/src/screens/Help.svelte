@@ -1,5 +1,5 @@
 <script>
-  // Help center — layout from stitch_emblem_core_ui/help_documentation:
+  // Help center, layout from stitch_emblem_core_ui/help_documentation:
   // "How can we help you today?" hero with a big search, three category cards,
   // then an accordion FAQ.
   import { fly, slide } from "svelte/transition";
@@ -18,25 +18,27 @@
 
   const FAQS = [
     { q: "What is Emblem?",
-      a: "Emblem is a workspace you talk to. Ask it anything — by voice or by typing — and it answers, remembers what matters to you, and acts in the apps you connect: drafting and sending email, managing your calendar, editing code on GitHub, and more." },
+      a: "Emblem is a workspace you talk to. Ask it anything by voice or by typing. It answers, remembers what matters to you, and acts in the apps you connect: drafting and sending email, managing your calendar, editing code on GitHub, and more." },
     { q: "How does the voice onboarding work?",
-      a: "The first time you arrive, tap “Meet Emblem.” Emblem speaks first, asks about you one question at a time, and remembers your answers — your name, what you do, what you want help with, and how you like to be spoken to. Prefer typing? Choose “prefer typing” — the same conversation runs, and Emblem still answers out loud." },
+      a: "The first time you arrive, tap “Meet Emblem.” Emblem speaks first and asks about you one question at a time. It learns your name, what you do, what you want help with, and how you like to be spoken to. Prefer typing? Choose “prefer typing.” The same conversation runs, and Emblem still answers out loud." },
     { q: "Emblem speaks but I can't hear anything.",
       a: "Browsers block sound until you interact with the page. If you see “Tap to hear Emblem,” tap it once and audio unlocks. Also check your device volume and that the tab isn't muted." },
     { q: "How do I connect my apps?",
-      a: "Open Connections in the sidebar and pick an app — Gmail, Google Calendar, GitHub and thousands more. Sign-in happens securely in a popup with the app's own login page. Emblem never sees your password, and you can revoke a connection anytime." },
+      a: "Open Connections in the sidebar and pick an app: Gmail, Google Calendar, GitHub, and thousands more. Sign-in happens securely in a popup with the app's own login page. Emblem never sees your password, and you can revoke a connection anytime." },
     { q: "Whose account does Emblem act in?",
-      a: "Yours, always. When you ask Emblem to send an email, it sends from YOUR connected Gmail — your address, your sent folder. Commits push to YOUR GitHub. If the app you need isn't connected yet, Emblem asks you to connect it rather than sending any other way." },
+      a: "Yours, always. When you ask Emblem to send an email, it sends from YOUR connected Gmail, your address, your sent folder. Commits push to YOUR GitHub. If the app you need isn't connected yet, Emblem asks you to connect it rather than sending any other way." },
     { q: "What are approvals?",
-      a: "Anything consequential — sending, posting, committing, deleting — pauses first and shows you a card describing exactly what will happen (“Send email to sam@work.com via your Gmail”). Nothing happens until you approve, each approval covers exactly that one action, and declining costs nothing." },
-    { q: "What does Emblem remember?",
-      a: "Durable things you tell it: your name, preferences, projects, decisions. Memory makes every conversation smarter and it's yours — ask Emblem what it remembers, or tell it to forget something." },
+      a: "Anything consequential (sending, posting, committing, deleting) pauses first and shows you a card describing exactly what will happen, like “Send email to sam@work.com via your Gmail.” Nothing happens until you approve. Each approval covers exactly that one action, and declining costs nothing." },
+    { q: "What does Emblem remember, and can I shape how it talks to me?",
+      a: "Durable things you tell it: your name, preferences, projects, decisions. You can see, edit, pin, or delete any of it in Settings → Memory. You can also set a standing master instruction there for how you want it to talk to you (tone, language, what to avoid), and it applies to every conversation from then on." },
+    { q: "What are skills?",
+      a: "A skill is a saved way of handling a repeatable task, written in plain language once and reused automatically after. Tell Emblem “save this as a skill” after it does something well, describe one from scratch in Settings → Skills, or just let Emblem offer to save one when it notices a pattern. The next time a similar request comes up, it follows the skill without you explaining it again." },
     { q: "What are threads?",
-      a: "Every conversation is saved in the sidebar with an automatic title. Start a fresh one with New chat; reopen, rename or delete old ones anytime." },
+      a: "Every conversation is saved in the sidebar with an automatic title. Start a fresh one with New chat, then reopen, rename, or delete old ones anytime." },
     { q: "How do automations work?",
-      a: "Describe what you want in plain language — “every morning, summarize my unread email” — and Emblem runs it on schedule. Pause or delete any automation from the Automations screen. During your quiet hours, non-urgent updates hold until morning." },
+      a: "Describe what you want in plain language, like “every morning, summarize my unread email,” and Emblem runs it on schedule. Pause or delete any automation from the Automations screen. During your quiet hours, non-urgent updates hold until morning." },
     { q: "Can I change how Emblem looks?",
-      a: "Yes — light, dark, or follow-your-system, from the toggle in the sidebar or in Settings → Preferences." },
+      a: "Yes: light, dark, or follow-your-system, from the toggle in the sidebar or in Settings → Preferences." },
   ];
 
   $: shown = query.trim()
@@ -51,7 +53,7 @@
     <h1>How can we help you today?</h1>
     <div class="search glass">
       <i class="ti ti-search"></i>
-      <input bind:value={query} placeholder="Type your question — e.g. “connect Gmail” or “approvals”"
+      <input bind:value={query} placeholder="Type your question, e.g. “connect Gmail” or “approvals”"
              aria-label="Search help" />
     </div>
   </header>
@@ -69,7 +71,7 @@
   <section class="faq">
     <h2>Frequently asked questions</h2>
     {#if shown.length === 0}
-      <div class="empty">No matches — try different words, or just ask Emblem in chat.</div>
+      <div class="empty">No matches, try different words, or just ask Emblem in chat.</div>
     {/if}
     {#each shown as f, i (f.q)}
       <div class="qa" class:open={openIdx === i}>
@@ -84,7 +86,7 @@
     {/each}
   </section>
 
-  <p class="footnote">Still stuck? Just ask Emblem in chat — it knows this product best.</p>
+  <p class="footnote">Still stuck? Just ask Emblem in chat. It knows this product best.</p>
 </div>
 
 <style>

@@ -1,6 +1,6 @@
 // Speech-to-text for the turn-based voice pipeline.
-// Primary: Groq Whisper (whisper-large-v3-turbo — fast, generous free tier).
-// Fallback: Gemini generateContent with inline audio. Never throws — the voice
+// Primary: Groq Whisper (whisper-large-v3-turbo, fast, generous free tier).
+// Fallback: Gemini generateContent with inline audio. Never throws, the voice
 // loop must always be able to say "didn't catch that" and keep listening.
 
 import type { Env } from "./env";

@@ -33,7 +33,7 @@
 
   // ── Auto-scroll ────────────────────────────────────────────────
   // Stick to the bottom ONLY when the user is already near it. If they've scrolled
-  // up to read (even mid-typewriter), never yank them back down — they can scroll
+  // up to read (even mid-typewriter), never yank them back down, they can scroll
   // freely no matter what the assistant is doing.
   let threadEl;
   let stick = true;
@@ -119,7 +119,7 @@
     const preview = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
     notify(`Reading ${file.name}…`, "safe");
     try {
-      // Real documents (docx/pdf/xlsx/pptx/csv) parse client-side — no server round-trip,
+      // Real documents (docx/pdf/xlsx/pptx/csv) parse client-side, no server round-trip,
       // works for any size. Images still go to the vision endpoint.
       const { canParse, parseDocument } = await import("../lib/docparse.js");
       if (canParse(file.name)) {

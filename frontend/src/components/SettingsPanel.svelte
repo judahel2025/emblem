@@ -16,10 +16,10 @@
   let composioApps = [];
   let composioConnected = [];
   let profile = { display_name: "", quiet_start: "22:00", quiet_end: "07:00" };
-  let tab = isAdmin ? "ai" : "profile"; // admin: ai|voice|apps|security|secrets — user: profile|apps
+  let tab = isAdmin ? "ai" : "profile"; // admin: ai|voice|apps|security|secrets, user: profile|apps
 
   onMount(async () => {
-    // Owner-only surfaces are never even requested for regular users — nothing about
+    // Owner-only surfaces are never even requested for regular users, nothing about
     // providers/secrets appears in their network tab.
     if (isAdmin) {
       try { brain = { ...brain, ...(await api.brain()) }; } catch {}

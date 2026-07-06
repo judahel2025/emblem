@@ -32,7 +32,7 @@ registerTool({
   },
 });
 
-// System mail (Resend) — OWNER/SYSTEM ALERTS ONLY. User email always goes through
+// System mail (Resend), OWNER/SYSTEM ALERTS ONLY. User email always goes through
 // the user's own connected account (Gmail via the connections layer), never this.
 export async function sendViaResend(env: Env, to: string, subject: string, body: string) {
   if (!env.RESEND_KEY || !env.RESEND_DOMAIN) {

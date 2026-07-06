@@ -1,4 +1,4 @@
-// Connector workspaces — real in-app surfaces for connected accounts.
+// Connector workspaces, real in-app surfaces for connected accounts.
 // Each entry lazy-loads its component (heavy deps like the code editor stay out
 // of the main bundle). A connected toolkit with a registry entry gets an "Open"
 // affordance on Connectors and a spot in the sidebar.
@@ -20,21 +20,21 @@ export const WORKSPACES = {
   // Google Calendar has NO workspace screen on purpose: Emblem's built-in
   // Calendar is the single calendar surface. The connector stays available so
   // Emblem can READ the user's real Google schedule (automations, proactive
-  // grounding) — it just doesn't add a second, duplicate calendar to the sidebar.
+  // grounding), it just doesn't add a second, duplicate calendar to the sidebar.
 };
 
 export const hasWorkspace = (slug) => Boolean(WORKSPACES[slug]);
 
 /**
  * Run a connected-app tool through the kernel gate.
- * Reads run free; writes (act) pause for approval — onApproval(info) is called
+ * Reads run free; writes (act) pause for approval, onApproval(info) is called
  * with { approval_id, summary, resume() } so the workspace can show its card.
  * resume() approves and returns the executed result (or throws on decline/error).
  */
 export async function runConnected(slug, params, { act = false, onApproval, retries } = {}) {
   const gate = act ? "composio.act" : "composio.read";
   // Reads auto-retry on transient/cold-connection failures (the "unable to fetch"
-  // flash when a workspace first opens) — 3 attempts with backoff. Actions NEVER
+  // flash when a workspace first opens), 3 attempts with backoff. Actions NEVER
   // auto-retry: re-firing a send/post could double-act, so they run exactly once.
   const attempts = act ? 1 : (Number.isInteger(retries) ? retries + 1 : 3);
   let lastErr = "The connected app returned an error.";

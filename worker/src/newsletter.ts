@@ -1,4 +1,4 @@
-// Newsletters — opt-in only. Recipient set = opted-in members UNION landing
+// Newsletters, opt-in only. Recipient set = opted-in members UNION landing
 // subscribers. Every email carries a working HMAC-signed unsubscribe link that
 // the server appends (the drafting model can never omit it). Sending uses
 // Resend's batch endpoint (≤100/call) to stay under the Workers subrequest cap.
@@ -89,7 +89,7 @@ export async function sendNewsletterEmail(env: Env, to: string, subject: string,
     }),
   });
   if (!res.ok) {
-    // Surface Resend's real message — "domain not verified" must reach the admin verbatim.
+    // Surface Resend's real message, "domain not verified" must reach the admin verbatim.
     const body = await res.text().catch(() => "");
     let msg = `send failed (${res.status})`;
     try { msg = (JSON.parse(body) as { message?: string }).message || msg; } catch {}
@@ -250,7 +250,7 @@ export async function newsletterDraftReply(env: Env,
         ? sanitizeNewsletterHtml(env, p.html.trim()) : null,
     };
   } catch {
-    // Model slipped out of JSON — treat the whole thing as conversation, keep the draft.
+    // Model slipped out of JSON, treat the whole thing as conversation, keep the draft.
     return { reply: r.content.trim(), subject: null, html: null };
   }
 }

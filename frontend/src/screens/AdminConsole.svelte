@@ -1,5 +1,5 @@
 <script>
-  // The admin console — owner only (the API 404s for everyone else; the client
+  // The admin console, owner only (the API 404s for everyone else; the client
   // guard in App.svelte is cosmetic). Three tabs: Users, Reviews, Newsletter.
   // The Newsletter tab is an AI channel: chat on the left, live preview on the
   // right, approve → send to every opted-in recipient.
@@ -88,7 +88,7 @@
       scrollNl();
     } catch (e) {
       console.error("newsletter chat failed:", e);
-      notify("Couldn't reach the editor — try again.", "danger");
+      notify("Couldn't reach the editor, try again.", "danger");
     }
     nlBusy = false;
     await tick(); try { nlInputEl?.focus(); } catch {}
@@ -126,7 +126,7 @@
       if (r.sent > 0 && r.failed === 0) notify(`Newsletter sent to ${r.sent} people.`, "safe");
       else if (r.sent > 0) notify(`Sent ${r.sent}, failed ${r.failed}. See results.`, "caution");
       else notify(`Send failed: ${r.results?.[0]?.error || "unknown error"}`, "danger");
-      if (r.sent > 0) sentLocked = true;   // it's out — close this discussion
+      if (r.sent > 0) sentLocked = true;   // it's out, close this discussion
       loadNewsletterMeta();
     } catch (e) { notify("Send failed.", "danger"); }
     sending = false;
@@ -141,7 +141,7 @@
   <header class="head reveal-in">
     <div>
       <h1>Admin console</h1>
-      <p class="sub">Members, reviews, and newsletters — owner's eyes only.</p>
+      <p class="sub">Members, reviews, and newsletters, owner's eyes only.</p>
     </div>
   </header>
 
@@ -171,14 +171,14 @@
               {#each users as u}
                 <tr>
                   <td class="mono">{u.email}</td>
-                  <td>{u.display_name || "—"}</td>
-                  <td class="dim2">{u.role || "—"}</td>
+                  <td>{u.display_name || "Not set"}</td>
+                  <td class="dim2">{u.role || "Not set"}</td>
                   <td class="dim2">{fmtDate(u.created_at)}</td>
-                  <td>{u.onboarded ? "✓" : "—"}</td>
+                  <td>{u.onboarded ? "✓" : "Not yet"}</td>
                   <td>
                     {#if u.newsletter_opt === 1}<span class="chip in">in</span>
                     {:else if u.newsletter_opt === 0}<span class="chip out">out</span>
-                    {:else}<span class="chip">—</span>{/if}
+                    {:else}<span class="chip">unset</span>{/if}
                   </td>
                 </tr>
               {/each}
@@ -193,7 +193,7 @@
       {#if !reviewsLoaded}
         <div class="empty">Loading…</div>
       {:else if !reviews.length}
-        <div class="empty">No reviews yet — they'll land here as members leave them.</div>
+        <div class="empty">No reviews yet, they'll land here as members leave them.</div>
       {:else}
         {#each reviews as r (r.id)}
           <div class="rcard glass" class:unread={r.status === "new"}>
@@ -230,13 +230,13 @@
     {#if domain}
       <div class="domain {domain.status}" in:fade={{ duration: 150 }}>
         {#if domain.status === "verified"}
-          <i class="ti ti-circle-check"></i> Sending domain <b>{domain.domain}</b> is verified — real sends are live.
+          <i class="ti ti-circle-check"></i> Sending domain <b>{domain.domain}</b> is verified, real sends are live.
         {:else if domain.status === "missing" || domain.status === "unknown"}
           <i class="ti ti-alert-triangle"></i>
-          <span>Sending domain <b>{domain.domain || "not set"}</b> isn't verified with Resend yet — sends will fail until it is.
+          <span>Sending domain <b>{domain.domain || "not set"}</b> isn't verified with Resend yet, sends will fail until it is.
           Add the domain in the Resend dashboard, then put its DKIM/SPF records into <b>Namecheap DNS</b>.</span>
         {:else}
-          <i class="ti ti-clock"></i> Domain <b>{domain.domain}</b> is {domain.status} — waiting on DNS.
+          <i class="ti ti-clock"></i> Domain <b>{domain.domain}</b> is {domain.status}, waiting on DNS.
         {/if}
       </div>
     {/if}
@@ -246,7 +246,7 @@
         <div class="nlhead">Draft it with Emblem</div>
         <div class="nllines" bind:this={nlLinesEl}>
           {#if !nlLines.length}
-            <p class="hint">Tell Emblem what this issue should cover — you'll go back and forth
+            <p class="hint">Tell Emblem what this issue should cover, you'll go back and forth
               until it's right, then preview and approve.</p>
           {/if}
           {#each nlLines as l}
@@ -287,7 +287,7 @@
         {:else if draft.html}
           <iframe class="mailframe" title="Newsletter preview" sandbox="" srcdoc={draft.html}></iframe>
         {:else}
-          <div class="empty">No draft yet — start the chat on the left.</div>
+          <div class="empty">No draft yet, start the chat on the left.</div>
         {/if}
         <div class="sendbar">
           <button class="ghostb" on:click={testSend} disabled={sending || sentLocked || !draft.html}>

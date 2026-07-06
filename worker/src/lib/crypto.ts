@@ -1,6 +1,6 @@
 // Password hashing + JWT sessions, all on WebCrypto. No dependencies.
 
-// Cloudflare Workers' WebCrypto caps PBKDF2 at 100k iterations — the max we can
+// Cloudflare Workers' WebCrypto caps PBKDF2 at 100k iterations, the max we can
 // request. With a 16-byte per-user random salt this remains a strong password hash.
 const PBKDF2_ITERATIONS = 100_000;
 

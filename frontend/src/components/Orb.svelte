@@ -3,9 +3,9 @@
   // One component powers the onboarding scene, voice mode, the FAB, and thinking dots.
   //
   // Props:
-  //   size    — px diameter of the core (halo extends beyond it)
-  //   state   — idle | listening | thinking | speaking | off
-  //   level   — 0..1 live mic/voice level (optional; drives glow intensity while listening)
+  //   size, px diameter of the core (halo extends beyond it)
+  //   state, idle | listening | thinking | speaking | off
+  //   level, 0..1 live mic/voice level (optional; drives glow intensity while listening)
   export let size = 72;
   export let state = "idle";
   export let level = 0;
@@ -66,7 +66,7 @@
     animation: throb var(--speed) ease-in-out infinite;
     animation-delay: calc(var(--speed) / -3);
   }
-  /* the glossy dark sphere itself — pink-white specular, crimson body,
+  /* the glossy dark sphere itself, pink-white specular, crimson body,
      near-black keel; the red bloom + blue rim come from halo/rim tokens */
   .core {
     width: 100%;

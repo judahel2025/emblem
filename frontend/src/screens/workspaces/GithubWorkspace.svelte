@@ -448,7 +448,7 @@
       {:else}
         <div class="tree">
           {#if treeTruncated}
-            <p class="notice">This repository is large — the file list may be incomplete.</p>
+            <p class="notice">This repository is large, the file list may be incomplete.</p>
           {/if}
           {#each visibleTree as n (n.path)}
             {#if n.kind === "dir"}
@@ -524,7 +524,7 @@
       {#if staleFile}
         <div class="flash danger" transition:fly={{ y: -8, duration: 150 }}>
           <i class="ti ti-alert-triangle"></i>
-          <span>This file changed upstream — reload it before committing.</span>
+          <span>This file changed upstream, reload it before committing.</span>
           <span class="grow"></span>
           <button class="btn" on:click={reloadFile}>Reload</button>
         </div>
@@ -573,7 +573,7 @@
         {:else if fileTooBig}
           <div class="empty">This file is over 1 MB, so it's read-only here and too large to open.</div>
         {:else if fileBinary}
-          <div class="empty">This looks like a binary file — it can't be edited here.</div>
+          <div class="empty">This looks like a binary file, it can't be edited here.</div>
         {:else}
           <MonacoEditor value={text} language={fileLanguage} on:change={(e) => (text = e.detail)} />
         {/if}
@@ -805,7 +805,7 @@
     border-top: 1px solid var(--border); background: var(--bg-2);
     display: flex; flex-direction: column; max-height: 42%; flex-shrink: 0;
   }
-  /* Full-screen preview — fills the viewport; Esc or the icon returns to normal. */
+  /* Full-screen preview, fills the viewport; Esc or the icon returns to normal. */
   .run-out.fullscreen {
     position: fixed; inset: 0; z-index: 200; max-height: none;
     background: var(--bg); border-top: none;

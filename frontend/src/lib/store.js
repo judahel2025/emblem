@@ -79,7 +79,7 @@ export function startNotifPolling() {
   window.addEventListener("focus", tick);
 }
 
-// The user's connected apps (toolkit slugs) — drives sidebar workspaces + tiles.
+// The user's connected apps (toolkit slugs), drives sidebar workspaces + tiles.
 export const connectedApps = writable([]);
 export async function loadConnections() {
   try {
@@ -161,7 +161,7 @@ export async function loadMe(force = false) {
   return get(me);
 }
 
-// --- theme — always dark -------------------------------------------------------
+// --- theme, always dark -------------------------------------------------------
 export const darkMode = writable(true);
 
 export const pendingCount = derived(approvals, ($a) => $a.pending?.length || 0);
@@ -198,7 +198,7 @@ export async function speakText(text, cfg = {}) {
     };
     await a.play();
   } catch (err) {
-    // Spoken replies are an enhancement — a missing TTS backend must never toast.
+    // Spoken replies are an enhancement, a missing TTS backend must never toast.
     voiceState.set("idle");
     console.warn("tts unavailable:", err?.message || err);
   }
@@ -225,7 +225,7 @@ export async function refresh() {
   loadNotifications();
 }
 
-// Legacy alerts are drained silently (marked seen) — activity now lives ONLY on the
+// Legacy alerts are drained silently (marked seen), activity now lives ONLY on the
 // Notifications page, never pushed into the chat.
 let _alertBusy = false;
 async function checkAlerts() {
@@ -241,11 +241,11 @@ function _alertLine(al) {
   const admin = get(me).is_admin;
   if (al.kind === "support")
     return admin
-      ? `Master Judah — ${al.title}. ${al.body} Want me to draft a reply?`
+      ? `Master Judah, ${al.title}. ${al.body} Want me to draft a reply?`
       : `${al.title}. ${al.body}`;
   if (al.kind === "signup")
     return admin
-      ? `Good news, Master Judah — ${al.title}: ${al.body}.`
+      ? `Good news, Master Judah, ${al.title}: ${al.body}.`
       : `${al.title}: ${al.body}.`;
   return `${al.title}. ${al.body}`;
 }
@@ -270,7 +270,7 @@ export async function openLegacy() {
 }
 
 // When Emblem comes on: just a quiet greeting. Connector activity is NOT dumped
-// into the chat anymore — the Notifications page + badge + Chrome popups own that,
+// into the chat anymore, the Notifications page + badge + Chrome popups own that,
 // so a fresh chat stays a fresh chat.
 let _briefed = false;
 export async function loadBriefing() {
@@ -310,14 +310,14 @@ function runActions(actions) {
     } else if (a.type === "connect.pending") {
       // Emblem handed the user a connect link in-chat. Open it, then watch the
       // connections list; the moment the toolkit turns ACTIVE, feed an internal
-      // continuation back to the agent so it confirms + resumes — no user retype.
+      // continuation back to the agent so it confirms + resumes, no user retype.
       if (a.url) window.open(a.url, "_blank", "noopener,width=600,height=760");
       if (a.toolkit) watchConnection(a.toolkit);
     } else if (a.type === "approval.pending") {
       notify(a.summary ? `Waiting for your approval: ${a.summary}` : "An action is waiting for your approval", "caution");
       refresh();
     } else if (a.type === "tool_error") {
-      // A connected-app action failed — say so loudly instead of deflecting.
+      // A connected-app action failed, say so loudly instead of deflecting.
       notify(a.summary || "A connected app returned an error", "danger");
     } else if (a.type === "view_file") {
       goTo("files", "files");
@@ -329,7 +329,7 @@ function runActions(actions) {
     } else if (a.type === "refresh") {
       refresh();
     } else if (a.type === "inbox.cleared") {
-      notify(`Inbox cleared — ${a.count ?? ""} messages deleted`, "safe");
+      notify(`Inbox cleared, ${a.count ?? ""} messages deleted`, "safe");
     } else if (a.type === "conversations.cleared") {
       messages.set([]);
       notify("Chat history cleared", "safe");
@@ -357,7 +357,7 @@ export async function generateDocument(doc) {
     patch({ status: "ready", filename, url, size: blob.size, mime });
     // Persist to R2 in the background (best-effort; download works from the blob url).
     api.fileUpload(filename, blob).catch((e) => console.warn("doc upload failed:", e?.message));
-    notify(`${doc.format.toUpperCase()} ready — ${filename}`, "safe");
+    notify(`${doc.format.toUpperCase()} ready, ${filename}`, "safe");
   } catch (e) {
     console.error("doc generation failed:", e);
     patch({ status: "error", error: e?.message || "Couldn't generate the document." });
@@ -369,7 +369,7 @@ export async function generateDocument(doc) {
 export async function clearInbox() {
   const r = await api.inboxDeleteAll().catch(() => ({ ok: false }));
   const count = r.deleted_count ?? r.deletedCount ?? "all";
-  notify(`Inbox cleared — ${count} messages deleted`, "safe");
+  notify(`Inbox cleared, ${count} messages deleted`, "safe");
 }
 
 export async function clearConversations() {
@@ -388,7 +388,7 @@ let _revealCancel = null;  // halts the current reveal, keeping the partial text
 
 // Reveal an assistant reply with a fast-but-visible typewriter. Pushes an empty
 // assistant bubble, grows its text in place, and resolves with the text actually
-// shown — the FULL reply normally, or the PARTIAL if the user hit Stop mid-reveal.
+// shown, the FULL reply normally, or the PARTIAL if the user hit Stop mid-reveal.
 function revealAssistant(fullText) {
   return new Promise((resolve) => {
     messages.update((m) => [...m, { role: "assistant", text: "" }]);
@@ -401,7 +401,7 @@ function revealAssistant(fullText) {
       if (i >= 0 && m[i].role === "assistant") m[i] = { ...m[i], text: fullText.slice(0, n) };
       return m;
     });
-    // Background tabs throttle requestAnimationFrame to a standstill — if the user
+    // Background tabs throttle requestAnimationFrame to a standstill, if the user
     // minimizes or switches away mid-reveal, snap to the full text so the reply is
     // complete and readable the instant they come back (never stuck half-written).
     const onHide = () => { if (document.hidden) finish(fullText); };
@@ -447,7 +447,7 @@ export function stopGeneration() {
   voiceState.set("idle");
 }
 
-// Post an internal continuation to the agent — a system note that is NOT shown as
+// Post an internal continuation to the agent, a system note that is NOT shown as
 // a user bubble and NOT persisted as a user message; only the assistant reply is
 // pushed + saved. Shared by decideAndContinue (approvals) and watchConnection.
 export async function continueTask(command) {
@@ -480,7 +480,7 @@ export async function continueTask(command) {
 }
 
 // Watch a just-started connection: poll the live connections list (same pattern as
-// the Connectors screen — interval + window focus), and when the toolkit turns
+// the Connectors screen, interval + window focus), and when the toolkit turns
 // ACTIVE, tell the agent so it confirms and picks the task back up seamlessly.
 const _watching = new Map();   // toolkit -> { timer, startedAt }
 export function watchConnection(toolkit) {
@@ -492,7 +492,7 @@ export function watchConnection(toolkit) {
   const check = async () => {
     let live = [];
     try { live = (await api.connections()).connected || []; }
-    catch { return; }                       // transient — next tick retries
+    catch { return; }                       // transient, next tick retries
     if (live.includes(tk)) {
       stop();
       connectedApps.set(live);
@@ -500,7 +500,7 @@ export function watchConnection(toolkit) {
       const label = tk.charAt(0).toUpperCase() + tk.slice(1);
       notify(`${label} connected`, "safe");
       if (!get(thinking)) {
-        continueTask(`[system note — not typed by the user] They just finished connecting ${tk}. ` +
+        continueTask(`[system note, not typed by the user] They just finished connecting ${tk}. ` +
           `It is now active. Confirm you detect the connection in one short sentence, then continue ` +
           `the task you were doing without asking them to repeat anything.`);
       }
@@ -517,14 +517,14 @@ export function watchConnection(toolkit) {
   _watching.set(tk, { timer, startedAt });
 }
 
-// Spoken or typed command — routed through the agent brain (intent -> action).
+// Spoken or typed command, routed through the agent brain (intent -> action).
 export async function sendCommand(text) {
   const clean = (text || "").trim();
   if (!clean || get(thinking) || get(writing)) return;
   stopSpeaking();
 
   // First message of a fresh chat creates its thread. It shows the raw message
-  // instantly, then a model-generated 3–6 word title replaces it in the sidebar.
+  // instantly, then a model-generated 3 to 6 word title replaces it in the sidebar.
   let tid = get(activeThread);
   if (!tid) {
     try {
@@ -552,7 +552,7 @@ export async function sendCommand(text) {
     r = await api.agent(clean, { model: get(model), lastReply, history, pending: pendingTask }, _abort.signal);
   } catch (e) {
     _abort = null;
-    // User hit Stop before the reply arrived — leave the chat as-is, no bubble.
+    // User hit Stop before the reply arrived, leave the chat as-is, no bubble.
     if (e?.name === "AbortError") { thinking.set(false); voiceState.set("idle"); return { reply: "", actions: [] }; }
     r = { reply: String(e), actions: [] };
   }
@@ -579,7 +579,7 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   const isImage = (fileType || "").startsWith("image/");
   const userLabel = isImage ? `[Image: ${fileName}]` : `[Document: ${fileName}]`;
 
-  // 1. User bubble — show file card (+ image thumbnail if image)
+  // 1. User bubble, show file card (+ image thumbnail if image)
   messages.update((m) => [...m, {
     role: "user",
     text: userLabel,
@@ -589,10 +589,10 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   }]);
   api.conversationAdd("user", userLabel).catch(() => {});
 
-  // 2. Immediate Emblem acknowledgement — spoken + shown
+  // 2. Immediate Emblem acknowledgement, spoken + shown
   const ack = isImage
-    ? `I've received the image ${fileName} — analysing it now.`
-    : `I've received ${fileName} — reading through it now.`;
+    ? `I've received the image ${fileName}, analysing it now.`
+    : `I've received ${fileName}, reading through it now.`;
   messages.update((m) => [...m, { role: "assistant", text: ack, isAck: true }]);
   speakText(ack, get(voiceCfg));
 
@@ -603,10 +603,10 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
   const lastReply = [...prior].filter((m) => m.role === "assistant" && !m.isAck).slice(-1)[0]?.text || "";
   const history = prior.filter((m) => !m.isAck).slice(-12).map((m) => ({ role: m.role, content: m.text }));
 
-  // 3. Build agent prompt with extracted content — Emblem does the analysis
+  // 3. Build agent prompt with extracted content, Emblem does the analysis
   const agentPrompt = isImage
-    ? `The user uploaded an image called "${fileName}". Vision analysis result:\n\n${extractedContent}\n\nBriefly summarise what you see in 2–3 sentences, then ask what they'd like to do with it.`
-    : `The user uploaded a document called "${fileName}". Full extracted content:\n\n---\n${extractedContent}\n---\n\nBriefly summarise the key points in 2–4 sentences, then ask what they'd like to do with it.`;
+    ? `The user uploaded an image called "${fileName}". Vision analysis result:\n\n${extractedContent}\n\nBriefly summarise what you see in 2 to 3 sentences, then ask what they'd like to do with it.`
+    : `The user uploaded a document called "${fileName}". Full extracted content:\n\n---\n${extractedContent}\n---\n\nBriefly summarise the key points in 2 to 4 sentences, then ask what they'd like to do with it.`;
 
   const r = await api.agent(agentPrompt, { model: get(model), lastReply, history, pending: pendingTask })
     .catch((e) => ({ reply: String(e), actions: [] }));
@@ -645,7 +645,7 @@ export async function sendAttachment(fileName, fileType, extractedContent, image
 // Approve/decline a pending action AND close the loop in the conversation:
 // api.decide runs the tool server-side (resolveApproval executes it and returns
 // its result), then an internal continuation is sent to the agent so Emblem
-// reports the outcome in-chat — no more "approved… now what?" dead ends.
+// reports the outcome in-chat, no more "approved… now what?" dead ends.
 // The internal command is never shown as a user bubble and never persisted as
 // a user message; only the assistant's reply is pushed + saved.
 const _deciding = new Set();
@@ -664,7 +664,7 @@ export async function decideAndContinue(id, approved, summary = "") {
     notify(approved ? `Approved #${id}` : `Declined #${id}`, approved ? "safe" : "info");
     const tid = get(activeThread);
 
-    // Approve failed (tool threw, already decided, …) — surface it, no continuation.
+    // Approve failed (tool threw, already decided, …), surface it, no continuation.
     if (approved && !r.ok) {
       const line = `That action failed: ${r.error || "unknown error"}`;
       messages.update((m) => [...m, { role: "assistant", text: line }]);
@@ -673,13 +673,13 @@ export async function decideAndContinue(id, approved, summary = "") {
       return r;
     }
 
-    // Internal continuation — same history shape sendCommand builds.
+    // Internal continuation, same history shape sendCommand builds.
     const command = approved
-      ? `[system note — not typed by the user] They approved the pending action "${summary}". Result: ${JSON.stringify(r.result ?? null).slice(0, 1500)}. Confirm the outcome to the user in one short sentence (mention any id/link), and continue the task if anything was left unfinished.`
-      : `[system note — not typed by the user] They declined the action "${summary}". Acknowledge briefly and offer an alternative if there is one.`;
+      ? `[system note, not typed by the user] They approved the pending action "${summary}". Result: ${JSON.stringify(r.result ?? null).slice(0, 1500)}. Confirm the outcome to the user in one short sentence (mention any id/link), and continue the task if anything was left unfinished.`
+      : `[system note, not typed by the user] They declined the action "${summary}". Acknowledge briefly and offer an alternative if there is one.`;
 
     // Loop guard: if this continuation itself queues a NEW approval, continueTask's
-    // runActions just notifies + refreshes so the new card renders — we never
+    // runActions just notifies + refreshes so the new card renders, we never
     // auto-decide, so there is no recursion. decideAndContinue only runs on click.
     await continueTask(command);
     return r;

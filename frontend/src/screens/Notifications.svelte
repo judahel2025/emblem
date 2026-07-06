@@ -33,7 +33,7 @@
   <header class="head reveal-in">
     <div>
       <h1>Notifications {#if unread}<span class="hcount">{unread}</span>{/if}</h1>
-      <p class="sub">Activity from your connected apps — new mail, calendar, and updates — all in one place.</p>
+      <p class="sub">Activity from your connected apps, new mail, calendar, and updates, all in one place.</p>
     </div>
     <div class="headacts">
       {#if canAskPush && !permAsked}

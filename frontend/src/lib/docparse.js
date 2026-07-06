@@ -1,4 +1,4 @@
-// Client-side document reading — extract text from an uploaded .docx / .pdf /
+// Client-side document reading, extract text from an uploaded .docx / .pdf /
 // .xlsx / .pptx in the browser (libs lazy-loaded), so Emblem can read and act on
 // documents without any server-side parsing. Returns plain text for the agent.
 

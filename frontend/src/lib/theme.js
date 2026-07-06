@@ -1,4 +1,4 @@
-// Theme: light | dark | system — INK (dark) is the default; vellum (light) is
+// Theme: light | dark | system, INK (dark) is the default; vellum (light) is
 // the equally finished alternative. The inline script in index.html sets the
 // initial data-theme before paint; this store keeps it live afterwards.
 import { writable, derived } from "svelte/store";

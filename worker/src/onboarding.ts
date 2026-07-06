@@ -1,4 +1,4 @@
-// AI onboarding — the text-mode interviewer. The SAME conversation the live
+// AI onboarding, the text-mode interviewer. The SAME conversation the live
 // voice runs, but over the brain pool (Cerebras → Groq → Gemini), so onboarding
 // works even when realtime voice can't: no breaks, no scripts.
 // The frontend sends the running transcript; we return the next reply, and when
@@ -10,11 +10,11 @@ import { poolChat, type ChatMsg } from "./brainpool";
 
 const INTERVIEWER =
   "You are Emblem, meeting a brand-new member for the very first time. You are warm, " +
-  "genuinely curious, and human — this is a real conversation, not a form.\n\n" +
+  "genuinely curious, and human, this is a real conversation, not a form.\n\n" +
   "RULES OF THE CONVERSATION:\n" +
-  "- Ask exactly ONE question per turn. Keep every turn to 1–3 short sentences.\n" +
-  "- ALWAYS react to what they just said first (by name once you know it) — a beat of " +
-  "genuine acknowledgment or a light follow-up — THEN ask the next question.\n" +
+  "- Ask exactly ONE question per turn. Keep every turn to 1 to 3 short sentences.\n" +
+  "- ALWAYS react to what they just said first (by name once you know it), a beat of " +
+  "genuine acknowledgment or a light follow-up, THEN ask the next question.\n" +
   "- Adapt: if an answer already covers a later topic, don't re-ask it; if an answer is " +
   "interesting or vague, ask ONE follow-up before moving on.\n\n" +
   "COVER THESE TOPICS over the conversation (in a natural order, adapting freely): " +
@@ -25,11 +25,11 @@ const INTERVIEWER =
   "(9) how they like to be spoken to (brief and direct, or warm and chatty), (10) their " +
   "usual working hours / when NOT to disturb them + anything an assistant should " +
   "never do for them.\n\n" +
-  "THE WRAP-UP CHECKPOINT (important — the member must always see the end coming): " +
+  "THE WRAP-UP CHECKPOINT (important, the member must always see the end coming): " +
   "after about TEN questions (count your own questions), STOP asking new topic questions. " +
   "Instead say you have a good picture now, and ask ONE thing: is there anything they'd " +
   "like to add, or shall we wrap up? If they have nothing (or say wrap up / no / that's " +
-  "all), COMPLETE immediately. If they DO add more, engage with it for at most 2–3 " +
+  "all), COMPLETE immediately. If they DO add more, engage with it for at most 2 to 3 " +
   "further questions, then ask the same checkpoint question again. Repeat until they're " +
   "done. Never let the conversation drift past a checkpoint without asking.\n\n" +
   "TO COMPLETE (checkpoint passed with nothing to add, or the user asks to finish at any " +
@@ -43,16 +43,16 @@ const INTERVIEWER =
 
 const EXTRACTOR =
   "You extract a structured profile from an onboarding conversation transcript. " +
-  "Reply with ONLY a JSON object (no prose) with these keys — use null for anything " +
+  "Reply with ONLY a JSON object (no prose) with these keys, use null for anything " +
   "not learned: display_name (string), role (string), current_work (string), " +
-  "focus (string — what they most want help with), tools (array of strings), " +
-  "tone (string — short label for how to speak to them, e.g. 'brief and direct'), " +
-  "comm_style (string — a fuller standing instruction for how they want to be " +
+  "focus (string, what they most want help with), tools (array of strings), " +
+  "tone (string, short label for how to speak to them, e.g. 'brief and direct'), " +
+  "comm_style (string, a fuller standing instruction for how they want to be " +
   "communicated with: tone, language/spelling, how to address them, what to avoid; " +
   "null if nothing specific was said), " +
   "quiet_hours (string like '22:00-07:00' or null), " +
-  "boundaries (string — what never to do, or null), " +
-  "extra_facts (array of strings — every other durable fact worth remembering, " +
+  "boundaries (string, what never to do, or null), " +
+  "extra_facts (array of strings, every other durable fact worth remembering, " +
   "each a complete standalone sentence about 'the user').";
 
 export interface OnboardTurn { role: "user" | "assistant"; text: string }
@@ -64,7 +64,7 @@ export async function onboardingReply(env: Env, history: OnboardTurn[]):
     ...history.slice(-40).map((t) => ({ role: t.role, content: t.text })),
   ];
   if (!history.length) {
-    messages.push({ role: "user", content: "(a brand-new member just arrived — greet them and begin)" });
+    messages.push({ role: "user", content: "(a brand-new member just arrived, greet them and begin)" });
   }
   const r = await poolChat(env, messages, { maxTokens: 400, temperature: 0.8 });
   if (!r?.content) return null;
@@ -73,8 +73,7 @@ export async function onboardingReply(env: Env, history: OnboardTurn[]):
   return { reply, done };
 }
 
-// Run the extractor over a (possibly partial) transcript WITHOUT saving —
-// powers the AI ⇄ form switch: the form pre-fills with whatever the
+// Run the extractor over a (possibly partial) transcript WITHOUT saving, // powers the AI ⇄ form switch: the form pre-fills with whatever the
 // conversation already covered so the member never repeats themselves.
 export async function extractProfileFields(env: Env,
     history: OnboardTurn[]): Promise<Record<string, unknown>> {

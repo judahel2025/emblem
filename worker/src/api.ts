@@ -1,4 +1,4 @@
-// /api/* — the workspace REST surface, ported 1:1 from the Python backend's
+// /api/*, the workspace REST surface, ported 1:1 from the Python backend's
 // response shapes so the Svelte frontend works unchanged. Every row is scoped
 // to the authenticated user; operator surfaces 404 for everyone but the owner.
 
@@ -80,7 +80,7 @@ apiRoutes.put("/me/profile", async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- AI onboarding (text mode — same conversation the live voice runs) --------
+// ---- AI onboarding (text mode, same conversation the live voice runs) --------
 
 apiRoutes.post("/onboarding/chat", async (c) => {
   const b = await c.req.json().catch(() => ({} as { history?: Array<{ role: string; text: string }> }));
@@ -114,7 +114,7 @@ apiRoutes.post("/onboarding/extract", async (c) => {
 });
 
 // Classic-form onboarding completion: saves profile + memories directly from
-// the typed fields (extractor-shaped) — no LLM in the loop.
+// the typed fields (extractor-shaped), no LLM in the loop.
 apiRoutes.post("/onboarding/form", async (c) => {
   const b = await c.req.json().catch(() => ({} as Record<string, unknown>));
   const fields = (b && typeof b.fields === "object" && b.fields) ? b.fields as Record<string, unknown> : {};
@@ -256,7 +256,7 @@ apiRoutes.post("/newsletter/opt", async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- admin console (owner only — 404 for everyone else, same as /audit) --------
+// ---- admin console (owner only, 404 for everyone else, same as /audit) --------
 
 apiRoutes.get("/admin/users", async (c) => {
   if (!c.get("isOwner")) return notFound(c);
@@ -422,7 +422,7 @@ apiRoutes.get("/conversations", async (c) => {
   const threadQ = c.req.query("thread_id");
   let rows;
   if (threadQ === "legacy") {
-    // Pre-threads history — shown as one "Earlier" bucket.
+    // Pre-threads history, shown as one "Earlier" bucket.
     rows = await c.env.DB.prepare(
       "SELECT id, role, text, created_at FROM conversations WHERE user_id = ? AND thread_id IS NULL ORDER BY id DESC LIMIT ?")
       .bind(c.get("userId"), limit).all();
@@ -645,7 +645,7 @@ apiRoutes.post("/skills/draft", async (c) => {
   if (!desc) return c.json({ ok: false, error: "Describe what you want the skill to do." }, 400);
   const draft = b.paste ? await normalizeSkill(c.env, desc) : await draftSkill(c.env, desc);
   return draft ? c.json({ ok: true, skill: draft })
-               : c.json({ ok: false, error: "Couldn't draft that — try describing it a bit more." }, 502);
+               : c.json({ ok: false, error: "Couldn't draft that, try describing it a bit more." }, 502);
 });
 
 /** Keyword recall + always-on pinned facts. Pinned memories are never dropped

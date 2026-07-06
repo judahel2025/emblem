@@ -1,4 +1,4 @@
-// Emblem live-voice client — one WebSocket session to /api/voice/live.
+// Emblem live-voice client, one WebSocket session to /api/voice/live.
 // Handles mic capture (PCM 16k), streamed playback (PCM 24k), captions, and barge-in.
 // Used by both the conversational onboarding and the everyday voice mode.
 
@@ -12,7 +12,7 @@ export class LiveClient {
    *   mode        "chat" | "onboarding"
    *   onState     (state) => {}   connecting|ready|listening|thinking|speaking|onboarded|unavailable|error|ended
    *                               "unavailable" = the server said no (mic denied / not configured);
-   *                               "error" = connection trouble — retryable.
+   *                               "error" = connection trouble, retryable.
    *   onCaption   ({who, text}) => {}
    *   onLevel     (0..1) => {}    live mic level (for the orb)
    *   onError     (message) => {} human-readable connection problem
@@ -38,7 +38,7 @@ export class LiveClient {
   _url() {
     const token = (typeof localStorage !== "undefined" && localStorage.getItem("emblem_token")) || "";
     const qs = `?mode=${this.mode}${token ? `&token=${encodeURIComponent(token)}` : ""}`;
-    // The voice socket must reach the Worker DIRECTLY — Vercel doesn't proxy WebSockets.
+    // The voice socket must reach the Worker DIRECTLY, Vercel doesn't proxy WebSockets.
     // VITE_WORKER_URL is set at build time when the frontend is hosted apart from the
     // backend (Vercel); otherwise the API and socket share an origin.
     const worker = (typeof import.meta !== "undefined" && import.meta.env?.VITE_WORKER_URL) || "";
@@ -175,7 +175,7 @@ export class LiveClient {
   }
 
   _bargeIn() {
-    // The user cut in — stop everything queued and go back to listening.
+    // The user cut in, stop everything queued and go back to listening.
     for (const s of this.sources) { try { s.stop(); } catch {} }
     this.sources = [];
     this.playHead = 0;

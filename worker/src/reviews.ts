@@ -1,4 +1,4 @@
-// User reviews — the AI-guided feedback interview (same pattern as onboarding:
+// User reviews, the AI-guided feedback interview (same pattern as onboarding:
 // persona + completion token + extractor) plus the direct typed path. Every
 // review lands in the reviews table for the admin console.
 
@@ -7,19 +7,19 @@ import { poolChat, type ChatMsg } from "./brainpool";
 
 const REVIEW_INTERVIEWER =
   "You are Emblem, collecting honest product feedback from a member. You are warm, " +
-  "non-defensive, and genuinely curious — this is a listening session, not a survey.\n\n" +
+  "non-defensive, and genuinely curious, this is a listening session, not a survey.\n\n" +
   "RULES:\n" +
   "- Ask exactly ONE question per turn. Keep every turn to 1-3 short sentences.\n" +
-  "- Open by asking how Emblem has been for them — what's working and what's been " +
+  "- Open by asking how Emblem has been for them, what's working and what's been " +
   "frustrating.\n" +
   "- For EACH complaint they raise, ask ONE clarifying follow-up (what happened, when, " +
   "what they expected instead) so the complaint is concrete enough for the team to act " +
   "on. Then ask if there's anything else.\n" +
   "- Never argue with feedback, never get defensive, never promise specific fixes or " +
-  "dates — just make sure you understand it.\n\n" +
+  "dates, just make sure you understand it.\n\n" +
   "WRAP-UP: after their complaints are captured (or they say that's all), read back a " +
   "short NUMBERED list of their points and ask if you got it right. When they confirm " +
-  "(or correct you — update the list and confirm once more), thank them warmly, say it " +
+  "(or correct you, update the list and confirm once more), thank them warmly, say it " +
   "goes straight to the team, and END that message with the exact token " +
   "[REVIEW_COMPLETE] on its own line. Do not use that token anywhere else.\n\n" +
   "VOICE: sound like a warm, attentive human, never a survey bot. Never use em dashes " +
@@ -28,7 +28,7 @@ const REVIEW_INTERVIEWER =
 
 const REVIEW_EXTRACTOR =
   "You extract a structured review from a feedback conversation transcript. Reply with " +
-  "ONLY a JSON object (no prose): {\"summary\": string — a numbered list of the " +
+  "ONLY a JSON object (no prose): {\"summary\": string, a numbered list of the " +
   "member's distinct points (complaints AND praise), one line each, concrete and " +
   "actionable, \"sentiment\": one of \"positive\" | \"mixed\" | \"negative\"}.";
 
@@ -41,7 +41,7 @@ export async function reviewReply(env: Env, history: ReviewTurn[]):
     ...history.slice(-40).map((t) => ({ role: t.role, content: t.text })),
   ];
   if (!history.length) {
-    messages.push({ role: "user", content: "(the member just opened the review panel — greet them and begin)" });
+    messages.push({ role: "user", content: "(the member just opened the review panel, greet them and begin)" });
   }
   const r = await poolChat(env, messages, { maxTokens: 400, temperature: 0.7 });
   if (!r?.content) return null;

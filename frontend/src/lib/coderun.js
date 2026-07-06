@@ -1,10 +1,10 @@
-// In-browser code execution — free, no server, no cold starts. The browser IS the
+// In-browser code execution, free, no server, no cold starts. The browser IS the
 // sandbox (same idea that runs document generation client-side):
 //   • JS / TS  → a sandboxed <iframe> (sandbox="allow-scripts", no same-origin) that
 //                captures console output and posts it back. It cannot touch our page.
 //   • HTML     → rendered live via iframe srcdoc (a real preview).
 //   • Python   → Pyodide (CPython compiled to WASM), lazy-loaded from the CDN once.
-// Anything else (Go/Rust/Java/native) isn't runnable in-browser — the caller offers
+// Anything else (Go/Rust/Java/native) isn't runnable in-browser, the caller offers
 // the github.dev / Codespaces link instead.
 
 export const RUNNABLE = new Set(["javascript", "js", "typescript", "ts", "html", "python", "py"]);

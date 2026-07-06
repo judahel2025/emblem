@@ -1,5 +1,5 @@
 // Thin client for the Emblem Worker API. The Worker serves this app same-origin,
-// so in the browser the API base is simply "" — the one exception is the Tauri
+// so in the browser the API base is simply "", the one exception is the Tauri
 // desktop shell, which loads from a local file and must be pointed at the Worker.
 import { speechify } from "./speech.js";
 
@@ -34,7 +34,7 @@ async function req(path, options = {}) {
     ...(signal ? { signal } : {}),
   });
   if (res.status === 401) {
-    // Session expired/invalid — let the shell sign out cleanly.
+    // Session expired/invalid, let the shell sign out cleanly.
     window.dispatchEvent(new CustomEvent("emblem:session-expired"));
     throw new ApiError(path, 401, "signed out");
   }
@@ -191,7 +191,7 @@ export const api = {
   newsletterOpt: (choice) => post("/api/newsletter/opt", { choice }),
   newsletterSubscribe: (email) => post("/api/newsletter/subscribe", { email }),
 
-  // Admin console (owner only — 404s for everyone else)
+  // Admin console (owner only, 404s for everyone else)
   adminUsers: () => get("/api/admin/users"),
   adminReviews: () => get("/api/admin/reviews"),
   adminReviewRead: (id) => post(`/api/admin/reviews/${id}/read`, {}),

@@ -1,4 +1,4 @@
-// /auth/* — Emblem's own auth, entirely on the Worker.
+// /auth/*, Emblem's own auth, entirely on the Worker.
 //   POST /auth/signup   {email, password}         -> {token, user_id}
 //   POST /auth/login    {email, password}         -> {token, user_id}
 //   GET  /auth/google                             -> 302 Google consent
@@ -6,7 +6,7 @@
 //
 // Sessions are Worker-signed HS256 JWTs (sub = user id). Passwords are
 // PBKDF2-SHA256 (310k iterations, per-user salt). Google identity is verified
-// server-side via Google's tokeninfo endpoint — no client-side trust.
+// server-side via Google's tokeninfo endpoint, no client-side trust.
 
 import { Hono } from "hono";
 import type { Context, Next } from "hono";
@@ -39,7 +39,7 @@ authRoutes.post("/signup", async (c) => {
   if (String(password).length < 8) return c.json({ error: "Password must be at least 8 characters." }, 400);
 
   const existing = await c.env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(em).first();
-  if (existing) return c.json({ error: "That email already has an account — log in instead." }, 409);
+  if (existing) return c.json({ error: "That email already has an account, log in instead." }, 409);
 
   const id = crypto.randomUUID();
   const { hash, salt } = await hashPassword(String(password));
@@ -104,7 +104,7 @@ authRoutes.get("/google/callback", async (c) => {
   const tok = await tokenRes.json<{ id_token?: string }>().catch(() => ({} as { id_token?: string }));
   if (!tok.id_token) return c.redirect("/#auth_error=google", 302);
 
-  // Let Google verify its own token — returns claims only when the signature is valid.
+  // Let Google verify its own token, returns claims only when the signature is valid.
   const info = await fetch(
     `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(tok.id_token)}`);
   const claims = await info.json<{ aud?: string; sub?: string; email?: string }>().catch(() => ({} as Record<string, never>));

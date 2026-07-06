@@ -1,5 +1,5 @@
 <script>
-  // Calendar workspace — the connected account's real month view.
+  // Calendar workspace, the connected account's real month view.
   // Mirrors the native Calendar screen's grid; reads run free through
   // runConnected, create/delete pause for approval (card rendered by parent).
   import { fly, fade } from "svelte/transition";
@@ -139,8 +139,8 @@
     if (!en) return `${day}, ${fmtTime(s)}`;
     const sameDay = dayKey(s) === dayKey(en);
     return sameDay
-      ? `${day}, ${fmtTime(s)} – ${fmtTime(en)}`
-      : `${day}, ${fmtTime(s)} – ${en.toLocaleDateString([], { month: "short", day: "numeric" })}, ${fmtTime(en)}`;
+      ? `${day}, ${fmtTime(s)}, ${fmtTime(en)}`
+      : `${day}, ${fmtTime(s)}, ${en.toLocaleDateString([], { month: "short", day: "numeric" })}, ${fmtTime(en)}`;
   }
   const chipLabel = (e) => (isAllDay(e) ? evTitle(e) : `${fmtTime(evStart(e))} ${evTitle(e)}`);
 
@@ -193,7 +193,7 @@
           { act: true, onApproval },
         );
       } catch (err) {
-        // User said no — don't ask again with a different shape.
+        // User said no, don't ask again with a different shape.
         if (String(err?.message || "") === "Declined.") throw err;
         console.debug("[calendar] create with flat params failed, retrying start/end shape:", err);
         await runConnected(

@@ -1,5 +1,5 @@
 <script>
-  // The review flow — two paths, user's choice: talk it through with Emblem
+  // The review flow, two paths, user's choice: talk it through with Emblem
   // (AI confirms each complaint, then logs a structured review) or just write
   // it. Both land in the admin console.
   import { createEventDispatcher, tick } from "svelte";
@@ -40,7 +40,7 @@
       }
     } catch (e) {
       console.error("review chat failed:", e);
-      notify("Couldn't reach Emblem — try again in a moment.", "danger");
+      notify("Couldn't reach Emblem, try again in a moment.", "danger");
     }
     busy = false;
     refocus();
@@ -62,11 +62,11 @@
     try {
       const r = await api.reviewSubmit(t);
       if (!r.ok) throw new Error(r.error || "failed");
-      notify("Thanks — your review went straight to the team.", "safe");
+      notify("Thanks, your review went straight to the team.", "safe");
       close();
     } catch (e) {
       console.error("review submit failed:", e);
-      notify("Couldn't save your review — try again.", "danger");
+      notify("Couldn't save your review, try again.", "danger");
     }
     busy = false;
   }
@@ -81,7 +81,7 @@
     </div>
 
     {#if step === "choice"}
-      <p class="sub">However you'd rather do it — it all reaches the team.</p>
+      <p class="sub">However you'd rather do it, it all reaches the team.</p>
       <div class="paths stagger">
         <button class="path" on:click={startAI}>
           <i class="ti ti-sparkles"></i>
@@ -128,7 +128,7 @@
     {:else}
       <div class="thanks" in:fade={{ duration: 200 }}>
         <i class="ti ti-circle-check"></i>
-        <p>Thank you — your feedback went straight to the team.</p>
+        <p>Thank you, your feedback went straight to the team.</p>
       </div>
     {/if}
   </div>

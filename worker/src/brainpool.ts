@@ -1,7 +1,7 @@
-// The brain pool — ONE ordered provider chain for every text-generation need
+// The brain pool, ONE ordered provider chain for every text-generation need
 // (agent loop, onboarding interviewer, titles, suggestions, extraction).
 // Strategy: Cerebras (fastest) → Groq → Gemini generateContent. Each provider
-// gets a retry on 429/5xx, then the chain falls through — four keys (two
+// gets a retry on 429/5xx, then the chain falls through, four keys (two
 // Gemini) means no single point of failure. Gemini is a REAL last resort even
 // when tools are requested: it converts the OpenAI-shaped tool defs to
 // Gemini's function-calling schema and parses functionCall parts back into
@@ -56,7 +56,7 @@ async function openAICompatible(url: string, key: string, model: string,
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
         continue;
       }
-      if (!res.ok) return null;   // request-shape rejection — next provider
+      if (!res.ok) return null;   // request-shape rejection, next provider
       const data = await res.json<{ choices?: Array<{ message: ChatMsg }> }>();
       const msg = data.choices?.[0]?.message;
       if (!msg) return null;
@@ -68,12 +68,12 @@ async function openAICompatible(url: string, key: string, model: string,
         })),
         raw: msg,
       };
-    } catch { /* network — retry then fall through */ }
+    } catch { /* network, retry then fall through */ }
   }
   return null;
 }
 
-// ---- Gemini schema conversion — OpenAI JSON Schema → Gemini's uppercase Type enum ----
+// ---- Gemini schema conversion, OpenAI JSON Schema → Gemini's uppercase Type enum ----
 
 function toGeminiSchema(node: unknown): unknown {
   if (!node || typeof node !== "object") return node;
@@ -99,7 +99,7 @@ function toGeminiTools(tools: OpenAIToolDef[]): Record<string, unknown> {
   };
 }
 
-/** Gemini generateContent — a REAL fallback, tool-calling included. Tries
+/** Gemini generateContent, a REAL fallback, tool-calling included. Tries
  *  GEMINI_KEY then GEMINI_KEY2 on 429/5xx/network so one exhausted key
  *  doesn't take the whole pool down with it. */
 async function geminiText(env: Env, messages: ChatMsg[], opts: PoolOpts): Promise<PoolResult | null> {
@@ -107,7 +107,7 @@ async function geminiText(env: Env, messages: ChatMsg[], opts: PoolOpts): Promis
   if (!keys.length) return null;
 
   const sys = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
-  // Gemini's generateContent turns are user/model only — fold any tool results
+  // Gemini's generateContent turns are user/model only, fold any tool results
   // back in as plain user-role context so a Cerebras/Groq tool loop can still
   // be picked up mid-flight by this fallback.
   const turns = messages.filter((m) => m.role === "user" || m.role === "assistant" || m.role === "tool");
@@ -146,7 +146,7 @@ async function geminiText(env: Env, messages: ChatMsg[], opts: PoolOpts): Promis
         raw: { role: "assistant", content: text || null,
           tool_calls: calls.map((c) => ({ id: c.id, function: { name: c.name, arguments: JSON.stringify(c.args) } })) },
       };
-    } catch { /* network — try the next key */ }
+    } catch { /* network, try the next key */ }
   }
   return null;
 }

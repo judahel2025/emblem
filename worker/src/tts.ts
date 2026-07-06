@@ -1,9 +1,9 @@
 // One-shot TTS for scripted narration (the product tour) and spoken replies.
-// Uses Gemini's native TTS on generativelanguage.googleapis.com — the SAME key
+// Uses Gemini's native TTS on generativelanguage.googleapis.com, the SAME key
 // that powers live voice (an AI Studio key does NOT work with Google Cloud TTS;
 // that combination 401s). Gemini TTS returns raw PCM (s16le, 24 kHz mono), which
 // browsers can't play directly, so we wrap it in a WAV header. Cached in R2 by
-// content hash — each tour line costs one synthesis EVER.
+// content hash, each tour line costs one synthesis EVER.
 // Provider-blind to the client: the route returns bare audio/wav.
 
 import type { Env } from "./env";

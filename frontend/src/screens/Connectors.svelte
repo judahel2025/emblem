@@ -8,7 +8,7 @@
   import Logo from "../components/Logo.svelte";
 
   // If the Composio logo endpoint ever 404s, drop the <img> and reveal the
-  // Tabler icon sitting right after it — a real logo first, icon only as a
+  // Tabler icon sitting right after it, a real logo first, icon only as a
   // last resort (never a bare generic tile).
   function imgFallback(e) {
     const img = e.currentTarget;
@@ -50,7 +50,7 @@
   // ── Connect lifecycle: spinner on the button, poll until the OAuth
   //    round-trip lands, then flip the tile into the Active section. ──
   const POLL_MS = 3000;
-  const TIMEOUT_MS = 4 * 60 * 1000;   // OAuth (esp. Google consent) can be slow — be patient
+  const TIMEOUT_MS = 4 * 60 * 1000;   // OAuth (esp. Google consent) can be slow, be patient
   let connecting = {};   // toolkit -> true while its OAuth flow is pending
   let startedAt = {};    // toolkit -> Date.now() when the flow began
   let pollTimer = null;
@@ -62,7 +62,7 @@
   function startPolling() {
     if (pollTimer) return;
     pollTimer = setInterval(poll, POLL_MS);
-    // The OAuth popup closing refocuses this window — check right away.
+    // The OAuth popup closing refocuses this window, check right away.
     window.addEventListener("focus", poll);
   }
   function stopPolling() {
@@ -100,17 +100,17 @@
         all = d.all || all;
         loadConnections();   // sync the sidebar's workspace list
       }
-    } catch { /* transient — next tick retries */ }
+    } catch { /* transient, next tick retries */ }
     polling = false;
     if (!anyPending()) stopPolling();
   }
 
-  // Manual re-check — for when a slow OAuth finished but auto-detect hasn't caught it yet.
+  // Manual re-check, for when a slow OAuth finished but auto-detect hasn't caught it yet.
   async function checkNow() { await load(); if (anyPending()) poll(); }
 
   // Emblem-branded consent step: clicking Connect opens OUR dialog first
-  // ("Emblem is requesting to connect…") — the user authorizes through Emblem,
-  // not a third-party name — before we open the secure provider sign-in.
+  // ("Emblem is requesting to connect…"), the user authorizes through Emblem,
+  // not a third-party name, before we open the secure provider sign-in.
   let confirmTk = null;
   function connect(toolkit) {
     if (connecting[toolkit]) return;
@@ -132,7 +132,7 @@
     } catch { error = "Couldn't start the connection."; }
   }
 
-  // Disconnect — revoke Emblem's access to an app. Always confirm first.
+  // Disconnect, revoke Emblem's access to an app. Always confirm first.
   let disconnectTk = null;
   let disconnecting = {};
   async function proceedDisconnect() {
@@ -199,7 +199,7 @@
     <div class="empty">Loading connections…</div>
   {:else}
     {#if broken.length}
-      <!-- Expired / broken connections — one tap to reconnect. -->
+      <!-- Expired / broken connections, one tap to reconnect. -->
       <section class="section">
         <div class="secthead">
           <span class="pulse warn" aria-hidden="true"></span>
@@ -217,7 +217,7 @@
                 <span class="badge caution">Expired</span>
               </div>
               <div class="name">{m.label}</div>
-              <div class="desc">Its sign-in expired — reconnect to keep using it.</div>
+              <div class="desc">Its sign-in expired, reconnect to keep using it.</div>
               <div class="afoot">
                 <span class="footnote">Access paused</span>
                 <button class="btn primary cbtn" on:click={() => connect(k)}
@@ -285,7 +285,7 @@
         <h2>Available connectors</h2>
         <div class="search">
           <i class="ti ti-search"></i>
-          <input placeholder="Search 20,000+ tools — Gmail, GitHub, Stripe, Linear…" bind:value={query}
+          <input placeholder="Search 20,000+ tools, Gmail, GitHub, Stripe, Linear…" bind:value={query}
             aria-label="Search tools to connect" />
         </div>
       </div>
@@ -311,7 +311,7 @@
       </div>
       {#if available.length === 0}
         <div class="empty">
-          {query ? "No matches — try another name." : "All featured apps are connected. Search to reach 20,000+ more."}
+          {query ? "No matches, try another name." : "All featured apps are connected. Search to reach 20,000+ more."}
         </div>
       {:else if !query}
         <div class="hint">Showing featured apps. Search above to reach all 20,000+ tools.</div>
@@ -320,7 +320,7 @@
   {/if}
 </div>
 
-<!-- Emblem-branded connect consent — the user authorizes through Emblem -->
+<!-- Emblem-branded connect consent, the user authorizes through Emblem -->
 {#if confirmTk}
   {@const cm = meta(confirmTk)}
   <div class="veil" on:click|self={() => (confirmTk = null)}
@@ -359,7 +359,7 @@
       </div>
       <h3>Disconnect {dm.label}?</h3>
       <p>Emblem will immediately lose access to your {dm.label} account and can no longer read
-         your data or take actions there. Nothing in {dm.label} will be deleted — this only
+         your data or take actions there. Nothing in {dm.label} will be deleted, this only
          removes Emblem's access. You can reconnect anytime.</p>
       <div class="consent-btns">
         <button class="btn ghost" on:click={() => (disconnectTk = null)}>Cancel</button>

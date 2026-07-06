@@ -1,4 +1,4 @@
-// Auth client — talks to the Emblem Worker's own /auth/* endpoints (Cloudflare-native,
+// Auth client, talks to the Emblem Worker's own /auth/* endpoints (Cloudflare-native,
 // no Supabase). On success we store the Worker-signed JWT as `emblem_token`, which the
 // API client sends as `Authorization: Bearer` and the Worker verifies on every request.
 // (File name kept as supabase.js so imports don't churn; the `auth` interface is identical.)

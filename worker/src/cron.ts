@@ -1,4 +1,4 @@
-// The heartbeat — a Cron Trigger fires every minute. Quiet by default:
+// The heartbeat, a Cron Trigger fires every minute. Quiet by default:
 //   • due automations run an agent turn AS their owner and file an alert
 //   • calendar reminders become alerts at their lead time
 // Discipline (from the blueprint): claim-before-run (no overlapping runs),

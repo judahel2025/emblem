@@ -24,7 +24,7 @@
   <header class="head reveal-in">
     <div>
       <h1>Automations</h1>
-      <p class="sub">Set something once and Emblem runs it on its own — quietly, on schedule.</p>
+      <p class="sub">Set something once and Emblem runs it on its own, quietly, on schedule.</p>
     </div>
     {#if !loading && items.length}
       <div class="livechip glass" in:fade={{ duration: 150 }}>
@@ -46,7 +46,7 @@
       {:else if items.length === 0}
         <div class="blankstate glass" in:fade={{ duration: 200 }}>
           <i class="ti ti-bolt"></i>
-          <p>Automations run in the background — describe what you want in plain language.</p>
+          <p>Automations run in the background, describe what you want in plain language.</p>
         </div>
       {:else}
         <div class="nodes">
@@ -75,7 +75,7 @@
               <div class="afoot">
                 <span class="meta"><i class="ti ti-clock"></i> every {a.every || "day"}</span>
                 {#if !a.enabled}
-                  <span class="meta warn"><i class="ti ti-player-pause"></i> Paused — resume anytime</span>
+                  <span class="meta warn"><i class="ti ti-player-pause"></i> Paused, resume anytime</span>
                 {/if}
               </div>
             </div>
@@ -108,7 +108,7 @@
       <div class="feature">
         <i class="ti ti-bolt watermark" aria-hidden="true"></i>
         <h3>Automate from chat</h3>
-        <p>Describe a routine in plain language — "every Friday, draft my weekly recap" — and Emblem sets it up and runs it quietly.</p>
+        <p>Describe a routine in plain language, "every Friday, draft my weekly recap", and Emblem sets it up and runs it quietly.</p>
       </div>
     </aside>
   </div>

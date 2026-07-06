@@ -1,13 +1,14 @@
 <script>
-  // Emblem landing — AURORA (Judah's reference): full-dark navy page with twin
+  // Emblem landing, AURORA (Judah's reference): full-dark navy page with twin
   // blue/red blooms, halftone dot patches, glass nav, white pill CTA, a red-
   // highlighted hero headline (weight contrast 300/600), a grey logo trust
   // strip, and twin glow-edged glass showcase cards. Says nothing about which
-  // AI or providers power it — that stays in the backend.
+  // AI or providers power it, that stays in the backend.
   import { createEventDispatcher } from "svelte";
   import Logo from "../components/Logo.svelte";
   import Orb from "../components/Orb.svelte";
   import LandingShader from "../components/LandingShader.svelte";
+  import ProductShowcase from "../components/ProductShowcase.svelte";
   import { tilt } from "../lib/tilt.js";
   import { api } from "../lib/api.js";
   const dispatch = createEventDispatcher();
@@ -15,7 +16,7 @@
   let menuOpen = false;
   const closeMenu = () => (menuOpen = false);
 
-  // Newsletter signup (public endpoint — works logged-out).
+  // Newsletter signup (public endpoint, works logged-out).
   let nlEmail = "", nlBusy = false, nlDone = false, nlErr = false;
   async function subscribe() {
     if (nlBusy || nlDone) return;
@@ -57,7 +58,8 @@
     { i: "ti-message-2", t: "Chat that acts", d: "Say it in plain words. It drafts, sends, schedules, and files. Answers are just the start." },
     { i: "ti-microphone", t: "Real voice mode", d: "Hands-free conversation: it listens, thinks, and speaks back naturally." },
     { i: "ti-plug-connected", t: "20,000+ tools", d: "Gmail, Calendar, GitHub, your socials and more. Every account stays yours." },
-    { i: "ti-brain", t: "Memory that grows", d: "It learns your people, preferences and projects, and every session builds on the last." },
+    { i: "ti-brain", t: "Memory & personalization", d: "Tell it who you are once. It remembers your name, your preferences, and a standing instruction for how you like to be talked to, and you can see, edit, or delete any of it in Settings → Memory." },
+    { i: "ti-sparkles", t: "Skills you teach it", d: "Show it a task once and say “save this as a skill.” Next time something similar comes up, it just handles it, no re-explaining." },
     { i: "ti-bolt", t: "Works while you rest", d: "Set an automation once, a morning brief or an inbox sweep, and it keeps running on its own." },
     { i: "ti-file-text", t: "Notes & calendar", d: "Turn a conversation into a note or an event with one line. Your workspace, built as you talk." },
   ];
@@ -66,12 +68,13 @@
 </script>
 
 <div class="lp">
-  <!-- Nav — glass on navy, white pill CTA (the reference's "Add to chrome") -->
+  <!-- Nav, glass on navy, white pill CTA (the reference's "Add to chrome") -->
   <header class="nav glass">
     <div class="brand"><span class="mark"><Logo size={26} /></span> <span class="word">Emblem</span> <span class="byline">by Quaniac</span></div>
     <nav class="links">
       <a href="#features">Product</a>
       <a href="#connect">Connections</a>
+      <a href="#showcase">See it in action</a>
       <a href="#voice">Voice</a>
       <a href="#principles">Principles</a>
     </nav>
@@ -87,6 +90,7 @@
       <nav class="mobile-menu glass" on:click={closeMenu}>
         <a href="#features">Product</a>
         <a href="#connect">Connections</a>
+        <a href="#showcase">See it in action</a>
         <a href="#voice">Voice</a>
         <a href="#principles">Principles</a>
         <button class="ghost" on:click={enter}>Sign in</button>
@@ -95,7 +99,7 @@
     {/if}
   </header>
 
-  <!-- Hero — aurora blooms + shader + dot patches + the red-highlighted headline -->
+  <!-- Hero, aurora blooms + shader + dot patches + the red-highlighted headline -->
   <section class="hero">
     <LandingShader alwaysDark />
     <span class="dotfield df1" aria-hidden="true"></span>
@@ -113,7 +117,7 @@
       <div class="hero-note">No card needed · your accounts stay private to you</div>
     </div>
 
-    <!-- Trust strip — quiet grey logos, like the reference's brand row -->
+    <!-- Trust strip, quiet grey logos, like the reference's brand row -->
     <div id="connect" class="loganchor" use:reveal>
       <div class="logorow">
         {#each tools as t}
@@ -123,7 +127,7 @@
       </div>
     </div>
 
-    <!-- Twin showcase cards — glow-edged glass, red left / blue right -->
+    <!-- Twin showcase cards, glow-edged glass, red left / blue right -->
     <div class="show" use:reveal>
       <div class="showcard left glass gloss edge-red" use:tilt>
         <div class="q-pill"><i class="ti ti-sparkles"></i> What can Emblem do for me?</div>
@@ -169,6 +173,15 @@
     </div>
   </section>
 
+  <!-- Showcase: a real, end-to-end walkthrough of the whole product -->
+  <section id="showcase" class="showcase" use:reveal>
+    <h2>One workspace, <span class="red">the whole story</span>.</h2>
+    <p class="sub">You talk, it remembers who you are, it learns the tasks you show it, it reaches
+      into the tools you connect, it asks before anything consequential goes out, and it keeps
+      working on its own after you've closed the tab. Here's what that actually looks like.</p>
+    <ProductShowcase />
+  </section>
+
   <!-- Voice section -->
   <section id="voice" class="voice" use:reveal>
     <div class="v-orb"><Orb size={84} state="speaking" /></div>
@@ -186,7 +199,7 @@
     <button class="whitepill big" on:click={enter}>Open your workspace <i class="ti ti-arrow-right"></i></button>
   </section>
 
-  <!-- Footer — brand + link columns + legal bar -->
+  <!-- Footer, brand + link columns + legal bar -->
   <footer class="foot">
     <div class="foot-grid">
       <div class="foot-brand">
@@ -212,6 +225,7 @@
         <h5>Product</h5>
         <a href="#features">Chat & voice</a>
         <a href="#connect">Connections</a>
+        <a href="#features">Memory & skills</a>
         <a href="#features">Automations</a>
         <a href="#features">Notes & calendar</a>
       </div>
@@ -236,8 +250,7 @@
 </div>
 
 <style>
-  /* The whole landing lives in the reference's dark navy world in BOTH themes —
-     the aurora scope re-declares the dark tokens locally. */
+  /* The whole landing lives in the reference's dark navy world in BOTH themes, the aurora scope re-declares the dark tokens locally. */
   .lp {
     --bg: #0b1020; --bg-2: #0e142a; --s1: #121a33; --s2: #1a2340; --s3: #232d4f;
     --text: #edf0fa; --text-2: #9aa3bf; --text-3: #5f6885;
@@ -422,6 +435,12 @@
     display: grid; place-items: center; font-size: 21px; margin-bottom: 16px; }
   .ftitle { font-size: 17px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
   .fdesc { font-size: 14px; line-height: 1.6; color: var(--text-2); }
+
+  /* ── Showcase ── */
+  .showcase { padding: 80px 24px; text-align: center; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .showcase h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -0.02em; }
+  .showcase .sub { max-width: 560px; margin: 0; color: var(--text-2); font-size: 15.5px; line-height: 1.65; }
 
   /* ── Voice ── */
   .voice { padding: 80px 24px; text-align: center; border-top: 1px solid var(--border);

@@ -1,7 +1,7 @@
-// Tour engine — a small step machine that drives the TourOverlay.
+// Tour engine, a small step machine that drives the TourOverlay.
 // For each step: switch the app view, wait for the target to mount, locate its
 // rect, play the narration (cached server TTS; captions carry it if audio is
-// unavailable), advance on audio end or Next. Deterministic by design — the
+// unavailable), advance on audio end or Next. Deterministic by design, the
 // script never drifts, and repeat plays cost nothing (R2-cached MP3s).
 import { writable, get } from "svelte/store";
 import { tick } from "svelte";
@@ -13,8 +13,7 @@ export const tourState = writable(null);
 // null | { steps, idx, rect, playing, audioOk }
 
 let audio = null;
-// Generation counter: endTour bumps it, and every async continuation checks it —
-// no stale showStep/auto-advance can resurrect a finished tour.
+// Generation counter: endTour bumps it, and every async continuation checks it, // no stale showStep/auto-advance can resurrect a finished tour.
 let gen = 0;
 
 function stopAudio() {
@@ -23,7 +22,7 @@ function stopAudio() {
 
 async function locate(target) {
   await tick();
-  // The screen may mount asynchronously — poll briefly for the target.
+  // The screen may mount asynchronously, poll briefly for the target.
   for (let i = 0; i < 20; i++) {
     const el = document.querySelector(`[data-tour="${target}"]`);
     if (el) {
@@ -33,7 +32,7 @@ async function locate(target) {
     await new Promise((r) => requestAnimationFrame(r));
     await new Promise((r) => setTimeout(r, 60));
   }
-  return null; // no target — the caption card still shows, centered
+  return null; // no target, the caption card still shows, centered
 }
 
 async function narrate(text, onDone) {
@@ -54,7 +53,7 @@ async function narrate(text, onDone) {
     return true;
   } catch (e) {
     console.warn("tour narration unavailable:", e?.message || e);
-    return false; // captions-only — user advances with Next
+    return false; // captions-only, user advances with Next
   }
 }
 
@@ -64,7 +63,7 @@ async function showStep(idx, myGen) {
   if (idx >= steps.length) return endTour(true);
   const step = steps[idx];
   appView.set(step.view);
-  // Advance the card IMMEDIATELY — the spotlight fills in once the target mounts.
+  // Advance the card IMMEDIATELY, the spotlight fills in once the target mounts.
   // (Setting state only after locate() made fast Next clicks repeat steps.)
   tourState.set({ steps, idx, rect: null, playing: false, audioOk: true });
   const rect = await locate(step.target);

@@ -1,11 +1,11 @@
 <script>
-  // The Emblem mark — the AURORA orb (Judah's reference, 2026-07-05): a glossy
+  // The Emblem mark, the AURORA orb (Judah's reference, 2026-07-05): a glossy
   // near-black sphere with a crimson bloom, a thin electric-blue rim, and a
-  // white four-point sparkle riding the upper right. Vector — crisp anywhere,
+  // white four-point sparkle riding the upper right. Vector, crisp anywhere,
   // identical in both themes. `size` is the rendered diameter.
   export let size = 28;
   export let glow = false;
-  // Unique gradient ids per instance — several logos render on one page, and
+  // Unique gradient ids per instance, several logos render on one page, and
   // duplicate SVG ids break if the first instance is hidden.
   const uid = Math.random().toString(36).slice(2, 8);
 </script>

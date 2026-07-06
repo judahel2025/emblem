@@ -1,8 +1,8 @@
-// The security kernel — faithful TS port of the Python kernel's guarantees:
+// The security kernel, faithful TS port of the Python kernel's guarantees:
 //   • every tool call passes ONE choke point (executeTool)
 //   • tiers: SAFE (runs) / CAUTION (runs, logged) / DANGER (needs approval) / FORBIDDEN
 //   • approvals are SINGLE-USE and ARG-BOUND: approving runs exactly the arguments
-//     that were requested, exactly once — nothing can swap them after the fact
+//     that were requested, exactly once, nothing can swap them after the fact
 //   • append-only audit of every call
 //   • kill switch stops all agent/tool activity instantly
 //   • full-auto mode only auto-approves an explicit allowlist
@@ -33,9 +33,8 @@ export function toolManifest() {
   }));
 }
 
-// Tools full-auto mode may run without a click. Allowlist — omission = ask.
-// Deliberately narrow: connected-app writes (composio.act) and email always ask —
-// auto-sending mail or auto-pushing commits would contradict the approval contract.
+// Tools full-auto mode may run without a click. Allowlist, omission = ask.
+// Deliberately narrow: connected-app writes (composio.act) and email always ask, // auto-sending mail or auto-pushing commits would contradict the approval contract.
 const FULL_AUTO_ALLOW = new Set(["files.delete"]);
 
 // Secret-looking arg values never reach the audit log.
@@ -102,7 +101,7 @@ export async function executeTool(env: Env, userId: string, name: string,
 
   if (await killSwitchOn(env)) {
     await audit(env, userId, actor, name, spec.tier, args, "blocked", "kill switch on");
-    throw new Error("The kill switch is on — all actions are paused.");
+    throw new Error("The kill switch is on, all actions are paused.");
   }
   if (spec.tier === "forbidden") {
     await audit(env, userId, actor, name, spec.tier, args, "blocked", "forbidden tier");
@@ -123,7 +122,7 @@ export async function executeTool(env: Env, userId: string, name: string,
         await audit(env, userId, actor, name, spec.tier, args, "blocked", "args differ from approval");
         throw new Error("Arguments don't match the approved action.");
       }
-      // Burn it — single use.
+      // Burn it, single use.
       await env.DB.prepare("UPDATE kernel_approvals SET status = 'used' WHERE id = ?")
         .bind(approvalId).run();
     } else {

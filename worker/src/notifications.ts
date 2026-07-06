@@ -1,4 +1,4 @@
-// Notifications — connector activity captured into a per-user feed. Polled on a
+// Notifications, connector activity captured into a per-user feed. Polled on a
 // throttle (client triggers it while the app is open; cron also feeds it), with a
 // baseline so the FIRST check of an account doesn't flood the feed with every
 // existing unread email. New items after baseline become unread notifications

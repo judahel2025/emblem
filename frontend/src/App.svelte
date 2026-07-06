@@ -50,7 +50,7 @@
   const ls = (k) => typeof localStorage !== "undefined" && localStorage.getItem(k) === "1";
   let entered = ls("emblem_entered");
   let loggedIn = auth.isLoggedIn();
-  // Optimistic hint only — the server's profiles.onboarded is the truth, reconciled in boot().
+  // Optimistic hint only, the server's profiles.onboarded is the truth, reconciled in boot().
   let onboarded = ls("emblem_onboarded");
   let identityReady = !loggedIn;   // logged-in users wait for /api/me before routing
 
@@ -62,14 +62,14 @@
     await syncIdentity();
     boot();
   }
-  // After meeting Emblem, the voice-guided tour shows them around — once.
+  // After meeting Emblem, the voice-guided tour shows them around, once.
   function onOnboarded() {
     onboarded = true;
     startTour();
   }
   function signOut() { auth.signOut(); loggedIn = false; appView.set("chat"); }
 
-  // Server truth for onboarding — localStorage is just a hint that can go stale
+  // Server truth for onboarding, localStorage is just a hint that can go stale
   // (cleared cache, new device, or a failed save in an old build).
   async function syncIdentity() {
     const my = await loadMe(true);
@@ -77,7 +77,7 @@
       onboarded = !!my.onboarded;
       try { localStorage.setItem("emblem_onboarded", onboarded ? "1" : "0"); } catch {}
       // Existing members who never saw the tour get it once (captions-only if the
-      // browser blocks un-gestured audio — Next still walks them through).
+      // browser blocks un-gestured audio, Next still walks them through).
       if (onboarded && !my.toured && !localStorage.getItem("emblem_toured")) {
         setTimeout(startTour, 600);
       }
@@ -93,7 +93,7 @@
     engineFailed = true;
   }
 
-  // Weekly newsletter nudge — only for members who never decided, once a week,
+  // Weekly newsletter nudge, only for members who never decided, once a week,
   // and never racing the tour/briefing (short delay + onboarded check).
   let showNewsPrompt = false;
   async function maybeNewsPrompt() {
@@ -153,7 +153,7 @@
       <button class="mb-btn" on:click={() => (drawerOpen = !drawerOpen)} aria-label="Menu">
         <i class="ti ti-menu-2"></i>
       </button>
-      <button class="mb-brand" on:click={() => { newChat(); }} aria-label="Emblem — new chat">
+      <button class="mb-brand" on:click={() => { newChat(); }} aria-label="Emblem, new chat">
         <Logo size={22} /> <span>Emblem</span>
       </button>
       <button class="mb-btn" on:click={() => { newChat(); }} aria-label="New chat">
@@ -201,7 +201,7 @@
   .app { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
   .main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
 
-  /* Mobile top bar + drawer backdrop — hidden on desktop. */
+  /* Mobile top bar + drawer backdrop, hidden on desktop. */
   .mobilebar { display: none; }
   .backdrop { display: none; }
 

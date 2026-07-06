@@ -1,5 +1,5 @@
 <script>
-  // Mail workspace — two-pane inbox over the connected account.
+  // Mail workspace, two-pane inbox over the connected account.
   // Reads run free through runConnected; sends/replies pause for approval
   // (the parent WorkspaceHost renders the approval card via onApproval).
   import { onMount } from "svelte";

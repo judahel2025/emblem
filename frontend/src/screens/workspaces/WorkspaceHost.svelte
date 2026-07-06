@@ -33,7 +33,7 @@
       <span class="ws-icon"><i class="ti {entry.icon}"></i></span>
       <div class="ws-titles">
         <h1>{entry.label}</h1>
-        <p>{entry.blurb} — actions always ask first.</p>
+        <p>{entry.blurb}, actions always ask first.</p>
       </div>
     {/if}
   </header>
@@ -52,7 +52,7 @@
 
   {#if pendingApproval}
     <!-- Workspace approvals resolve in place via runConnected's own approve/
-         decline callbacks — the shared card is visual only here, so it gets
+         decline callbacks, the shared card is visual only here, so it gets
          callback props instead of the store's decideAndContinue flow. -->
     <div class="ap-veil">
       <div class="ap-holder" in:fly={{ y: 14, duration: 220 }}>

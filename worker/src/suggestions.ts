@@ -1,4 +1,4 @@
-// Personalized workflow suggestions — a second brain that reads what onboarding
+// Personalized workflow suggestions, a second brain that reads what onboarding
 // (and ongoing memory) learned about the user and proposes concrete next moves:
 // automations to set up, apps to connect, things to ask Emblem right now.
 // Cached per-user for 24h in kernel_config; regenerated on demand after
@@ -9,7 +9,7 @@ import { poolChat } from "./brainpool";
 import { listConnections } from "./composio";
 
 const SUGGESTER =
-  "You design personalized workflow suggestions for a member of Emblem — an AI " +
+  "You design personalized workflow suggestions for a member of Emblem, an AI " +
   "workspace that can: chat and answer anything; send email from THEIR connected Gmail; " +
   "manage their Google Calendar; browse/edit/push code in their GitHub; post to their " +
   "LinkedIn/X/Instagram/Facebook; use their Notion and Slack; keep Notes (living " +
@@ -22,13 +22,13 @@ const SUGGESTER =
   "\"line\": one warm sentence explaining WHY this fits them specifically (reference " +
   "their actual work/needs), " +
   "\"command\": the exact message the member would send Emblem to do it}.\n" +
-  "Rules: suggestions must be concretely tied to their profile — never generic filler. " +
+  "Rules: suggestions must be concretely tied to their profile, never generic filler. " +
   "If a suggestion needs an app they haven't connected, the command should ask Emblem " +
   "to help connect it. At least one suggestion should be an Automation. Never mention " +
   "AI models or providers.";
 
 // Models occasionally emit mojibake (UTF-8 read as Latin-1: "â€¯" etc.) and
-// exotic whitespace — normalize so cards never show garbage.
+// exotic whitespace, normalize so cards never show garbage.
 const clean = (s: string) =>
   s.replace(/â€[¯‘’“”†]?|Ã¢| |‑|�/g, " ").replace(/\s+/g, " ").trim();
 
@@ -61,7 +61,7 @@ export async function getSuggestions(env: Env, userId: string, force = false):
     { role: "system", content: SUGGESTER },
     { role: "user", content:
       `Member profile:\nName: ${profile?.display_name || "unknown"}\nRole: ${profile?.role || "unknown"}\n` +
-      `Facts:\n${facts || "- (nothing yet — suggest getting-started moves)"}\n` +
+      `Facts:\n${facts || "- (nothing yet, suggest getting-started moves)"}\n` +
       `Connected apps: ${connected.length ? connected.join(", ") : "none yet"}` },
   ], { maxTokens: 900, temperature: 0.7, json: true });
 

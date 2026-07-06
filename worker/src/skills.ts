@@ -1,10 +1,10 @@
-// Skills — named, described, reusable instructions the agent follows using its
+// Skills, named, described, reusable instructions the agent follows using its
 // native tools (Anthropic's SKILL.md concept, adapted to a no-sandbox Worker).
 // Progressive disclosure reproduced without a filesystem:
-//   Level 1 — every turn we look at {name, description} only, cheap.
-//   Level 2 — the 1-2 skills whose triggers match get their full `instructions`
+//   Level 1, every turn we look at {name, description} only, cheap.
+//   Level 2, the 1-2 skills whose triggers match get their full `instructions`
 //             injected for that turn.
-//   Level 3 — the instructions tell the model which NATIVE tools to call.
+//   Level 3, the instructions tell the model which NATIVE tools to call.
 //
 // Built-in "master skills" ship here in code (invisible to users, always in the
 // pool). User skills live in D1 and are managed in Settings → Skills.
@@ -14,14 +14,14 @@ import type { Env } from "./env";
 export interface Skill {
   id?: number;
   name: string;
-  description: string;   // WHAT + WHEN (trigger phrases) — the routing text
+  description: string;   // WHAT + WHEN (trigger phrases), the routing text
   instructions: string;  // the body the model follows
   source?: string;
   builtin?: boolean;
 }
 
 // Curated master skills. Descriptions are trigger-dense on purpose (the model
-// routes on them). Keep instructions tight — they steer existing native tools.
+// routes on them). Keep instructions tight, they steer existing native tools.
 export const BUILTIN_SKILLS: Skill[] = [
   {
     name: "document-designer",
@@ -35,7 +35,7 @@ export const BUILTIN_SKILLS: Skill[] = [
       "- Keep one consistent voice; define acronyms once.\n" +
       "- For slides (pptx): one idea per slide, a strong title, 3-5 tight bullets, speaker notes.\n" +
       "- For spreadsheets (xlsx): clear headers, one concept per sheet, tidy rows.\n" +
-      "- Write REAL substance — never a stub or lorem-ipsum. Then call create_document.",
+      "- Write REAL substance, never a stub or lorem-ipsum. Then call create_document.",
   },
   {
     name: "content-writer",
@@ -48,7 +48,7 @@ export const BUILTIN_SKILLS: Skill[] = [
       "- Match the platform: tweets short, LinkedIn a touch more substance, captions punchy.\n" +
       "- End with a clear call to action when it fits.\n" +
       "- ALWAYS show the draft in chat and get the user's approval before posting. If the post " +
-      "needs an image, ask them for a real one — never invent an image URL.",
+      "needs an image, ask them for a real one, never invent an image URL.",
   },
   {
     name: "researcher",

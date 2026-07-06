@@ -1,4 +1,4 @@
-// Proactive grounding — ONE accurate, real-signal line, surfaced when the user
+// Proactive grounding, ONE accurate, real-signal line, surfaced when the user
 // opens the app (not a timer, never a nag). Reads what's actually connected:
 // today's next calendar event + unread email + a fresh GitHub PR, and composes a
 // grounded sentence. Everything is best-effort with short timeouts so app-open
@@ -74,6 +74,6 @@ export async function proactiveBriefing(env: Env, userId: string): Promise<{ lin
 
   if (!bits.length) return { line: "" };
   const joined = bits.length === 1 ? bits[0] : bits.slice(0, -1).join(", ") + " and " + bits.at(-1);
-  const line = `Quick heads-up — ${joined}. Want me to help with any of it?`;
+  const line = `Quick heads-up, ${joined}. Want me to help with any of it?`;
   return { line };
 }

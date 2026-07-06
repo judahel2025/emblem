@@ -1,4 +1,4 @@
-// Cursor-tracking tilt — the Stitch design system's signature card motion:
+// Cursor-tracking tilt, the Stitch design system's signature card motion:
 // a subtle 3D tilt + light refraction that follows the cursor with slight lag.
 // Usage: <div use:tilt> or <div use:tilt={{ max: 6 }}>. No-ops under
 // prefers-reduced-motion and on touch-only devices.

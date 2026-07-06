@@ -1,4 +1,4 @@
-// Emblem — the whole backend as one Cloudflare Worker.
+// Emblem, the whole backend as one Cloudflare Worker.
 // Serves the Svelte app (static assets, same origin), the /api REST surface,
 // the /auth endpoints, the /api/voice/live WebSocket relay, and the cron heartbeat.
 
@@ -16,10 +16,10 @@ export { VoiceRelay } from "./voice_do";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Tiny standalone page for the unsubscribe flow — no app assets needed.
+// Tiny standalone page for the unsubscribe flow, no app assets needed.
 const unsubPage = (title: string, body: string) => `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} — Emblem</title></head>
+<title>${title}, Emblem</title></head>
 <body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#ebe9dd;
   font-family:sans-serif;color:#0a0a0a">
 <div style="max-width:420px;padding:36px;text-align:center">
@@ -30,7 +30,7 @@ const unsubPage = (title: string, body: string) => `<!doctype html>
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Allow the frontend origin — Vercel-hosted app (emblem.thequaniac.com + preview
+// Allow the frontend origin, Vercel-hosted app (emblem.thequaniac.com + preview
 // deploys) and localhost dev. Tokens ride in the Authorization header, not cookies,
 // so no credentials mode is needed. Same-origin (Vercel-proxied) requests skip this.
 app.use("/api/*", cors({
@@ -46,11 +46,11 @@ app.use("/auth/*", cors({
   allowHeaders: ["Content-Type", "Authorization"],
 }));
 
-// Never reveal what powers Emblem — health is name + readiness only.
+// Never reveal what powers Emblem, health is name + readiness only.
 app.get("/api/health", (c) => c.json({ name: "Emblem", status: "online", ready: true }));
 
 // Connector logos, proxied same-origin so the browser never sees the upstream
-// provider (provider secrecy — no third-party host in the network tab). Public
+// provider (provider secrecy, no third-party host in the network tab). Public
 // on purpose: <img> can't send an auth header, and a brand logo isn't sensitive.
 // The SVG is returned for <img> only, where any embedded script can't execute.
 app.get("/api/logo/:slug", async (c) => {
@@ -72,13 +72,13 @@ app.get("/api/logo/:slug", async (c) => {
   }
 });
 
-// PUBLIC newsletter endpoints — registered before apiRoutes so requireUser never
+// PUBLIC newsletter endpoints, registered before apiRoutes so requireUser never
 // sees them. Must live under /api/* (run_worker_first + the Vercel rewrites only
 // carry /api and /auth to the Worker).
 app.post("/api/newsletter/subscribe", async (c) => {
   const b = await c.req.json().catch(() => ({} as { email?: string }));
   const email = String(b.email || "").trim().toLowerCase();
-  // Always answer ok — no email enumeration; the UNIQUE index absorbs duplicates.
+  // Always answer ok, no email enumeration; the UNIQUE index absorbs duplicates.
   if (!EMAIL_RE.test(email) || email.length > 254) return c.json({ ok: true });
   await c.env.DB.prepare(
     `INSERT INTO subscribers (email, opted, source) VALUES (?1, 1, 'landing')

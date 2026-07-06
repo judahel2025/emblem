@@ -2,7 +2,7 @@
   // The Stitch hero orb (stitch_emblem_core_ui/three.js): an electric-blue
   // sphere with a wireframe shell that rotates, floats, and follows the cursor.
   // three.js loads lazily AFTER first paint (its chunk never blocks the page);
-  // until then — and wherever WebGL/motion is unavailable — the CSS orb shows.
+  // until then, and wherever WebGL/motion is unavailable, the CSS orb shows.
   import { onMount, onDestroy } from "svelte";
   import Orb from "./Orb.svelte";
 
@@ -33,7 +33,7 @@
     host.appendChild(renderer.domElement);
 
     // AURORA: a glossy dark sphere with a crimson undertone and a faint
-    // electric-blue wire shell — the reference's orb, in three.js.
+    // electric-blue wire shell, the reference's orb, in three.js.
     const orb = new THREE.Mesh(
       new THREE.SphereGeometry(1.5, 64, 64),
       new THREE.MeshPhongMaterial({

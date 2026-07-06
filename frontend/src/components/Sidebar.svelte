@@ -197,7 +197,7 @@
   .sidebar.collapsed { width: 62px; }
 
   .top { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; flex-shrink: 0; }
-  /* Railed: only the toggle remains, centered — never clipped. */
+  /* Railed: only the toggle remains, centered, never clipped. */
   .sidebar.collapsed .top { justify-content: center; }
   .brand { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 500; color: var(--text); cursor: pointer;
     font-family: var(--font-display); }
@@ -221,7 +221,7 @@
   .new-chat:hover { filter: brightness(1.07); box-shadow: 0 4px 16px var(--accent-glow); }
   .new-chat i { font-size: 17px; }
 
-  /* THE scroll region — nav + chats together; the only thing that scrolls. */
+  /* THE scroll region, nav + chats together; the only thing that scrolls. */
   .scroll {
     flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 2px 0 4px;
     scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
@@ -295,7 +295,7 @@
     color: var(--text); outline: none;
   }
 
-  /* Pinned profile — never scrolls, always at the bottom. */
+  /* Pinned profile, never scrolls, always at the bottom. */
   .foot { flex-shrink: 0; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--divider); position: relative; }
   .profile-btn {
     display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
@@ -348,7 +348,7 @@
       z-index: 100; box-shadow: var(--shadow-lg);
     }
     .sidebar.open { transform: translateX(0); }
-    /* Always full content in the drawer — never a rail. */
+    /* Always full content in the drawer, never a rail. */
     .sidebar.collapsed { width: 82vw; max-width: 300px; }
     /* The desktop collapse toggle is meaningless inside the drawer. */
     .top .toggle { display: none; }

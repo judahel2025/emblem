@@ -5,7 +5,7 @@
 //
 // Spec shape (what create_document produces):
 //   { title, format: 'docx'|'pdf'|'pptx'|'xlsx',
-//     content?: markdown            // docx / pdf — rich prose
+//     content?: markdown            // docx / pdf, rich prose
 //     slides?: [{title, bullets[], notes?}]         // pptx
 //     sheets?: [{name, headers[], rows[][]}] }       // xlsx
 
@@ -87,7 +87,7 @@ async function makeDocx(spec) {
   return { blob, filename: safeName(spec.title, "docx"), mime: MIME.docx };
 }
 
-// pdf-lib's standard fonts are WinAnsi (CP1252) only — models love emitting
+// pdf-lib's standard fonts are WinAnsi (CP1252) only, models love emitting
 // Unicode punctuation (non-breaking hyphen U+2011, minus, thin spaces, arrows,
 // emoji) that WinAnsi can't encode, which throws. Map the common offenders to
 // safe equivalents, then strip anything still outside CP1252 so it never crashes.

@@ -1,5 +1,5 @@
 <script>
-  // Meeting Emblem — a real AI conversation with NO dead ends, or a classic
+  // Meeting Emblem, a real AI conversation with NO dead ends, or a classic
   // form: the member picks, and can SWITCH either way mid-flight without
   // losing progress (AI → form pre-fills via the extractor; form → AI hands
   // the answers to the conversation). A progress bar always shows how far
@@ -30,7 +30,7 @@
   let done = false;
   let switching = false;        // AI → form extraction in flight
 
-  // ── The classic form — extractor-shaped fields, one step at a time ──
+  // ── The classic form, extractor-shaped fields, one step at a time ──
   const FIELDS = [
     { key: "display_name", label: "What should Emblem call you?", ph: "Your name", required: true },
     { key: "role", label: "What do you do?", ph: "e.g. I run a small design studio" },
@@ -38,14 +38,14 @@
     { key: "focus", label: "What would you most like to hand over to an assistant?", ph: "The thing you'd happily never do again", area: true },
     { key: "tools", label: "Which apps and tools do you live in?", ph: "Gmail, Notion, GitHub… (comma-separated)" },
     { key: "tone", label: "How should Emblem talk to you?", ph: "e.g. brief and direct · warm and chatty" },
-    { key: "quiet_hours", label: "When should Emblem NOT disturb you?", ph: "e.g. 22:00–07:00, or weekends" },
+    { key: "quiet_hours", label: "When should Emblem NOT disturb you?", ph: "e.g. 22:00 to 07:00, or weekends" },
     { key: "boundaries", label: "Anything Emblem should never do for you?", ph: "e.g. never send email without asking" },
   ];
   let form = Object.fromEntries(FIELDS.map((f) => [f.key, ""]));
   let formStep = 0;
   let formBusy = false;
 
-  // ── Progress — one bar, both modes. AI counts questions asked; the form
+  // ── Progress, one bar, both modes. AI counts questions asked; the form
   //    counts steps. The wrap-up checkpoint lands around question 10. ──
   $: asked = lines.filter((l) => l.who === "assistant").length;
   $: progress = done ? 1
@@ -53,7 +53,7 @@
     : mode === "convo" ? Math.min(asked / 12, 0.95)
     : 0;
 
-  // ── Persistence — a refresh never loses the member's progress. ──
+  // ── Persistence, a refresh never loses the member's progress. ──
   const DRAFT_KEY = "emblem_onboard_state";
   function persist() {
     if (done) return;
@@ -89,15 +89,14 @@
     queueMicrotask(() => { if (linesEl) linesEl.scrollTop = linesEl.scrollHeight; });
   }
 
-  // Keep the reply box focused so the member can just keep typing —
-  // losing the caret after every answer was a real Judah complaint.
+  // Keep the reply box focused so the member can just keep typing, // losing the caret after every answer was a real Judah complaint.
   async function refocus() { await tick(); try { inputEl?.focus(); } catch {} }
   function focusNow(node) { try { node.focus(); } catch {} }
 
   // ── Engine 1: hands-free voice. DEFAULT = Gemini Live (realtime, immediate).
   //    localStorage emblem_voice_engine = "turns" opts into the turn-based
   //    STT → interviewer brain → TTS pipeline instead. ──
-  let voiceDone = false;   // interview complete — finish once the reply is spoken
+  let voiceDone = false;   // interview complete, finish once the reply is spoken
   async function startLive(mic) {
     withMic = mic;
     mode = "convo";
@@ -109,7 +108,7 @@
       onState: (s) => {
         if (engine !== "live" || done) return;
         if (s === "onboarded") { state = s; finish(); return; }
-        // The wrap-up reply has been spoken — the conversation is over.
+        // The wrap-up reply has been spoken, the conversation is over.
         if (voiceDone && s === "listening") { state = "onboarded"; finish(); return; }
         // Any terminal live state mid-conversation → carry on via the chat brain.
         if (s === "unavailable" || s === "error" || s === "ended") { fallThrough(); return; }
@@ -134,7 +133,7 @@
         },
         ...events,
       });
-      // The turn client has no server greeting — open with the interviewer's
+      // The turn client has no server greeting, open with the interviewer's
       // first question from the text brain, spoken by the client's own TTS.
       client.start({ mic }).then(async (ok) => {
         needsAudioTap = client.audioSuspended();
@@ -147,7 +146,7 @@
               await client._speak(r.reply);
               if (engine === "live" && !done) client._startListening();
             }
-          } catch { /* they can just talk — the first turn will answer */ }
+          } catch { /* they can just talk, the first turn will answer */ }
         }
       });
       return;
@@ -191,7 +190,7 @@
     refocus();
   }
 
-  // Spoken replies for the chat engine — best-effort, captions always carry it.
+  // Spoken replies for the chat engine, best-effort, captions always carry it.
   let audioEl = null;
   async function speak(text) {
     try {
@@ -202,7 +201,7 @@
       state = "speaking";
       audioEl.onended = () => { if (!done) state = "listening"; };
       await audioEl.play();
-    } catch { /* audio blocked or TTS down — captions have it */ }
+    } catch { /* audio blocked or TTS down, captions have it */ }
   }
 
   async function enableAudio() {
@@ -260,7 +259,7 @@
     const filled = FIELDS.filter((f) => form[f.key]?.trim());
     if (filled.length) {
       const summary = filled.map((f) => `${f.label} ${form[f.key].trim()}`).join(" · ");
-      const note = `(I already filled part of a form — here's what I said, don't re-ask these: ${summary})`;
+      const note = `(I already filled part of a form, here's what I said, don't re-ask these: ${summary})`;
       const last = lines[lines.length - 1];
       if (!last || last.who !== "user" || !last.text.startsWith("(I already filled")) {
         lines = [...lines, { who: "user", text: note }];
@@ -294,7 +293,7 @@
       finish();
     } catch (e) {
       console.error("onboarding form failed:", e);
-      errorMsg = "Couldn't save — try again.";
+      errorMsg = "Couldn't save, try again.";
     }
     formBusy = false;
   }
@@ -327,7 +326,7 @@
 
   $: statusLine = {
     connecting: "waking up…",
-    listening: engine === "live" && withMic ? "listening — just talk (or type below)" : "type below — I'll answer out loud",
+    listening: engine === "live" && withMic ? "listening, just talk (or type below)" : "type below, I'll answer out loud",
     thinking: "one moment…",
     speaking: "",
     onboarded: "all set.",
@@ -352,7 +351,7 @@
   {#if mode === "intro"}
     <div class="intro" in:fly={{ y: 12, duration: 300 }}>
       <h1>Meet Emblem.</h1>
-      <p>A real conversation — Emblem asks about you, listens, and remembers what matters.</p>
+      <p>A real conversation, Emblem asks about you, listens, and remembers what matters.</p>
       <button class="meet" on:click={() => startLive(true)}>
         <i class="ti ti-microphone"></i> Meet Emblem
       </button>
@@ -391,18 +390,18 @@
       {#if errorMsg}<div class="status bad">{errorMsg}</div>{/if}
       {#if !done}
         <button class="switchlink" on:click={switchToAI}>
-          <i class="ti ti-sparkles"></i> Switch to the AI conversation — your answers carry over
+          <i class="ti ti-sparkles"></i> Switch to the AI conversation, your answers carry over
         </button>
       {/if}
       {#if done}
-        <div class="alldone" in:fade={{ duration: 200 }}><i class="ti ti-circle-check"></i> All set — welcome in.</div>
+        <div class="alldone" in:fade={{ duration: 200 }}><i class="ti ti-circle-check"></i> All set, welcome in.</div>
       {/if}
     </div>
 
   {:else}
     <div class="convo" bind:this={linesEl}>
       {#if !lines.length && state === "connecting"}
-        <p class="pre">A moment — Emblem's coming to meet you.</p>
+        <p class="pre">A moment, Emblem's coming to meet you.</p>
       {/if}
       {#each lines as l}
         <p class="line {l.who}">{l.text}</p>
@@ -437,7 +436,7 @@
       </div>
       <button class="switchlink" on:click={switchToForm} disabled={switching}>
         {#if switching}<span class="spin-dot dark"></span> carrying your answers over…
-        {:else}<i class="ti ti-forms"></i> Prefer a quick form? Switch — nothing is lost{/if}
+        {:else}<i class="ti ti-forms"></i> Prefer a quick form? Switch, nothing is lost{/if}
       </button>
     {/if}
   {/if}
@@ -457,7 +456,7 @@
     position: relative;
   }
 
-  /* ── The progress bar — always visible once the journey starts ── */
+  /* ── The progress bar, always visible once the journey starts ── */
   .progress {
     position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: var(--accent-bg);
@@ -519,7 +518,7 @@
   .send:hover:not(:disabled) { filter: brightness(1.04); }
   .send:disabled { opacity: 0.5; cursor: default; }
 
-  /* ── The classic form — one calm question at a time ── */
+  /* ── The classic form, one calm question at a time ── */
   .formwrap {
     width: 100%; max-width: 480px;
     display: flex; flex-direction: column; gap: 16px;
