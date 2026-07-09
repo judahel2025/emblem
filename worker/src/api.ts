@@ -886,10 +886,18 @@ apiRoutes.post("/agent", async (c) => {
 
 apiRoutes.get("/connections", async (c) => {
   const uid = c.get("userId");
-  const [states, all] = await Promise.all([
-    connectionStates(c.env, uid), allToolkits(c.env)]);
+  const [states, all, resourcesRows] = await Promise.all([
+    connectionStates(c.env, uid),
+    allToolkits(c.env),
+    c.env.DB.prepare("SELECT key, value FROM kernel_config WHERE key LIKE ?").bind(`${uid}_resource_%`).all<{ key: string; value: string }>()
+  ]);
+  const resources: Record<string, any> = {};
+  for (const r of resourcesRows.results || []) {
+    const appName = r.key.replace(`${uid}_resource_`, "");
+    try { resources[appName] = JSON.parse(r.value); } catch { resources[appName] = r.value; }
+  }
   return c.json({ configured: composioConfigured(c.env),
-    featured: FEATURED_TOOLKITS, connected: states.active, broken: states.broken, all });
+    featured: FEATURED_TOOLKITS, connected: states.active, broken: states.broken, all, resources });
 });
 
 apiRoutes.get("/connections/link", async (c) => {

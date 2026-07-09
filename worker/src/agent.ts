@@ -692,7 +692,7 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
         } else if (composioNames.has(call.name)) {
           const gate = isReadOnly(call.name) ? "composio.read" : "composio.act";
           const r = await executeTool(env, userId, gate, { slug: call.name, params: call.args });
-          result = JSON.stringify(r ?? "").slice(0, 9000);
+          result = JSON.stringify(r ?? "").slice(0, 2000);
           action = { type: "refresh" };
           ranTools.push({ name: call.name, args: call.args ?? {}, ok: true });
         } else {

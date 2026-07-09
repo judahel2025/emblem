@@ -4,7 +4,7 @@
   // pause on an inline approval card. "Expand" opens the full workspace.
   import { fly } from "svelte/transition";
   import { runConnected, hasWorkspace } from "../lib/workspaces.js";
-  import { appView, notify } from "../lib/store.js";
+  import { appView, notify, savedResources } from "../lib/store.js";
   import { brandLogo, logoUrl, MONO_LOGOS } from "../lib/logos.js";
   import ApprovalCard from "./ApprovalCard.svelte";
 
@@ -26,6 +26,17 @@
 
   // Compose (calendar quick-add / gmail compose)
   let composeOpen = false, cTitle = "", cWhen = "", cTo = "", cSubject = "", cBody = "";
+
+  $: {
+    const res = $savedResources[app] || $savedResources["twitter"] || $savedResources["x"];
+    if (res && res.id && (app === "twitter" || app === "x")) {
+      if (twitterUserId !== res.id) {
+        twitterUserId = res.id;
+        twitterHandle = res.name || "";
+        load();
+      }
+    }
+  }
 
   // Inline approval surface
   let pendingApproval = null;

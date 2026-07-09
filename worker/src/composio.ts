@@ -112,8 +112,13 @@ export async function disconnect(env: Env, userId: string, toolkit: string): Pro
 export async function allToolkits(env: Env): Promise<string[]> {
   if (!toolkitsCache.length) {
     try {
-      const res = await cf(env, "/toolkits?limit=500") as { items?: Array<{ slug?: string }> };
-      toolkitsCache = (res.items || []).map((t) => String(t.slug || "").toLowerCase()).filter(Boolean);
+      const p1 = await cf(env, "/toolkits?limit=1000") as { items?: Array<{ slug?: string }>, next_cursor?: string };
+      const items = [...(p1.items || [])];
+      if (p1.next_cursor) {
+        const p2 = await cf(env, `/toolkits?limit=1000&cursor=${p1.next_cursor}`) as { items?: Array<{ slug?: string }> };
+        items.push(...(p2.items || []));
+      }
+      toolkitsCache = items.map((t) => String(t.slug || "").toLowerCase()).filter(Boolean);
     } catch { /* leave empty */ }
   }
   const featured = FEATURED_TOOLKITS.filter((t) => !toolkitsCache.length || toolkitsCache.includes(t));

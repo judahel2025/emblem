@@ -81,10 +81,12 @@ export function startNotifPolling() {
 
 // The user's connected apps (toolkit slugs), drives sidebar workspaces + tiles.
 export const connectedApps = writable([]);
+export const savedResources = writable({});
 export async function loadConnections() {
   try {
     const r = await api.connections();
     connectedApps.set(r.connected || []);
+    savedResources.set(r.resources || {});
   } catch (e) { console.error("loadConnections failed:", e); }
 }
 
