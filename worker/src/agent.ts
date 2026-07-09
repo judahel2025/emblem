@@ -53,6 +53,12 @@ When they want to SEE or WORK WITH a connected app (their inbox, calendar, etc.)
 open_panel(app) to bring a live, interactive mini-workspace right into the chat, don't
 dump raw data or send them away to another page.
 
+RESOURCE DISCOVERY & PREVIEWS:
+If a target resource ID (like Facebook page_id, YouTube channel_id, Notion database_id, Google Drive folder_id, Jira project_id, etc.) is listed under 'Saved resource configurations' in the Live Workspace Context, ALWAYS use it automatically.
+If it is missing, do NOT ask the user for it upfront. First scan your toolset for list/search/browse tools matching that app (e.g. 'facebook_list_managed_pages', 'youtube_list_channels', etc.).
+Call that discovery tool first, and present the results to the user in a clean scannable preview list or table, showing friendly names alongside their IDs, and ask them to choose.
+Once they choose, call 'save_resource_id' tool to save it for future turns, then immediately execute the original task.
+
 CONVERSATION FRESHNESS (important): answer the user's NEWEST message. Each new message
 is its own request, if it changes the subject, follow it and drop whatever you were
 doing before. NEVER re-run or re-queue a consequential action (send, post, delete) from
@@ -136,6 +142,12 @@ the connection and continue the task without making them repeat anything.
 When they want to SEE or WORK WITH a connected app (their inbox, calendar, etc.), call
 open_panel(app) to bring a live, interactive mini-workspace right into the chat, don't
 dump raw data or send them away to another page.
+
+RESOURCE DISCOVERY & PREVIEWS:
+If a target resource ID (like Facebook page_id, YouTube channel_id, Notion database_id, Google Drive folder_id, Jira project_id, etc.) is listed under 'Saved resource configurations' in the Live Workspace Context, ALWAYS use it automatically.
+If it is missing, do NOT ask the user for it upfront. First scan your toolset for list/search/browse tools matching that app (e.g. 'facebook_list_managed_pages', 'youtube_list_channels', etc.).
+Call that discovery tool first, and present the results to the user in a clean scannable preview list or table, showing friendly names alongside their IDs, and ask them to choose.
+Once they choose, call 'save_resource_id' tool to save it for future turns, then immediately execute the original task.
 
 RANGE: you are schooled across every field and every kind of business the user might be
 in, strategy, marketing, sales, finance and bookkeeping, operations, hiring and people,
@@ -316,6 +328,18 @@ const NATIVE_TOOLS: OpenAITool[] = [
       "googlecalendar, linkedin, twitter, notion, slack, …. Returns a URL: include it in your reply " +
       "as a markdown link. The system watches the connection and notifies you when it lands.",
     parameters: { type: "object", properties: { toolkit: { type: "string" } }, required: ["toolkit"] } } },
+  { type: "function", function: { name: "save_resource_id",
+    description: "Save a selected platform resource ID (e.g. Facebook page_id, YouTube channel_id, Notion database_id) for this user so it is remembered in future turns.",
+    parameters: { type: "object", properties: {
+      app: { type: "string", description: "toolkit slug: facebook, youtube, notion, googlecalendar…" },
+      resource_id: { type: "string", description: "the unique identifier of the selected page/channel/database/etc." },
+      resource_name: { type: "string", description: "friendly display name of the selected resource" },
+    }, required: ["app", "resource_id", "resource_name"] } } },
+  { type: "function", function: { name: "clear_resource_id",
+    description: "Clear a previously saved platform resource ID.",
+    parameters: { type: "object", properties: {
+      app: { type: "string", description: "toolkit slug: facebook, youtube, notion…" },
+    }, required: ["app"] } } },
 ];
 
 const NATIVE_NAMES = new Set(NATIVE_TOOLS.map((t) => t.function.name));
@@ -462,6 +486,23 @@ export async function execNative(env: Env, userId: string, name: string,
         return [`Couldn't create a connect link for ${toolkit}: ${e instanceof Error ? e.message : String(e)}`, null];
       }
     }
+    case "save_resource_id": {
+      const appKey = String(a.app || "").toLowerCase().trim();
+      const resId = String(a.resource_id || "").trim();
+      const resName = String(a.resource_name || "").trim();
+      if (!appKey || !resId) return ["Missing app or resource_id.", null];
+      await env.DB.prepare(
+        "INSERT INTO kernel_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+        .bind(`${userId}_resource_${appKey}`, JSON.stringify({ id: resId, name: resName })).run();
+      return [`Saved resource selection for ${appKey}: ${resName} (${resId})`, { type: "refresh" }];
+    }
+    case "clear_resource_id": {
+      const appKey = String(a.app || "").toLowerCase().trim();
+      if (!appKey) return ["Missing app.", null];
+      await env.DB.prepare("DELETE FROM kernel_config WHERE key = ?")
+        .bind(`${userId}_resource_${appKey}`).run();
+      return [`Cleared resource selection for ${appKey}`, { type: "refresh" }];
+    }
   }
   return [`Unknown tool ${name}.`, null];
 }
@@ -505,11 +546,13 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
   // turn so Emblem never suggests connecting an app that already is, and never
   // greets a known user like a stranger.
   try {
-    const [prof, conn] = await Promise.all([
+    const [prof, conn, resources] = await Promise.all([
       env.DB.prepare("SELECT display_name, role, tone, comm_style, about_me FROM profiles WHERE user_id = ?")
         .bind(userId).first<{ display_name: string; role: string; tone: string;
                               comm_style: string; about_me: string }>(),
       configured(env) ? connectionStates(env, userId) : Promise.resolve({ active: [], broken: [] }),
+      env.DB.prepare("SELECT key, value FROM kernel_config WHERE key LIKE ?")
+        .bind(`${userId}_resource_%`).all<{ key: string; value: string }>()
     ]);
     const lines: string[] = [];
     if (prof?.display_name || prof?.role) {
@@ -531,6 +574,18 @@ export async function runAgent(env: Env, userId: string, isOwner: boolean, comma
     if (conn.broken.length) {
       lines.push(`Expired connections needing a reconnect before use: ${conn.broken.join(", ")}. ` +
         "If the task needs one, call connect_app for a fresh link.");
+    }
+    if (resources.results?.length) {
+      lines.push("Saved resource configurations (ALWAYS use these automatically, never ask the user for them unless they ask to change):");
+      for (const r of resources.results) {
+        const appName = r.key.replace(`${userId}_resource_`, "");
+        try {
+          const val = JSON.parse(r.value);
+          lines.push(`  - ${appName}: ${val.name} (ID: ${val.id})`);
+        } catch {
+          lines.push(`  - ${appName}: (ID: ${r.value})`);
+        }
+      }
     }
     messages.push({ role: "system",
       content: "Live workspace context (fetched this turn, trust it over older memory):\n" +
