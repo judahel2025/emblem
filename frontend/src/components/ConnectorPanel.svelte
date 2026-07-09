@@ -22,6 +22,7 @@
   let items = [];
   let openItem = null, openLoading = false;
   let replyText = "", acting = false;
+  let twitterHandle = "", twitterUserId = "";
 
   // Compose (calendar quick-add / gmail compose)
   let composeOpen = false, cTitle = "", cWhen = "", cTo = "", cSubject = "", cBody = "";
@@ -55,11 +56,59 @@
         items = arr(await runConnected("GOOGLECALENDAR_EVENTS_LIST", {
           timeMin: new Date().toISOString(), timeMax: end.toISOString(),
           maxResults: 10, singleEvents: true, orderBy: "startTime" }));
+      } else if (app === "instagram") {
+        items = arr(await runConnected("INSTAGRAM_GET_USER_MEDIA", {}));
+      } else if (app === "twitter" && twitterUserId) {
+        items = arr(await runConnected("TWITTER_GET_USER_TWEETS_BY_ID", { id: twitterUserId, max_results: 8 }));
       }
     } catch (e) { error = e?.message || "Couldn't load."; }
     loading = false;
   }
   load();
+
+  async function loadTwitter() {
+    if (!twitterHandle.trim()) return;
+    loading = true; error = ""; openItem = null; composeOpen = false;
+    try {
+      const username = twitterHandle.replace("@", "").trim();
+      const userRes = await runConnected("TWITTER_GET_USER_ID_BY_USERNAME", { username });
+      const uid = userRes?.id || userRes?.data?.id;
+      if (uid) {
+        twitterUserId = uid;
+        const tweetsRes = await runConnected("TWITTER_GET_USER_TWEETS_BY_ID", { id: uid, max_results: 8 });
+        items = arr(tweetsRes);
+      } else {
+        error = "User not found or API rejected.";
+      }
+    } catch (e) {
+      error = e?.message || "Couldn't load tweets.";
+    }
+    loading = false;
+  }
+
+  async function postTweet() {
+    if (!cBody.trim() || acting) return;
+    acting = true;
+    try {
+      await runConnected("TWITTER_CREATION_OF_A_POST",
+        { text: cBody.trim() },
+        { act: true, onApproval });
+      notify("Tweet posted", "safe"); cBody = ""; composeOpen = false; if (twitterUserId) loadTwitter();
+    } catch (e) { if (e?.message !== "Declined.") notify(e?.message || "Couldn't post tweet", "danger"); }
+    acting = false;
+  }
+
+  async function postInstagram() {
+    if (!cTitle.trim() || acting) return;
+    acting = true;
+    try {
+      await runConnected("INSTAGRAM_CREATE_POST",
+        { image_url: cTitle.trim(), caption: cBody.trim() },
+        { act: true, onApproval });
+      notify("Instagram post created", "safe"); cTitle = ""; cBody = ""; composeOpen = false; load();
+    } catch (e) { if (e?.message !== "Declined.") notify(e?.message || "Couldn't create Instagram post", "danger"); }
+    acting = false;
+  }
 
   async function openMail(m) {
     openLoading = true; replyText = "";
@@ -172,6 +221,59 @@
           <button class="btn primary sm addbtn" on:click={() => composeOpen = true}><i class="ti ti-plus"></i> Quick add</button>
         {/if}
 
+      {:else if app === 'twitter'}
+        {#if composeOpen}
+          <div class="compose" in:fly={{ y: 6, duration: 150 }}>
+            <textarea class="reply" bind:value={cBody} rows="3" placeholder="What's happening?"></textarea>
+            <div class="c-btns">
+              <button class="btn primary sm" on:click={postTweet} disabled={!cBody.trim() || acting}>{acting ? "Posting…" : "Post"}</button>
+              <button class="btn ghost sm" on:click={() => composeOpen = false}>Cancel</button>
+            </div>
+          </div>
+        {:else}
+          <div class="handle-input-row">
+            <input bind:value={twitterHandle} placeholder="Enter username (e.g. Twitter)" on:keydown={(e) => e.key === 'Enter' && loadTwitter()} />
+            <button class="btn primary sm" on:click={loadTwitter} disabled={loading}>Load</button>
+          </div>
+          {#if items.length}
+            <ul class="rows" style="margin-top: 8px;">
+              {#each items as t (t.id)}
+                <li><div class="row static">
+                  <span class="r-from">@{twitterHandle}</span>
+                  <span class="r-subj">{t.text || ''}</span>
+                </div></li>
+              {/each}
+            </ul>
+          {:else}<div class="p-state">No tweets loaded.</div>{/if}
+          <button class="btn primary sm addbtn" on:click={() => { composeOpen = true; cBody = ""; }}><i class="ti ti-plus"></i> Post tweet</button>
+        {/if}
+
+      {:else if app === 'instagram'}
+        {#if composeOpen}
+          <div class="compose" in:fly={{ y: 6, duration: 150 }}>
+            <input bind:value={cTitle} placeholder="Image URL" />
+            <textarea class="reply" bind:value={cBody} rows="3" placeholder="Caption…"></textarea>
+            <div class="c-btns">
+              <button class="btn primary sm" on:click={postInstagram} disabled={!cTitle.trim() || acting}>{acting ? "Posting…" : "Post"}</button>
+              <button class="btn ghost sm" on:click={() => composeOpen = false}>Cancel</button>
+            </div>
+          </div>
+        {:else}
+          {#if items.length}
+            <ul class="rows">
+              {#each items as item (item.id)}
+                <li><div class="row static">
+                  {#if item.media_url || item.thumbnail_url}
+                    <img src={item.media_url || item.thumbnail_url} alt="Instagram Media" class="ig-thumb" style="width: 100%; max-height: 150px; object-fit: cover; border-radius: var(--r-sm); margin-bottom: 4px;" />
+                  {/if}
+                  <span class="r-subj">{item.caption || '(no caption)'}</span>
+                </div></li>
+              {/each}
+            </ul>
+          {:else}<div class="p-state">No posts.</div>{/if}
+          <button class="btn primary sm addbtn" on:click={() => { composeOpen = true; cTitle = ""; cBody = ""; }}><i class="ti ti-plus"></i> Post photo</button>
+        {/if}
+
       {:else}
         <div class="p-state">
           Open the full {label} workspace to work with it.
@@ -224,4 +326,7 @@
   .link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; color: var(--accent-ink); cursor: pointer; }
   .p-approval { padding: 10px; border-top: 1px solid var(--border); }
   .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--text-2); animation: spin 0.7s linear infinite; display: inline-block; }
+  .handle-input-row { display: flex; gap: 8px; padding: 6px 8px; }
+  .handle-input-row input { flex: 1; background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 10px; font-size: 13px; color: var(--text); outline: none; }
+  .handle-input-row input:focus { border-color: var(--accent); }
 </style>

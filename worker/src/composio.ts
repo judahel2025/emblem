@@ -134,8 +134,8 @@ const PINNED_SLUGS: Record<string, string[]> = {
   googlecalendar: ["GOOGLECALENDAR_CREATE_EVENT", "GOOGLECALENDAR_EVENTS_LIST"],
   github: ["GITHUB_CREATE_OR_UPDATE_FILE_CONTENTS", "GITHUB_GET_A_REPOSITORY"],
   linkedin: ["LINKEDIN_CREATE_LINKED_IN_POST", "LINKEDIN_GET_MY_INFO"],
-  twitter: ["TWITTER_CREATION_OF_A_POST"],
-  instagram: ["INSTAGRAM_CREATE_POST", "INSTAGRAM_GET_USER_MEDIA"],
+  twitter: ["TWITTER_CREATION_OF_A_POST", "TWITTER_POST_REPLY", "TWITTER_RETWEET_A_TWEET", "TWITTER_GET_USER_ID_BY_USERNAME", "TWITTER_GET_USER_TWEETS_BY_ID"],
+  instagram: ["INSTAGRAM_CREATE_POST", "INSTAGRAM_GET_USER_MEDIA", "INSTAGRAM_REPLY_TO_COMMENT", "INSTAGRAM_GET_USER_INFO", "INSTAGRAM_SEND_TEXT_MESSAGE"],
   facebook: ["FACEBOOK_CREATE_POST", "FACEBOOK_GET_PAGE_POSTS"],
   notion: ["NOTION_ADD_PAGE_CONTENT", "NOTION_SEARCH_NOTION_PAGE"],
   slack: ["SLACK_SEND_MESSAGE", "SLACK_CHAT_POST_MESSAGE"],
@@ -358,8 +358,16 @@ export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): str
     }
     case "TWITTER_CREATION_OF_A_POST":
       return `Post on your X (Twitter)${str("text") ? `, “${str("text").slice(0, 70)}…”` : ""}`;
+    case "TWITTER_POST_REPLY":
+      return `Reply to a tweet on X (Twitter)${str("text") ? `, “${str("text").slice(0, 70)}…”` : ""}`;
+    case "TWITTER_RETWEET_A_TWEET":
+      return `Retweet post ${str("tweet_id")} on X (Twitter)`;
     case "INSTAGRAM_CREATE_POST":
       return "Publish a post on your Instagram";
+    case "INSTAGRAM_REPLY_TO_COMMENT":
+      return "Reply to a comment on Instagram";
+    case "INSTAGRAM_SEND_TEXT_MESSAGE":
+      return `Send Instagram DM${str("username") ? ` to ${str("username")}` : ""}`;
     case "FACEBOOK_CREATE_POST":
       return "Publish a post on your Facebook";
     case "SLACK_SEND_MESSAGE":
