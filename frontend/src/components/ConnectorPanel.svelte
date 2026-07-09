@@ -13,7 +13,7 @@
   export let params = {};
 
   const LABEL = { gmail: "Gmail", googlecalendar: "Calendar", github: "GitHub",
-                  linkedin: "LinkedIn", twitter: "X", instagram: "Instagram",
+                  linkedin: "LinkedIn", twitter: "X", x: "X", instagram: "Instagram",
                   facebook: "Facebook", notion: "Notion", slack: "Slack" };
   const label = LABEL[app] || app;
 
@@ -58,7 +58,7 @@
           maxResults: 10, singleEvents: true, orderBy: "startTime" }));
       } else if (app === "instagram") {
         items = arr(await runConnected("INSTAGRAM_GET_USER_MEDIA", {}));
-      } else if (app === "twitter" && twitterUserId) {
+      } else if ((app === "twitter" || app === "x") && twitterUserId) {
         items = arr(await runConnected("TWITTER_GET_USER_TWEETS_BY_ID", { id: twitterUserId, max_results: 8 }));
       }
     } catch (e) { error = e?.message || "Couldn't load."; }
@@ -221,7 +221,7 @@
           <button class="btn primary sm addbtn" on:click={() => composeOpen = true}><i class="ti ti-plus"></i> Quick add</button>
         {/if}
 
-      {:else if app === 'twitter'}
+      {:else if app === 'twitter' || app === 'x'}
         {#if composeOpen}
           <div class="compose" in:fly={{ y: 6, duration: 150 }}>
             <textarea class="reply" bind:value={cBody} rows="3" placeholder="What's happening?"></textarea>

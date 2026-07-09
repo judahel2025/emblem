@@ -29,6 +29,7 @@
     facebook: { icon: "ti-brand-facebook", label: "Facebook", desc: "Pages, posts" },
     linkedin: { icon: "ti-brand-linkedin", label: "LinkedIn", desc: "Posts, profile" },
     twitter: { icon: "ti-brand-x", label: "Twitter / X", desc: "Post, reply, DMs" },
+    x: { icon: "ti-brand-x", label: "Twitter / X", desc: "Post, reply, DMs" },
     notion: { icon: "ti-brand-notion", label: "Notion", desc: "Pages, databases" },
     slack: { icon: "ti-brand-slack", label: "Slack", desc: "Messages, channels" },
   };
@@ -152,15 +153,36 @@
     const { [toolkit]: _x, ...rest } = disconnecting; disconnecting = rest;
   }
 
-  onDestroy(stopPolling);
+  onDestroy(() => {
+    stopPolling();
+    window.removeEventListener("scroll", handleScroll);
+  });
 
-  // Active section always shows every live link; the available grid shows the rest.
-  $: available = (query
-    ? all.filter((k) => k.includes(query.toLowerCase()))
-    : featured
-  ).filter((k) => !isOn(k));
+  let limit = 30;
+  function handleScroll() {
+    const threshold = 300;
+    const totalHeight = document.documentElement.scrollHeight;
+    const scrollPosition = window.innerHeight + window.pageYOffset;
+    if (totalHeight - scrollPosition < threshold) {
+      if (limit < filteredAll.length) {
+        limit += 30;
+      }
+    }
+  }
 
-  onMount(load);
+  $: filteredAll = all.filter((k) => !isOn(k) && (!query || k.includes(query.toLowerCase())));
+  $: available = filteredAll.slice(0, limit);
+
+  $: {
+    if (query !== undefined) {
+      limit = 30;
+    }
+  }
+
+  onMount(() => {
+    load();
+    window.addEventListener("scroll", handleScroll);
+  });
 </script>
 
 <div class="page">
