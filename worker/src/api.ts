@@ -895,8 +895,12 @@ apiRoutes.get("/connections", async (c) => {
 apiRoutes.get("/connections/link", async (c) => {
   const toolkit = c.req.query("toolkit") || "";
   if (!toolkit) return c.json({ ok: false, error: "toolkit required" });
-  const url = await initiateConnection(c.env, toolkit, c.get("userId"));
-  return c.json(url ? { ok: true, url } : { ok: false, error: "Couldn't start the connection." });
+  try {
+    const url = await initiateConnection(c.env, toolkit, c.get("userId"));
+    return c.json({ ok: true, url });
+  } catch (e) {
+    return c.json({ ok: false, error: e instanceof Error ? e.message : String(e) });
+  }
 });
 
 apiRoutes.post("/connections/disconnect", async (c) => {

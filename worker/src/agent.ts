@@ -453,12 +453,14 @@ export async function execNative(env: Env, userId: string, name: string,
     }
     case "connect_app": {
       const toolkit = String(a.toolkit || "").toLowerCase().trim();
-      const url = await initiateConnection(env, toolkit, userId);
-      return [url
-        ? `Connect link created: ${url}, put it in your reply as a markdown link, e.g. ` +
-          `[Connect ${toolkit}](${url}). The system will send you a note the moment they finish.`
-        : "Couldn't create a connect link for that app.",
-        url ? { type: "connect.pending", toolkit, url } : null];
+      try {
+        const url = await initiateConnection(env, toolkit, userId);
+        return [`Connect link created: ${url}, put it in your reply as a markdown link, e.g. ` +
+                `[Connect ${toolkit}](${url}). The system will send you a note the moment they finish.`,
+                { type: "connect.pending", toolkit, url }];
+      } catch (e) {
+        return [`Couldn't create a connect link for ${toolkit}: ${e instanceof Error ? e.message : String(e)}`, null];
+      }
     }
   }
   return [`Unknown tool ${name}.`, null];

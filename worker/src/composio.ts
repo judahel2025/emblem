@@ -31,34 +31,31 @@ async function cf(env: Env, path: string, init?: RequestInit): Promise<Record<st
 
 export const configured = (env: Env) => Boolean(env.COMPOSIO_KEY);
 
-async function authConfigFor(env: Env, toolkit: string): Promise<string | null> {
+async function authConfigFor(env: Env, toolkit: string): Promise<string> {
   const slug = toolkit.toLowerCase();
   const cached = authConfigCache.get(slug);
   if (cached) return cached;
-  try {
-    const list = await cf(env, `/auth_configs?toolkit_slug=${slug}&limit=10`) as
-      { items?: Array<{ id: string; is_composio_managed?: boolean }> };
-    const pick = (list.items || []).find((a) => a.is_composio_managed) || (list.items || [])[0];
-    if (pick) { authConfigCache.set(slug, pick.id); return pick.id; }
-    const created = await cf(env, "/auth_configs", {
-      method: "POST",
-      body: JSON.stringify({ toolkit: { slug }, auth_config: { type: "use_composio_managed_auth" } }),
-    }) as { auth_config?: { id?: string } };
-    const id = created.auth_config?.id || null;
-    if (id) authConfigCache.set(slug, id);
-    return id;
-  } catch { return null; }
+  const list = await cf(env, `/auth_configs?toolkit_slug=${slug}&limit=10`) as
+    { items?: Array<{ id: string; is_composio_managed?: boolean }> };
+  const pick = (list.items || []).find((a) => a.is_composio_managed) || (list.items || [])[0];
+  if (pick) { authConfigCache.set(slug, pick.id); return pick.id; }
+  const created = await cf(env, "/auth_configs", {
+    method: "POST",
+    body: JSON.stringify({ toolkit: { slug }, auth_config: { type: "use_composio_managed_auth" } }),
+  }) as { auth_config?: { id?: string } };
+  const id = created.auth_config?.id || null;
+  if (!id) throw new Error(`Could not find or create auth config for ${toolkit}`);
+  authConfigCache.set(slug, id);
+  return id;
 }
 
-export async function initiateConnection(env: Env, toolkit: string, userId: string): Promise<string | null> {
+export async function initiateConnection(env: Env, toolkit: string, userId: string): Promise<string> {
   const acid = await authConfigFor(env, toolkit);
-  if (!acid) return null;
-  try {
-    const res = await cf(env, "/connected_accounts/link", {
-      method: "POST", body: JSON.stringify({ auth_config_id: acid, user_id: userId }),
-    }) as { redirect_url?: string };
-    return res.redirect_url || null;
-  } catch { return null; }
+  const res = await cf(env, "/connected_accounts/link", {
+    method: "POST", body: JSON.stringify({ auth_config_id: acid, user_id: userId }),
+  }) as { redirect_url?: string };
+  if (!res.redirect_url) throw new Error(`Failed to generate redirect URL for ${toolkit}`);
+  return res.redirect_url;
 }
 
 export async function listConnections(env: Env, userId: string): Promise<string[]> {
