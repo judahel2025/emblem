@@ -76,7 +76,9 @@ def _uid(user_id: str | None) -> str:
 # ---------------------------------------------------------------------------
 
 def _auth_config_for(toolkit: str) -> str | None:
-    """Find (or create) the auth config for a toolkit. Composio-managed by default."""
+    """Find (or create) the auth config for a toolkit. Composio-managed by default.
+    NOTE: Twitter/X requires custom developer credentials configured in the Composio Dashboard.
+    """
     slug = toolkit.lower()
     if slug in _auth_config_cache:
         return _auth_config_cache[slug]

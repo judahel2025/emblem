@@ -33,6 +33,9 @@ export const configured = (env: Env) => Boolean(env.COMPOSIO_KEY);
 
 async function authConfigFor(env: Env, toolkit: string): Promise<string> {
   const slug = toolkit.toLowerCase();
+  // NOTE: Composio no longer provides managed credentials for Twitter/X.
+  // Users must configure their own developer credentials in the Composio Dashboard,
+  // which will then be resolved via the `/auth_configs` API query.
   const cached = authConfigCache.get(slug);
   if (cached) return cached;
   const list = await cf(env, `/auth_configs?toolkit_slug=${slug}&limit=10`) as
