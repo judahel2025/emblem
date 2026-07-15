@@ -8,7 +8,9 @@ import { executeTool, resolveApproval, toolManifest, getConfig, setConfig,
          ApprovalRequired, ApprovalRejected } from "./kernel";
 import { runAgent, generateTitle } from "./agent";
 import { configured as composioConfigured, FEATURED_TOOLKITS, allToolkits,
-         listConnections, connectionStates, initiateConnection, disconnect } from "./composio";
+         listConnections, connectionStates, initiateConnection, disconnect,
+         needsCredentials, createCustomAuthConfig, CredentialsNeeded,
+         CUSTOM_CRED_TOOLKITS } from "./composio";
 import { synthesize } from "./tts";
 import { onboardingReply, extractAndSaveProfile, extractProfileFields, saveProfileFields } from "./onboarding";
 import { reviewReply, extractReview, saveReview, type ReviewTurn } from "./reviews";
@@ -897,13 +899,41 @@ apiRoutes.get("/connections", async (c) => {
     try { resources[appName] = JSON.parse(r.value); } catch { resources[appName] = r.value; }
   }
   return c.json({ configured: composioConfigured(c.env),
-    featured: FEATURED_TOOLKITS, connected: states.active, broken: states.broken, all, resources });
+    featured: FEATURED_TOOLKITS, connected: states.active, broken: states.broken, all, resources,
+    // Toolkits that require the user's own developer credentials (custom auth).
+    custom_cred_toolkits: Object.keys(CUSTOM_CRED_TOOLKITS) });
 });
 
 apiRoutes.get("/connections/link", async (c) => {
   const toolkit = c.req.query("toolkit") || "";
   if (!toolkit) return c.json({ ok: false, error: "toolkit required" });
   try {
+    // Some apps (e.g. X/Twitter) have no Composio-managed auth and need the
+    // user's own developer credentials before a connect link can be minted.
+    const fields = await needsCredentials(c.env, toolkit);
+    if (fields) return c.json({ ok: false, needs_credentials: true, toolkit, fields });
+    const url = await initiateConnection(c.env, toolkit, c.get("userId"));
+    return c.json({ ok: true, url });
+  } catch (e) {
+    if (e instanceof CredentialsNeeded) {
+      return c.json({ ok: false, needs_credentials: true, toolkit: e.toolkit, fields: e.fields });
+    }
+    return c.json({ ok: false, error: e instanceof Error ? e.message : String(e) });
+  }
+});
+
+// Submit developer credentials for a toolkit that needs its own app (X/Twitter).
+// Creates the custom auth config once, then returns a fresh connect link, the
+// credentials live in Composio, so the user never re-enters them.
+apiRoutes.post("/connections/credentials", async (c) => {
+  const b = await c.req.json().catch(() => ({}));
+  const toolkit = String(b.toolkit || "").toLowerCase().trim();
+  const credentials = (b.credentials || {}) as Record<string, string>;
+  if (!toolkit || !CUSTOM_CRED_TOOLKITS[toolkit]) {
+    return c.json({ ok: false, error: "This app does not take custom credentials." });
+  }
+  try {
+    await createCustomAuthConfig(c.env, toolkit, credentials);
     const url = await initiateConnection(c.env, toolkit, c.get("userId"));
     return c.json({ ok: true, url });
   } catch (e) {

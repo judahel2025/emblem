@@ -9,8 +9,25 @@ const BASE = "https://backend.composio.dev/api/v3";
 
 export const FEATURED_TOOLKITS = [
   "gmail", "googlecalendar", "github", "youtube",
-  "instagram", "facebook", "linkedin", "twitter", "notion", "slack",
+  "instagram", "facebook", "linkedin", "twitter", "whatsapp", "notion", "slack",
 ];
+
+// Toolkits Composio does NOT provide managed auth for: the user must bring their
+// own developer app credentials. Verified against the live catalog (2026-07-14):
+// twitter has composio_managed_auth_schemes = []. Emblem collects these through
+// the in-app credential dialog and stores them as a custom auth_config.
+// Each field: name = Composio credential key, label/hint = what the user sees.
+export interface CredField { name: string; label: string; hint?: string; }
+export const CUSTOM_CRED_TOOLKITS: Record<string, { authScheme: string; fields: CredField[] }> = {
+  twitter: {
+    authScheme: "OAUTH2",
+    fields: [
+      { name: "client_id", label: "Client ID", hint: "OAuth 2.0 Client ID from your X Developer app" },
+      { name: "client_secret", label: "Client Secret", hint: "OAuth 2.0 Client Secret from the same app" },
+      { name: "generic_id", label: "Bearer Token", hint: "Bearer Token from your X Developer app (same app as above)" },
+    ],
+  },
+};
 
 const authConfigCache = new Map<string, string>();
 let toolkitsCache: string[] = [];
@@ -31,17 +48,38 @@ async function cf(env: Env, path: string, init?: RequestInit): Promise<Record<st
 
 export const configured = (env: Env) => Boolean(env.COMPOSIO_KEY);
 
+// Raised when a toolkit needs the user's own developer credentials and none are
+// on file yet. The connections route turns this into a "collect credentials"
+// response so the frontend can pop the credential dialog instead of erroring.
+export class CredentialsNeeded extends Error {
+  constructor(public toolkit: string, public fields: CredField[]) {
+    super(`${toolkit} needs developer credentials`);
+    this.name = "CredentialsNeeded";
+  }
+}
+
+// Does this toolkit already have a usable auth config? (managed, or a custom one
+// the user previously set up.) Used by the connections UI to decide whether to
+// show the credential form before connecting.
+async function findAuthConfig(env: Env, slug: string): Promise<string | null> {
+  const list = await cf(env, `/auth_configs?toolkit_slug=${slug}&limit=10`) as
+    { items?: Array<{ id: string; is_composio_managed?: boolean; status?: string }> };
+  const items = (list.items || []).filter((a) => a.status !== "DISABLED");
+  const pick = items.find((a) => a.is_composio_managed) || items[0];
+  return pick?.id || null;
+}
+
 async function authConfigFor(env: Env, toolkit: string): Promise<string> {
   const slug = toolkit.toLowerCase();
-  // NOTE: Composio no longer provides managed credentials for Twitter/X.
-  // Users must configure their own developer credentials in the Composio Dashboard,
-  // which will then be resolved via the `/auth_configs` API query.
   const cached = authConfigCache.get(slug);
   if (cached) return cached;
-  const list = await cf(env, `/auth_configs?toolkit_slug=${slug}&limit=10`) as
-    { items?: Array<{ id: string; is_composio_managed?: boolean }> };
-  const pick = (list.items || []).find((a) => a.is_composio_managed) || (list.items || [])[0];
-  if (pick) { authConfigCache.set(slug, pick.id); return pick.id; }
+  const existing = await findAuthConfig(env, slug);
+  if (existing) { authConfigCache.set(slug, existing); return existing; }
+  // No config yet. Toolkits without managed auth CANNOT be auto-created, they
+  // need the user's own credentials (collected via the dialog, see createCustomAuthConfig).
+  if (CUSTOM_CRED_TOOLKITS[slug]) {
+    throw new CredentialsNeeded(slug, CUSTOM_CRED_TOOLKITS[slug].fields);
+  }
   const created = await cf(env, "/auth_configs", {
     method: "POST",
     body: JSON.stringify({ toolkit: { slug }, auth_config: { type: "use_composio_managed_auth" } }),
@@ -50,6 +88,45 @@ async function authConfigFor(env: Env, toolkit: string): Promise<string> {
   if (!id) throw new Error(`Could not find or create auth config for ${toolkit}`);
   authConfigCache.set(slug, id);
   return id;
+}
+
+// Create a CUSTOM auth config from user-supplied developer credentials, then
+// remember it so future connects for this toolkit skip the dialog entirely.
+export async function createCustomAuthConfig(env: Env, toolkit: string,
+    credentials: Record<string, string>): Promise<string> {
+  const slug = toolkit.toLowerCase();
+  const spec = CUSTOM_CRED_TOOLKITS[slug];
+  if (!spec) throw new Error(`${toolkit} does not take custom credentials.`);
+  const missing = spec.fields.filter((f) => !String(credentials[f.name] || "").trim());
+  if (missing.length) throw new Error(`Missing: ${missing.map((f) => f.label).join(", ")}`);
+  const creds: Record<string, string> = {};
+  for (const f of spec.fields) creds[f.name] = String(credentials[f.name]).trim();
+  const created = await cf(env, "/auth_configs", {
+    method: "POST",
+    body: JSON.stringify({
+      toolkit: { slug },
+      auth_config: {
+        name: `${slug}-emblem`,
+        type: "use_custom_auth",
+        auth_scheme: spec.authScheme,
+        credentials: creds,
+      },
+    }),
+  }) as { auth_config?: { id?: string } };
+  const id = created.auth_config?.id || null;
+  if (!id) throw new Error(`Could not create ${toolkit} auth config with those credentials.`);
+  authConfigCache.set(slug, id);
+  return id;
+}
+
+// True when the toolkit needs the user's own credentials AND none exist yet.
+export async function needsCredentials(env: Env, toolkit: string): Promise<CredField[] | null> {
+  const slug = toolkit.toLowerCase();
+  if (!CUSTOM_CRED_TOOLKITS[slug]) return null;
+  if (authConfigCache.get(slug)) return null;
+  const existing = await findAuthConfig(env, slug).catch(() => null);
+  if (existing) { authConfigCache.set(slug, existing); return null; }
+  return CUSTOM_CRED_TOOLKITS[slug].fields;
 }
 
 export async function initiateConnection(env: Env, toolkit: string, userId: string): Promise<string> {
@@ -138,11 +215,16 @@ const PINNED_SLUGS: Record<string, string[]> = {
   gmail: ["GMAIL_SEND_EMAIL", "GMAIL_FETCH_EMAILS", "GMAIL_REPLY_TO_THREAD"],
   googlecalendar: ["GOOGLECALENDAR_CREATE_EVENT", "GOOGLECALENDAR_EVENTS_LIST"],
   github: ["GITHUB_CREATE_OR_UPDATE_FILE_CONTENTS", "GITHUB_GET_A_REPOSITORY"],
-  linkedin: ["LINKEDIN_CREATE_LINKED_IN_POST", "LINKEDIN_GET_MY_INFO"],
-  twitter: ["TWITTER_CREATION_OF_A_POST", "TWITTER_POST_REPLY", "TWITTER_RETWEET_A_TWEET", "TWITTER_GET_USER_ID_BY_USERNAME", "TWITTER_GET_USER_TWEETS_BY_ID"],
-  x: ["TWITTER_CREATION_OF_A_POST", "TWITTER_POST_REPLY", "TWITTER_RETWEET_A_TWEET", "TWITTER_GET_USER_ID_BY_USERNAME", "TWITTER_GET_USER_TWEETS_BY_ID"],
-  instagram: ["INSTAGRAM_CREATE_POST", "INSTAGRAM_GET_USER_MEDIA", "INSTAGRAM_REPLY_TO_COMMENT", "INSTAGRAM_GET_USER_INFO", "INSTAGRAM_SEND_TEXT_MESSAGE"],
-  facebook: ["FACEBOOK_CREATE_POST", "FACEBOOK_GET_PAGE_POSTS"],
+  linkedin: ["LINKEDIN_CREATE_LINKED_IN_POST", "LINKEDIN_GET_MY_INFO", "LINKEDIN_GET_COMPANY_INFO"],
+  twitter: ["TWITTER_CREATION_OF_A_POST", "TWITTER_USER_LOOKUP_ME", "TWITTER_USER_LOOKUP_BY_USERNAME",
+            "TWITTER_USER_HOME_TIMELINE_BY_USER_ID", "TWITTER_RETWEET_POST", "TWITTER_RECENT_SEARCH"],
+  x: ["TWITTER_CREATION_OF_A_POST", "TWITTER_USER_LOOKUP_ME", "TWITTER_USER_LOOKUP_BY_USERNAME",
+      "TWITTER_USER_HOME_TIMELINE_BY_USER_ID", "TWITTER_RETWEET_POST", "TWITTER_RECENT_SEARCH"],
+  instagram: ["INSTAGRAM_CREATE_MEDIA_CONTAINER", "INSTAGRAM_CREATE_POST", "INSTAGRAM_GET_USER_MEDIA",
+              "INSTAGRAM_GET_USER_INFO", "INSTAGRAM_REPLY_TO_COMMENT", "INSTAGRAM_SEND_TEXT_MESSAGE"],
+  facebook: ["FACEBOOK_CREATE_POST", "FACEBOOK_CREATE_PHOTO_POST", "FACEBOOK_GET_PAGE_POSTS", "FACEBOOK_GET_USER_PAGES"],
+  whatsapp: ["WHATSAPP_SEND_MESSAGE", "WHATSAPP_SEND_MEDIA", "WHATSAPP_GET_PHONE_NUMBERS",
+             "WHATSAPP_GET_BUSINESS_PROFILE", "WHATSAPP_SEND_TEMPLATE_MESSAGE"],
   notion: ["NOTION_ADD_PAGE_CONTENT", "NOTION_SEARCH_NOTION_PAGE"],
   slack: ["SLACK_SEND_MESSAGE", "SLACK_CHAT_POST_MESSAGE"],
   youtube: ["YOUTUBE_UPLOAD_VIDEO", "YOUTUBE_SEARCH_YOU_TUBE"],
@@ -338,7 +420,7 @@ export const isReadOnly = (slug: string) =>
 const TOOLKIT_LABELS: Record<string, string> = {
   gmail: "Gmail", googlecalendar: "Google Calendar", github: "GitHub", youtube: "YouTube",
   instagram: "Instagram", facebook: "Facebook", linkedin: "LinkedIn", twitter: "X (Twitter)",
-  notion: "Notion", slack: "Slack",
+  x: "X (Twitter)", whatsapp: "WhatsApp", notion: "Notion", slack: "Slack",
 };
 
 export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): string {
@@ -362,20 +444,29 @@ export function humanizeSlug(slug: string, p: Record<string, unknown> = {}): str
       const body = str("commentary") || str("text") || str("content");
       return `Publish a post on your LinkedIn${body ? `, “${body.slice(0, 70)}…”` : ""}`;
     }
-    case "TWITTER_CREATION_OF_A_POST":
-      return `Post on your X (Twitter)${str("text") ? `, “${str("text").slice(0, 70)}…”` : ""}`;
-    case "TWITTER_POST_REPLY":
-      return `Reply to a tweet on X (Twitter)${str("text") ? `, “${str("text").slice(0, 70)}…”` : ""}`;
-    case "TWITTER_RETWEET_A_TWEET":
-      return `Retweet post ${str("tweet_id")} on X (Twitter)`;
+    case "TWITTER_CREATION_OF_A_POST": {
+      const body = str("text");
+      const replyTo = str("reply__in__reply__to__tweet__id");
+      return `${replyTo ? "Reply on" : "Post on"} your X (Twitter)${body ? `, “${body.slice(0, 70)}…”` : ""}`;
+    }
+    case "TWITTER_RETWEET_POST":
+      return `Retweet a post on X (Twitter)`;
     case "INSTAGRAM_CREATE_POST":
-      return "Publish a post on your Instagram";
+    case "INSTAGRAM_CREATE_MEDIA_CONTAINER":
+      return `Publish a post on your Instagram${str("caption") ? `, “${str("caption").slice(0, 60)}…”` : ""}`;
     case "INSTAGRAM_REPLY_TO_COMMENT":
       return "Reply to a comment on Instagram";
     case "INSTAGRAM_SEND_TEXT_MESSAGE":
-      return `Send Instagram DM${str("username") ? ` to ${str("username")}` : ""}`;
+      return `Send Instagram DM${str("username") || str("recipient_id") ? ` to ${str("username") || str("recipient_id")}` : ""}`;
     case "FACEBOOK_CREATE_POST":
-      return "Publish a post on your Facebook";
+    case "FACEBOOK_CREATE_PHOTO_POST":
+      return `Publish a post on your Facebook Page${str("message") ? `, “${str("message").slice(0, 60)}…”` : ""}`;
+    case "WHATSAPP_SEND_MESSAGE":
+      return `Send a WhatsApp message${str("to_number") ? ` to ${str("to_number")}` : ""}${str("text") ? `, “${str("text").slice(0, 60)}…”` : ""}`;
+    case "WHATSAPP_SEND_MEDIA":
+      return `Send WhatsApp media${str("to_number") ? ` to ${str("to_number")}` : ""}`;
+    case "WHATSAPP_SEND_TEMPLATE_MESSAGE":
+      return `Send a WhatsApp template message${str("to_number") ? ` to ${str("to_number")}` : ""}`;
     case "SLACK_SEND_MESSAGE":
     case "SLACK_CHAT_POST_MESSAGE":
       return `Send a Slack message${str("channel") ? ` to ${str("channel")}` : ""}`;

@@ -4,7 +4,7 @@
   // pause on an inline approval card. "Expand" opens the full workspace.
   import { fly } from "svelte/transition";
   import { runConnected, hasWorkspace } from "../lib/workspaces.js";
-  import { appView, notify, savedResources } from "../lib/store.js";
+  import { appView, notify } from "../lib/store.js";
   import { brandLogo, logoUrl, MONO_LOGOS } from "../lib/logos.js";
   import ApprovalCard from "./ApprovalCard.svelte";
 
@@ -14,7 +14,7 @@
 
   const LABEL = { gmail: "Gmail", googlecalendar: "Calendar", github: "GitHub",
                   linkedin: "LinkedIn", twitter: "X", x: "X", instagram: "Instagram",
-                  facebook: "Facebook", notion: "Notion", slack: "Slack" };
+                  facebook: "Facebook", whatsapp: "WhatsApp", notion: "Notion", slack: "Slack" };
   const label = LABEL[app] || app;
 
   let open = true;
@@ -23,20 +23,11 @@
   let openItem = null, openLoading = false;
   let replyText = "", acting = false;
   let twitterHandle = "", twitterUserId = "";
+  const tweetsOf = (r) => arr(r?.data ?? r);   // timeline nests tweets under data
 
   // Compose (calendar quick-add / gmail compose)
   let composeOpen = false, cTitle = "", cWhen = "", cTo = "", cSubject = "", cBody = "";
 
-  $: {
-    const res = $savedResources[app] || $savedResources["twitter"] || $savedResources["x"];
-    if (res && res.id && (app === "twitter" || app === "x")) {
-      if (twitterUserId !== res.id) {
-        twitterUserId = res.id;
-        twitterHandle = res.name || "";
-        load();
-      }
-    }
-  }
 
   // Inline approval surface
   let pendingApproval = null;
@@ -69,30 +60,32 @@
           maxResults: 10, singleEvents: true, orderBy: "startTime" }));
       } else if (app === "instagram") {
         items = arr(await runConnected("INSTAGRAM_GET_USER_MEDIA", {}));
-      } else if ((app === "twitter" || app === "x") && twitterUserId) {
-        items = arr(await runConnected("TWITTER_GET_USER_TWEETS_BY_ID", { id: twitterUserId, max_results: 8 }));
+      } else if (app === "twitter" || app === "x") {
+        await loadTwitter();
+        return;
       }
     } catch (e) { error = e?.message || "Couldn't load."; }
     loading = false;
   }
   load();
 
+  // X: show the signed-in user's own recent timeline (there's no public
+  // "another user's tweets" tool anymore). LOOKUP_ME → HOME_TIMELINE_BY_USER_ID.
   async function loadTwitter() {
-    if (!twitterHandle.trim()) return;
     loading = true; error = ""; openItem = null; composeOpen = false;
     try {
-      const username = twitterHandle.replace("@", "").trim();
-      const userRes = await runConnected("TWITTER_GET_USER_ID_BY_USERNAME", { username });
-      const uid = userRes?.id || userRes?.data?.id;
-      if (uid) {
-        twitterUserId = uid;
-        const tweetsRes = await runConnected("TWITTER_GET_USER_TWEETS_BY_ID", { id: uid, max_results: 8 });
-        items = arr(tweetsRes);
-      } else {
-        error = "User not found or API rejected.";
+      if (!twitterUserId) {
+        const meRes = await runConnected("TWITTER_USER_LOOKUP_ME", {});
+        const d = meRes?.data?.data || meRes?.data || meRes;
+        twitterUserId = d?.id || "";
+        twitterHandle = d?.username || d?.name || "";
       }
+      if (!twitterUserId) { error = "Couldn't read your X account."; loading = false; return; }
+      const tl = await runConnected("TWITTER_USER_HOME_TIMELINE_BY_USER_ID",
+        { id: twitterUserId, max_results: 8 });
+      items = tweetsOf(tl);
     } catch (e) {
-      error = e?.message || "Couldn't load tweets.";
+      error = e?.message || "Couldn't load your X timeline.";
     }
     loading = false;
   }
@@ -109,15 +102,69 @@
     acting = false;
   }
 
+  let igUserId = "";
+  // Instagram publishing is a real two-step Graph flow: build a media container
+  // from the image URL (read), then publish that creation_id (the gated action).
   async function postInstagram() {
     if (!cTitle.trim() || acting) return;
     acting = true;
     try {
+      if (!igUserId) {
+        const info = await runConnected("INSTAGRAM_GET_USER_INFO", {});
+        const d = info?.data?.data || info?.data || info;
+        igUserId = d?.id || d?.ig_user_id || d?.user_id || "";
+      }
+      if (!igUserId) throw new Error("Couldn't read your Instagram account.");
+      const container = await runConnected("INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        { ig_user_id: igUserId, image_url: cTitle.trim(), caption: cBody.trim() });
+      const cd = container?.data?.data || container?.data || container;
+      const creationId = cd?.id || cd?.creation_id;
+      if (!creationId) throw new Error("Instagram didn't accept that image URL.");
       await runConnected("INSTAGRAM_CREATE_POST",
-        { image_url: cTitle.trim(), caption: cBody.trim() },
+        { ig_user_id: igUserId, creation_id: String(creationId) },
         { act: true, onApproval });
-      notify("Instagram post created", "safe"); cTitle = ""; cBody = ""; composeOpen = false; load();
+      notify("Instagram post published", "safe"); cTitle = ""; cBody = ""; composeOpen = false; load();
     } catch (e) { if (e?.message !== "Declined.") notify(e?.message || "Couldn't create Instagram post", "danger"); }
+    acting = false;
+  }
+
+  // LinkedIn: resolve the author URN (LOOKUP_ME → urn:li:person:<sub>) then post.
+  let liAuthor = "";
+  async function postLinkedIn() {
+    if (!cBody.trim() || acting) return;
+    acting = true;
+    try {
+      if (!liAuthor) {
+        const me = await runConnected("LINKEDIN_GET_MY_INFO", {});
+        const d = me?.data?.data || me?.data || me;
+        liAuthor = d?.author_id || (d?.sub ? `urn:li:person:${d.sub}` : "");
+      }
+      if (!liAuthor) throw new Error("Couldn't read your LinkedIn account.");
+      await runConnected("LINKEDIN_CREATE_LINKED_IN_POST",
+        { author: liAuthor, commentary: cBody.trim(), visibility: "PUBLIC" },
+        { act: true, onApproval });
+      notify("Posted to LinkedIn", "safe"); cBody = ""; composeOpen = false;
+    } catch (e) { if (e?.message !== "Declined.") notify(e?.message || "Couldn't post to LinkedIn", "danger"); }
+    acting = false;
+  }
+
+  // WhatsApp: send a text message. Resolves the sender phone_number_id once.
+  let waPhoneId = "";
+  async function sendWhatsApp() {
+    if (!cTo.trim() || !cBody.trim() || acting) return;
+    acting = true;
+    try {
+      if (!waPhoneId) {
+        const nums = await runConnected("WHATSAPP_GET_PHONE_NUMBERS", {});
+        const list = arr(nums?.data ?? nums);
+        waPhoneId = list[0]?.id || list[0]?.phone_number_id || "";
+      }
+      if (!waPhoneId) throw new Error("No WhatsApp business number is available on your account.");
+      await runConnected("WHATSAPP_SEND_MESSAGE",
+        { phone_number_id: waPhoneId, to_number: cTo.replace(/[^\d+]/g, ""), text: cBody.trim() },
+        { act: true, onApproval });
+      notify("WhatsApp message sent", "safe"); cTo = ""; cBody = ""; composeOpen = false;
+    } catch (e) { if (e?.message !== "Declined.") notify(e?.message || "Couldn't send WhatsApp message", "danger"); }
     acting = false;
   }
 
@@ -242,20 +289,16 @@
             </div>
           </div>
         {:else}
-          <div class="handle-input-row">
-            <input bind:value={twitterHandle} placeholder="Enter username (e.g. Twitter)" on:keydown={(e) => e.key === 'Enter' && loadTwitter()} />
-            <button class="btn primary sm" on:click={loadTwitter} disabled={loading}>Load</button>
-          </div>
           {#if items.length}
-            <ul class="rows" style="margin-top: 8px;">
+            <ul class="rows">
               {#each items as t (t.id)}
                 <li><div class="row static">
-                  <span class="r-from">@{twitterHandle}</span>
+                  <span class="r-from">{twitterHandle ? `@${twitterHandle}` : "You"}</span>
                   <span class="r-subj">{t.text || ''}</span>
                 </div></li>
               {/each}
             </ul>
-          {:else}<div class="p-state">No tweets loaded.</div>{/if}
+          {:else}<div class="p-state">Nothing on your timeline yet.</div>{/if}
           <button class="btn primary sm addbtn" on:click={() => { composeOpen = true; cBody = ""; }}><i class="ti ti-plus"></i> Post tweet</button>
         {/if}
 
@@ -283,6 +326,35 @@
             </ul>
           {:else}<div class="p-state">No posts.</div>{/if}
           <button class="btn primary sm addbtn" on:click={() => { composeOpen = true; cTitle = ""; cBody = ""; }}><i class="ti ti-plus"></i> Post photo</button>
+        {/if}
+
+      {:else if app === 'linkedin'}
+        {#if composeOpen}
+          <div class="compose" in:fly={{ y: 6, duration: 150 }}>
+            <textarea class="reply" bind:value={cBody} rows="4" placeholder="Share an update…"></textarea>
+            <div class="c-btns">
+              <button class="btn primary sm" on:click={postLinkedIn} disabled={!cBody.trim() || acting}>{acting ? "Posting…" : "Post"}</button>
+              <button class="btn ghost sm" on:click={() => composeOpen = false}>Cancel</button>
+            </div>
+          </div>
+        {:else}
+          <div class="p-state">Write a post and share it to your LinkedIn.</div>
+          <button class="btn primary sm addbtn" on:click={() => { composeOpen = true; cBody = ""; }}><i class="ti ti-plus"></i> New post</button>
+        {/if}
+
+      {:else if app === 'whatsapp'}
+        {#if composeOpen}
+          <div class="compose" in:fly={{ y: 6, duration: 150 }}>
+            <input bind:value={cTo} placeholder="Recipient number (e.g. +14155550123)" />
+            <textarea class="reply" bind:value={cBody} rows="3" placeholder="Message…"></textarea>
+            <div class="c-btns">
+              <button class="btn primary sm" on:click={sendWhatsApp} disabled={!cTo.trim() || !cBody.trim() || acting}>{acting ? "Sending…" : "Send"}</button>
+              <button class="btn ghost sm" on:click={() => composeOpen = false}>Cancel</button>
+            </div>
+          </div>
+        {:else}
+          <div class="p-state">Send a WhatsApp message from your business number.</div>
+          <button class="btn primary sm addbtn" on:click={() => { composeOpen = true; cTo = ""; cBody = ""; }}><i class="ti ti-plus"></i> New message</button>
         {/if}
 
       {:else}
@@ -337,7 +409,4 @@
   .link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; color: var(--accent-ink); cursor: pointer; }
   .p-approval { padding: 10px; border-top: 1px solid var(--border); }
   .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--text-2); animation: spin 0.7s linear infinite; display: inline-block; }
-  .handle-input-row { display: flex; gap: 8px; padding: 6px 8px; }
-  .handle-input-row input { flex: 1; background: var(--s1); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 10px; font-size: 13px; color: var(--text); outline: none; }
-  .handle-input-row input:focus { border-color: var(--accent); }
 </style>

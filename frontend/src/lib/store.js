@@ -82,6 +82,9 @@ export function startNotifPolling() {
 // The user's connected apps (toolkit slugs), drives sidebar workspaces + tiles.
 export const connectedApps = writable([]);
 export const savedResources = writable({});
+// When the agent (or a connector) needs the user's own developer credentials,
+// this holds { toolkit, fields } and App.svelte shows the secure credential dialog.
+export const pendingCredentials = writable(null);
 export async function loadConnections() {
   try {
     const r = await api.connections();
@@ -315,6 +318,10 @@ function runActions(actions) {
       // continuation back to the agent so it confirms + resumes, no user retype.
       if (a.url) window.open(a.url, "_blank", "noopener,width=600,height=760");
       if (a.toolkit) watchConnection(a.toolkit);
+    } else if (a.type === "credentials.needed") {
+      // An app needs the user's own developer keys. Pop the secure dialog; on
+      // submit + connect, watch for the connection and resume the task.
+      if (a.toolkit && a.fields) pendingCredentials.set({ toolkit: a.toolkit, fields: a.fields });
     } else if (a.type === "approval.pending") {
       notify(a.summary ? `Waiting for your approval: ${a.summary}` : "An action is waiting for your approval", "caution");
       refresh();

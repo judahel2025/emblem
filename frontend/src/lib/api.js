@@ -213,6 +213,7 @@ export const api = {
   // Connections (per-user)
   connections: () => get("/api/connections"),
   connectionLink: (toolkit) => get(`/api/connections/link?toolkit=${encodeURIComponent(toolkit)}`),
+  connectionCredentials: (toolkit, credentials) => post("/api/connections/credentials", { toolkit, credentials }),
   connectionDisconnect: (toolkit) => post("/api/connections/disconnect", { toolkit }),
 
   // Pages (Notion-style)

@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import { refresh, loadBriefing, loadConversation, loadMe, loadConnections, appView, showVoiceOverlay, showOperator, me,
            startNotifPolling, askNotifPermission, loadNotifications, activeThread, newChat,
-           showReviewModal } from "./lib/store.js";
+           showReviewModal, pendingCredentials, watchConnection } from "./lib/store.js";
   import { fade } from "svelte/transition";
   import { api } from "./lib/api.js";
   import Logo from "./components/Logo.svelte";
@@ -29,6 +29,7 @@
   import AdminConsole from "./screens/AdminConsole.svelte";
   import ReviewModal from "./components/ReviewModal.svelte";
   import NewsletterPrompt from "./components/NewsletterPrompt.svelte";
+  import CredentialDialog from "./components/CredentialDialog.svelte";
 
   let engineUp = false;
   let engineFailed = false;
@@ -191,6 +192,11 @@
     {/if}
     {#if $showReviewModal}<ReviewModal on:close={() => showReviewModal.set(false)} />{/if}
     {#if showNewsPrompt}<NewsletterPrompt on:close={() => (showNewsPrompt = false)} />{/if}
+    {#if $pendingCredentials}
+      <CredentialDialog toolkit={$pendingCredentials.toolkit} fields={$pendingCredentials.fields}
+        on:connected={(e) => { watchConnection(e.detail.toolkit); pendingCredentials.set(null); }}
+        on:close={() => pendingCredentials.set(null)} />
+    {/if}
     <TourOverlay />
   </div>
 {/if}

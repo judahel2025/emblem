@@ -5,7 +5,7 @@
 import type { Env } from "./env";
 import { executeTool, ApprovalRequired, ApprovalRejected } from "./kernel";
 import { recallMemory } from "./api";
-import { userTools, isReadOnly, initiateConnection, listConnections, connectionStates, configured, humanizeSlug, type OpenAITool } from "./composio";
+import { userTools, isReadOnly, initiateConnection, listConnections, connectionStates, configured, humanizeSlug, needsCredentials, CredentialsNeeded, type OpenAITool } from "./composio";
 import { selectSkills } from "./skills";
 
 const SYSTEM_OWNER = `You are Emblem, and the person talking to you is the OWNER of this
@@ -198,7 +198,8 @@ YOUR TOOLS (call them; don't just describe):
 - create_document, real Word/PDF/PowerPoint/Excel files, downloadable in chat. Use for
   any document, report, letter, deck, or spreadsheet.
 - open_panel(app), a live, interactive mini-workspace inside the chat for a CONNECTED
-  app (Gmail inbox+reply, Calendar+quick-add). Use when they want to see/act in an app.
+  app (Gmail inbox+reply, Calendar+quick-add, X timeline+post, Instagram feed+post,
+  LinkedIn post, WhatsApp message). Use when they want to see/act in an app.
 - connect_app(toolkit), an in-chat link to connect (or reconnect) an app that's missing.
 - search_web, current info. save_note / remember, notes + durable memory (facts persist
   across chats). create_page / append_to_page, documents in their workspace.
@@ -478,11 +479,24 @@ export async function execNative(env: Env, userId: string, name: string,
     case "connect_app": {
       const toolkit = String(a.toolkit || "").toLowerCase().trim();
       try {
+        const fields = await needsCredentials(env, toolkit);
+        if (fields) {
+          return [`${toolkit} needs the user's own developer credentials (${fields.map((f) => f.label).join(", ")}). ` +
+                  `A secure form is now open in the chat for them to paste those in, one time only. Tell them ` +
+                  `you've opened it and that once they submit, you'll connect ${toolkit} right away, they won't ` +
+                  `need to enter these again.`,
+                  { type: "credentials.needed", toolkit, fields }];
+        }
         const url = await initiateConnection(env, toolkit, userId);
         return [`Connect link created: ${url}, put it in your reply as a markdown link, e.g. ` +
                 `[Connect ${toolkit}](${url}). The system will send you a note the moment they finish.`,
                 { type: "connect.pending", toolkit, url }];
       } catch (e) {
+        if (e instanceof CredentialsNeeded) {
+          return [`${toolkit} needs the user's own developer credentials. A secure form is now open ` +
+                  `in the chat for them to fill in once.`,
+                  { type: "credentials.needed", toolkit, fields: e.fields }];
+        }
         return [`Couldn't create a connect link for ${toolkit}: ${e instanceof Error ? e.message : String(e)}`, null];
       }
     }

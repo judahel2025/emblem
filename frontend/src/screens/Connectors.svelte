@@ -6,6 +6,7 @@
   import { hasWorkspace } from "../lib/workspaces.js";
   import { brandLogo, MONO_LOGOS, logoUrl } from "../lib/logos.js";
   import Logo from "../components/Logo.svelte";
+  import CredentialDialog from "../components/CredentialDialog.svelte";
 
   // If the Composio logo endpoint ever 404s, drop the <img> and reveal the
   // Tabler icon sitting right after it, a real logo first, icon only as a
@@ -30,6 +31,7 @@
     linkedin: { icon: "ti-brand-linkedin", label: "LinkedIn", desc: "Posts, profile" },
     twitter: { icon: "ti-brand-x", label: "Twitter / X", desc: "Post, reply, DMs" },
     x: { icon: "ti-brand-x", label: "Twitter / X", desc: "Post, reply, DMs" },
+    whatsapp: { icon: "ti-brand-whatsapp", label: "WhatsApp", desc: "Messages, media" },
     notion: { icon: "ti-brand-notion", label: "Notion", desc: "Pages, databases" },
     slack: { icon: "ti-brand-slack", label: "Slack", desc: "Messages, channels" },
   };
@@ -118,6 +120,25 @@
     confirmTk = toolkit;
   }
 
+  // ── Developer-credential dialog (apps with no managed auth, e.g. X/Twitter) ──
+  // The dialog itself lives in the shared CredentialDialog component; here we
+  // only track which toolkit + fields it should collect.
+  let credTk = null;          // toolkit awaiting credentials
+  let credFields = [];        // [{ name, label, hint }]
+
+  function openCredDialog(toolkit, fields) {
+    credTk = toolkit;
+    credFields = fields || [];
+  }
+
+  // The shared dialog opened the connect link, start the tile spinner + poll.
+  function onCredConnected(toolkit) {
+    credTk = null;
+    connecting = { ...connecting, [toolkit]: true };
+    startedAt[toolkit] = Date.now();
+    startPolling();
+  }
+
   async function proceedConnect() {
     const toolkit = confirmTk;
     confirmTk = null;
@@ -129,6 +150,8 @@
         connecting = { ...connecting, [toolkit]: true };
         startedAt[toolkit] = Date.now();
         startPolling();
+      } else if (r.needs_credentials) {
+        openCredDialog(toolkit, r.fields);
       } else error = r.error || "Couldn't start the connection.";
     } catch { error = "Couldn't start the connection."; }
   }
@@ -389,6 +412,14 @@
       </div>
     </div>
   </div>
+{/if}
+
+<!-- Developer-credential dialog: apps with no Composio-managed auth (X/Twitter).
+     Collected once, stored by Composio, never asked again. Shared component. -->
+{#if credTk}
+  <CredentialDialog toolkit={credTk} fields={credFields} label={meta(credTk).label}
+    on:connected={(e) => onCredConnected(e.detail.toolkit)}
+    on:close={() => (credTk = null)} />
 {/if}
 
 <style>
